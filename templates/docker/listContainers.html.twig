@@ -1,0 +1,31 @@
+{# templates/docker/containers.html.twig #}
+{% extends 'base.html.twig' %}
+
+{% block title %}Liste des conteneurs{% endblock %}
+
+{% block body %}
+    <h2 class="mb-4">Conteneurs Docker en cours d’exécution</h2>
+
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>Nom</th>
+            <th>ID</th>
+            <th>Statut</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for c in containers %}
+            <tr>
+                <td>{{ c.name }}</td>
+                <td>{{ c.id }}</td>
+                <td>{{ c.status }}</td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="3" class="text-center">Aucun conteneur trouvé.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

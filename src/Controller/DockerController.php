@@ -26,7 +26,7 @@ final class DockerController extends AbstractController
             }
             $containers = $newContainer;
         }
-        return $this->render('docker/index.html.twig', [
+        return $this->render('docker/listContainers.html.twig', [
             'containers' => $containers,
             'controller_name' => 'DockerController',
         ]);

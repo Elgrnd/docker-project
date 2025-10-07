@@ -1,0 +1,34 @@
+{% extends "base.html.twig" %}
+{% block title %}<title>Inscription</title>{% endblock %}
+{% block page_content %}
+<main>
+    {{ form_start(formulaireUtilisateur, {'attr': {'class': 'center basic-form'}}) }}
+    <fieldset>
+        <legend>Inscription</legend>
+        <div class="access-container">
+            <!-- Affichage du label "Login" -->
+            {{ form_label(formulaireUtilisateur.login) }}
+            <p class="help-input-form">Entre 4 et 20 caractères</p>
+            <!-- Affichage de l'input du login -->
+            {{ form_widget(formulaireUtilisateur.login) }}
+        </div>
+        <div class="access-container">
+            <!-- Affichage du label "Mot de passe" -->
+            {{ form_label(formulaireUtilisateur.plainPassword) }}
+            <p class="help-input-form">Entre 8 et 30 caractères, au moins une minuscule, une majuscule et un nombre</p>
+            <!-- Affichage de l'input du mot de passe -->
+            {{ form_widget(formulaireUtilisateur.plainPassword) }}
+        </div>
+        <div class="access-container">
+            <!-- Affichage du label "Adresse mail" -->
+            {{ form_label(formulaireUtilisateur.adresseMail) }}
+            <!-- Affichage de l'input de l'adresse email -->
+            {{ form_widget(formulaireUtilisateur.adresseMail) }}
+        </div>
+        <!-- Affichage du bouton d'envoi, contenant le texte (label) "S'inscrire" -->
+        {{ form_widget(formulaireUtilisateur.inscription) }}
+    </fieldset>
+    {{ form_rest(formulaireUtilisateur) }}
+    {{ form_end(formulaireUtilisateur) }}
+</main>
+{% endblock %}

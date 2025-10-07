@@ -10,7 +10,14 @@
     <div id="titre" class="center">
         <nav>
             <a href="{{ path("index") }}">Accueil</a>
-            <a href="{{ path('inscription') }}">Inscription</a>
+            {% if not is_granted('ROLE_USER') %}
+                <a href="{{ path('inscription') }}">Inscription</a>
+                <a href="{{ path('connexion') }}">Connexion</a>
+            {% else %}
+                <form method="post" action="{{ path('_logout_main')}}">
+                    <button id="btn-deconnexion">Déconnexion</button>
+                </form>
+            {% endif %}
         </nav>
     </div>
 </header>

@@ -4,6 +4,8 @@ namespace App\Controller;
 
 use App\Entity\Utilisateur;
 use App\Form\UtilisateurType;
+use App\Repository\UtilisateurRepository;
+use App\Repository\YamlFileRepository;
 use App\Service\FlashMessageHelperInterface;
 use App\Service\UtilisateurManagerInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -58,4 +60,6 @@ final class UtilisateurController extends AbstractController
         $lastUsername = $authenticationUtils->getLastUsername();
         return $this->render('utilisateur/connexion.html.twig', ['lastUsername' => $lastUsername]);
     }
+
+
 }

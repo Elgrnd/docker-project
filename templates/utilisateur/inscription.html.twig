@@ -2,32 +2,36 @@
 {% block title %}<title>Inscription</title>{% endblock %}
 {% block page_content %}
 <main>
-    {{ form_start(formulaireUtilisateur, {'attr': {'class': 'center basic-form'}}) }}
-    <fieldset>
-        <legend>Inscription</legend>
-        <div class="access-container">
-            <!-- Affichage du label "Login" -->
-            {{ form_label(formulaireUtilisateur.login) }}
-            <p class="help-input-form">Entre 4 et 20 caractères</p>
-            <!-- Affichage de l'input du login -->
-            {{ form_widget(formulaireUtilisateur.login) }}
-        </div>
-        <div class="access-container">
-            <!-- Affichage du label "Mot de passe" -->
-            {{ form_label(formulaireUtilisateur.plainPassword) }}
-            <p class="help-input-form">Entre 8 et 30 caractères, au moins une minuscule, une majuscule et un nombre</p>
-            <!-- Affichage de l'input du mot de passe -->
-            {{ form_widget(formulaireUtilisateur.plainPassword) }}
-        </div>
-        <div class="access-container">
-            <!-- Affichage du label "Adresse mail" -->
-            {{ form_label(formulaireUtilisateur.adresseMail) }}
-            <!-- Affichage de l'input de l'adresse email -->
-            {{ form_widget(formulaireUtilisateur.adresseMail) }}
-        </div>
-        <!-- Affichage du bouton d'envoi, contenant le texte (label) "S'inscrire" -->
-        {{ form_widget(formulaireUtilisateur.inscription) }}
-    </fieldset>
+    {{ form_start(formulaireUtilisateur) }}
+
+    <div class="mb-3">
+        {{ form_label(formulaireUtilisateur.login, "Login", {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+        <p class="text-muted small mb-1">Entre 4 et 20 caractères</p>
+        {{ form_widget(formulaireUtilisateur.login, {'attr': {'class': 'form-control rounded-pill'}}) }}
+    </div>
+
+    <div class="mb-3">
+        {{ form_label(formulaireUtilisateur.plainPassword, "Mot de passe", {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+        <p class="text-muted small mb-1">
+            Entre 8 et 30 caractères, au moins une minuscule, une majuscule et un nombre
+        </p>
+        {{ form_widget(formulaireUtilisateur.plainPassword, {'attr': {'class': 'form-control rounded-pill'}}) }}
+    </div>
+
+    <div class="mb-4">
+        {{ form_label(formulaireUtilisateur.adresseMail, "Adresse mail", {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+        {{ form_widget(formulaireUtilisateur.adresseMail, {'attr': {'class': 'form-control rounded-pill'}}) }}
+    </div>
+
+    <div class="d-grid mb-3">
+        {{ form_widget(formulaireUtilisateur.inscription, {'attr': {'class': 'btn btn-primary rounded-pill fw-semibold'}}) }}
+    </div>
+
+    <div class="text-center">
+        <small class="text-muted">
+            Déjà un compte ? <a href="{{ path('connexion') }}" class="text-primary fw-medium">Se connecter</a>
+        </small>
+    </div>
     {{ form_rest(formulaireUtilisateur) }}
     {{ form_end(formulaireUtilisateur) }}
 </main>

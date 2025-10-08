@@ -2,18 +2,18 @@
 
 namespace App\Service;
 
+use App\Entity\Utilisateur;
 use App\Entity\YamlFile;
-use App\Repository\YamlFileRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
-class YamlFileService
+class YamlFileManager implements YamlFileManagerInterface
 {
     public function __construct(
         private EntityManagerInterface $entityManager,
     ) {}
 
-    public function stockerYaml(UploadedFile $file): YamlFile {
+    public function stockerYaml(UploadedFile $file, Utilisateur $user): YamlFile {
 
         // Lire le contenu du fichier yaml
         $content = file_get_contents($file->getPathname());
@@ -22,7 +22,7 @@ class YamlFileService
         $yaml = new YamlFile();
         $yaml->setNameFile($file->getClientOriginalName());
         $yaml->setBodyFile($content);
-        $yaml->setIdUtilisateur("");
+        $yaml->setLogin($user->getLogin());
 
         // Faire persister les données
         $this->entityManager->persist($yaml);

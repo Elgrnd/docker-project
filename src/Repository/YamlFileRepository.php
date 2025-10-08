@@ -24,6 +24,15 @@ class YamlFileRepository extends ServiceEntityRepository
         ]);
     }
 
+    public function findByLogin(string $login) : array {
+        return $this->createQueryBuilder('y')
+            ->andWhere('y.login = :login')
+            ->setParameter('login', $login)
+            ->orderBy('y.nameFile', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return YamlFile[] Returns an array of YamlFile objects
     //     */

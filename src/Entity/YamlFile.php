@@ -26,7 +26,7 @@ class YamlFile
     private ?string $bodyFile = null;
 
     #[ORM\Column]
-    private ?int $idUtilisateur = null;
+    private ?string $login = null;
 
     public function getId(): ?int
     {
@@ -57,14 +57,14 @@ class YamlFile
         return $this;
     }
 
-    public function getIdUtilisateur(): ?int
+    public function getLogin(): ?int
     {
-        return $this->idUtilisateur;
+        return $this->login;
     }
 
-    public function setIdUtilisateur(int $idUtilisateur): static
+    public function setLogin(string $login): static
     {
-        $this->idUtilisateur = $idUtilisateur;
+        $this->login = $login;
 
         return $this;
     }

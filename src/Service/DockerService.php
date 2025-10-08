@@ -2,19 +2,25 @@
 
 namespace App\Service;
 
-use Symfony\Component\DependencyInjection\Container;
-
 class DockerService
 {
     public function listContainers(bool $all = false): array
     {
-        $cmd = $all ? 'docker ps -a -- format "{{.ID}}|{{.Names}}|{{.Status}}"' : 'docker ps --format "{{.ID}}|{{.Names}}|{{.Status}}"';
 
+        $dockerPath = '/usr/bin/docker';
+        $cmd = $all ? "$dockerPath ps -a --format \"{{.ID}}|{{.Names}}|{{.Status}}\" 2>&1" : "$dockerPath ps --format \"{{.ID}}|{{.Names}}|{{.Status}}\" 2>&1";
         $output = shell_exec($cmd);
+        var_dump($output);
+
 
         $containers = [];
-        foreach (explode("\n", $output) as $line) {
-            [$id, $name, $status] = explode('|', $line);
+
+        $lines = array_filter(array_map('trim', explode("\n", $output)));
+
+        var_dump($lines);
+        foreach ($lines as $line) {
+            $parts = explode('|', $line);
+            [$id, $name, $status] = $parts;
             $containers[] = [
                 'id' => $id,
                 'name' => $name,

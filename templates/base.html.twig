@@ -14,6 +14,7 @@
                 <a href="{{ path('inscription') }}">Inscription</a>
                 <a href="{{ path('connexion') }}">Connexion</a>
             {% else %}
+                <a href="{{ path('yaml_upload') }}">Uploader un fichier YAML</a>
                 <form method="post" action="{{ path('_logout_main')}}">
                     <button id="btn-deconnexion">Déconnexion</button>
                 </form>
@@ -29,7 +30,7 @@
         <span class="flashes flashes-error">{{ error }}</span>
     {% endfor %}
 </div>
-{% block page_content %}
+{% block body %}
 {% endblock %}
 </body>
 </html>

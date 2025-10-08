@@ -1,0 +1,23 @@
+{% extends "base.html.twig" %}
+{% block title %}<title>Uploader un fichier YAML</title>{% endblock %}
+
+{% block body %}
+    <main class="center basic-form">
+        <fieldset>
+            <legend>Uploader un fichier YAML</legend>
+
+            {% for msg in app.flashes('success') %}
+                <div class="flash-success">{{ msg }}</div>
+            {% endfor %}
+            {% for msg in app.flashes('error') %}
+                <div class="flash-error">{{ msg }}</div>
+            {% endfor %}
+
+            {{ form_start(formulaireYaml, {'attr': {'enctype': 'multipart/form-data'}}) }}
+            {{ form_row(formulaireYaml.nameFile) }}
+            {{ form_row(formulaireYaml.yamlFile) }}
+            <button type="submit" class="btn">Envoyer</button>
+            {{ form_end(formulaireYaml) }}
+        </fieldset>
+    </main>
+{% endblock %}

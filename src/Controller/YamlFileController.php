@@ -15,7 +15,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class YamlFileController extends AbstractController
 {
     #[Route('/upload', name: 'yaml_upload', methods:['GET', 'POST'])]
-    public function upload(Request $request, EntityManagerInterface $entityManager, FlashMessageHelperInterface $flashMessageHelper): Response
+    public function upload(Request $request, EntityManagerInterface $entityManager, FlashMessageHelperInterface $flashMessageHelperInterface): Response
     {
         $utilisateur = $this->getUser();
 
@@ -65,9 +65,8 @@ final class YamlFileController extends AbstractController
                 }
             }
         }
-        else {
-            $flashMessageHelper->addFormErrorsAsFlash($form);
-        }
+
+        $flashMessageHelperInterface->addFormErrorsAsFlash($form);
 
         return $this->render('YamlFile/upload.html.twig', ['formulaireYaml' => $form]);
     }

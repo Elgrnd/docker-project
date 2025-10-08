@@ -40,7 +40,7 @@ final class YamlFileController extends AbstractController
 
             $results = $entityManager
                 ->getRepository(YamlFile::class)
-                ->findByNomEtUtilisateur($yamlFile->getNameFile(), $utilisateur->getId());
+                ->findByNomEtUtilisateur($yamlFile->getNameFile(), $utilisateur->getUserIdentifier());
 
             if (count($results) > 0) {
                 $this->addFlash('error', sprintf(
@@ -53,8 +53,9 @@ final class YamlFileController extends AbstractController
             if ($uploadedFile) {
                 try {
                     $content = file_get_contents($uploadedFile->getRealPath());
+                    $yamlFile->setNameFile($uploadedFile->getClientOriginalName());
                     $yamlFile->setBodyFile($content);
-                    $yamlFile->setIdUtilisateur($utilisateur->getId());
+                    $yamlFile->setLogin($utilisateur->getUserIdentifier());
 
                     $entityManager->persist($yamlFile);
                     $entityManager->flush();
@@ -69,7 +70,7 @@ final class YamlFileController extends AbstractController
 
         $flashMessageHelperInterface->addFormErrorsAsFlash($form);
 
-        return $this->render('YamlFile/upload.html.twig', ['formulaireYaml' => $form]);
+        return $this->render('yaml_file/upload.html.twig', ['formulaireYaml' => $form]);
     }
 
     #[Route('/repertoire', name: 'repertoire', methods: ['GET'])]

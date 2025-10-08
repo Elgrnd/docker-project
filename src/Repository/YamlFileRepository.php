@@ -20,7 +20,7 @@ class YamlFileRepository extends ServiceEntityRepository
     {
         return $this->findBy([
             'nameFile' => $nomFichier,
-            'idUtilisateur' => $utilisateur,
+            'login' => $utilisateur,
         ]);
     }
 

@@ -1,21 +1,29 @@
 {% extends "base.html.twig" %}
 {% block title %}<title>Connexion</title>{% endblock %}
 {% block page_content %}
-    <main>
-        <form action="{{ path('connexion') }}" method="post" class="basic-form center">
-            <fieldset>
-                <legend>Connexion</legend>
-                <div class="access-container">
-                    <label for="login">Login</label>
-                    <input id="login" type="text" name="_username" value="{{ lastUsername }}" required/>
-                </div>
-                <div class="access-container">
-                    <label for="password">Mot de passe</label>
-                    <input id="password" type="password" name="_password" required/>
-                </div>
-                <button type="submit" class="basic-form-submit">Se connecter</button>
-            </fieldset>
-            <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-        </form>
-    </main>
+    <form action="{{ path('connexion') }}" method="post">
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+        <div class="mb-3">
+            <label for="login" class="form-label fw-semibold">Login</label>
+            <input id="login" type="text" name="_username" value="{{ lastUsername }}"
+                   class="form-control rounded-pill" required>
+        </div>
+
+        <div class="mb-4">
+            <label for="password" class="form-label fw-semibold">Mot de passe</label>
+            <input id="password" type="password" name="_password"
+                   class="form-control rounded-pill" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 rounded-pill fw-semibold">
+            <i class="bi bi-box-arrow-in-right me-1"></i> Se connecter
+        </button>
+    </form>
+
+    <div class="text-center mt-3">
+        <small class="text-muted">
+            Pas encore inscrit ? <a href="{{ path('inscription') }}" class="text-primary fw-medium">Créer un compte</a>
+        </small>
+    </div>
 {% endblock %}

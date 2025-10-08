@@ -1,0 +1,174 @@
+{% extends 'base.html.twig' %}
+{% block title %}<title>Répertoire perso</title>{% endblock %}
+{% block page_content %}
+
+    <!-- Overlay blur -->
+    <div id="overlayBlur" class="overlay-blur" onclick="cacherBlur()"></div>
+
+    <!-- Modal pour afficher le contenu -->
+    <div id="modalContent" class="modal-yaml">
+        <div class="modal-header">
+            <span class="close-modal" onclick="cacherBlur()">&times;</span>
+        </div>
+        <div id="contentDisplay" class="modal-body-yaml"></div>
+    </div>
+
+    <div class="file-explorer" id="fileExplorer">
+        <h2 class="title">📁 Répertoire personnel</h2>
+        <div class="file-list">
+            {% if yamlFiles|length > 0 %}
+                <ul class="list-group">
+                    {% for file in yamlFiles %}
+                        <li class="file-item">
+                            <div class="file-info">
+                                <i class="bi bi-file-earmark-text file-icon"></i>
+                                <span class="file-name">{{ file.nameFile }}</span>
+                            </div>
+                            <div class="file-actions">
+                                <i class="bi bi-eye view-icon" title="Afficher"
+                                   onclick="afficherContenuYamlFile('{{ file.bodyFile|escape('js') }}')"></i>
+                                <i class="bi bi-download download-icon" title="Télécharger"></i>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="empty-msg">Aucun fichier dans le répertoire</p>
+            {% endif %}
+        </div>
+    </div>
+
+
+    <style>
+        .overlay-blur {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 999;
+        }
+
+        .modal-yaml {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            max-width: 80%;
+            max-height: 80%;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 10px;
+        }
+
+        .close-modal {
+            font-size: 28px;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .close-modal:hover {
+            color: #000;
+        }
+
+        .modal-body-yaml {
+            font-family: monospace;
+            white-space: pre-wrap;
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            color: #333;
+        }
+
+        /* Effet de flou sur le contenu principal */
+        .blur-content {
+            filter: blur(5px);
+            -webkit-filter: blur(5px);
+        }
+
+        .file-explorer {
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 16px;
+            max-width: 600px;
+            background-color: #fafafa;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            font-family: system-ui, sans-serif;
+        }
+
+        .title {
+            font-size: 1.3em;
+            margin-bottom: 12px;
+        }
+
+        .file-list ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 10px;
+            margin-bottom: 5px;
+            border-radius: 8px;
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+
+        .file-item:hover {
+            background-color: #f2f2f2;
+            transform: scale(1.01);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-icon {
+            font-size: 1.2em;
+            color: #007bff;
+        }
+
+        .file-actions i {
+            cursor: pointer;
+            margin-left: 10px;
+            color: #666;
+            transition: color 0.2s ease;
+        }
+
+        .file-actions i:hover {
+            color: #007bff;
+        }
+
+        .empty-msg {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+        }
+    </style>
+
+
+
+{% endblock %}

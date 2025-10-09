@@ -48,6 +48,11 @@
                     <li class="nav-item mx-2">
                         <a class="nav-link text-white fw-medium" href="{{ path('yaml_upload') }}">Importer un fichier .yaml</a>
                     </li>
+                    {% if is_granted('ROLE_ADMIN') %}
+                        <li class="nav-item mx-2">
+                            <a class="nav-link text-white fw-medium" href="{{ path('partagerYamlFileAdmin') }}">Partager un fichier .yaml</a>
+                        </li>
+                    {% endif %}
                     <li class="nav-item mx-2">
                         <a class="nav-link text-white fw-medium" href="{{ path('listContainers') }}">Liste des conteneurs</a>
                     </li>
@@ -87,7 +92,11 @@
 
 <!-- 🔹 Footer -->
 <footer class="bg-primary text-white text-center py-3 mt-auto shadow-sm">
-    <small>© {{ "now"|date("Y") }} SAE A3</small>
+    <small>© {{ "now"|date("Y") }} SAE A3
+        {% if is_granted('ROLE_ADMIN') %}
+            {{ 'administrateur' }}
+        {% endif %}
+    </small>
 </footer>
 
 <script

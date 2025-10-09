@@ -1,0 +1,64 @@
+<?php
+
+namespace App\Entity;
+
+use App\Repository\EtrePartageRepository;
+use Doctrine\ORM\Mapping as ORM;
+
+#[ORM\Entity(repositoryClass: EtrePartageRepository::class)]
+class EtrePartage
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column]
+    private ?int $id = null;
+
+    #[ORM\ManyToOne(targetEntity: Utilisateur::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Utilisateur $utilisateur = null;
+
+    #[ORM\ManyToOne(targetEntity: YamlFile::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?YamlFile $yamlFile = null;
+
+    #[ORM\Column(type: 'datetime_immutable')]
+    private ?\DateTimeImmutable $datePartage = null;
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getUtilisateur(): ?Utilisateur
+    {
+        return $this->utilisateur;
+    }
+
+    public function setUtilisateur(?Utilisateur $utilisateur): static
+    {
+        $this->utilisateur = $utilisateur;
+        return $this;
+    }
+
+    public function getYamlFile(): ?YamlFile
+    {
+        return $this->yamlFile;
+    }
+
+    public function setYamlFile(?YamlFile $yamlFile): static
+    {
+        $this->yamlFile = $yamlFile;
+        return $this;
+    }
+
+    public function getDatePartage(): ?\DateTimeImmutable
+    {
+        return $this->datePartage;
+    }
+
+    public function setDatePartage(\DateTimeImmutable $datePartage): static
+    {
+        $this->datePartage = $datePartage;
+        return $this;
+    }
+}

@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}<title>Liste des conteneurs</title> {% endblock %}
+{% block scriptJs %}<script src="{{ asset('js/searchContainers.js') }}"></script>{% endblock %}
+
+{% block page_content %}
+<main>
+    <h2 class="mb-4">Conteneurs Docker en cours d’exécution</h2>
+
+    <div class="mb-3">
+        <input type="text" id="searchInput" class="form-control" placeholder="Rechercher par nom ou ID...">
+    </div>
+
+    <table class="table table-striped" id="containersTable">
+        <thead>
+        <tr>
+            <th>Nom</th>
+            <th>ID</th>
+            <th>Statut</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for c in containers %}
+            <tr>
+                <td>{{ c.name }}</td>
+                <td>{{ c.id }}</td>
+                <td>{{ c.status }}</td>
+                <td>
+                    <a href="{{ path('container_start', {'id': c.id}) }}" class="btn btn-success btn-sm">Run</a>
+                    <a href="{{ path('container_stop', {'id': c.id}) }}" class="btn btn-warning btn-sm">Down</a>
+                    <a href="{{ path('container_remove', {'id': c.id}) }}" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ce conteneur ?')">Delete</a>
+                </td>
+
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="3" class="text-center">Aucun conteneur trouvé.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</main>
+{% endblock %}

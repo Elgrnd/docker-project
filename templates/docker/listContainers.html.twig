@@ -1,12 +1,17 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}<title>Liste des conteneurs</title> {% endblock %}
+{% block scriptJs %}<script src="{{ asset('js/searchContainers.js') }}"></script>{% endblock %}
 
 {% block page_content %}
 <main>
     <h2 class="mb-4">Conteneurs Docker en cours d’exécution</h2>
 
-    <table class="table table-striped">
+    <div class="mb-3">
+        <input type="text" id="searchInput" class="form-control" placeholder="Rechercher par nom ou ID...">
+    </div>
+
+    <table class="table table-striped" id="containersTable">
         <thead>
         <tr>
             <th>Nom</th>

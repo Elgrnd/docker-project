@@ -32,4 +32,26 @@ final class DockerController extends AbstractController
             'controller_name' => 'DockerController',
         ]);
     }
+    #[Route('/container/{id}/start', name: 'container_start')]
+    public function start(string $id, DockerService $dockerService): Response
+    {
+        $dockerService->startContainer($id);
+        return $this->redirectToRoute('listContainers');
+    }
+
+    #[Route('/container/{id}/stop', name: 'container_stop')]
+    public function stop(string $id, DockerService $dockerService): Response
+    {
+        $dockerService->stopContainer($id);
+        return $this->redirectToRoute('listContainers');
+    }
+
+    #[Route('/container/{id}/remove', name: 'container_remove')]
+    public function remove(string $id, DockerService $dockerService): Response
+    {
+        $dockerService->removeContainer($id);
+        return $this->redirectToRoute('listContainers');
+    }
+
+
 }

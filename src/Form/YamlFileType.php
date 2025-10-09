@@ -15,9 +15,6 @@ class YamlFileType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('nameFile', TextType::class, [
-                'label' => 'Nom du fichier',
-            ])
             ->add('yamlFile', FileType::class, [
                 'label' => 'Fichier YAML',
                 'mapped' => false,
@@ -29,6 +26,8 @@ class YamlFileType extends AbstractType
                             'text/plain',
                             'application/x-yaml',
                             'application/yaml',
+                            'text/yaml',
+                            'text/x-yaml',
                         ],
                         'mimeTypesMessage' => 'Veuillez importer un fichier YAML valide',
                     ]),
@@ -42,7 +41,7 @@ class YamlFileType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'data_class' => YamlFile::class,
+            'data_class' => null,
         ]);
     }
 }

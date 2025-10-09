@@ -20,14 +20,12 @@ final class YamlFileController extends AbstractController
     {
         $utilisateur = $this->getUser();
 
-        if ($utilisateur == null) {
+        if ($utilisateur === null) {
             $this->addFlash('error', 'Vous devez être connecté pour importer un fichier');
             return $this->redirectToRoute('connexion');
         }
 
-        $yamlFile = new YamlFile();
-
-        $form = $this->createForm(YamlFileType::class, $yamlFile, [
+        $form = $this->createForm(YamlFileType::class, null, [
             'method' => 'POST',
             'action' => $this->generateUrl('yaml_upload'),
         ]);
@@ -38,42 +36,51 @@ final class YamlFileController extends AbstractController
 
             $uploadedFile = $form->get('yamlFile')->getData();
 
+            if (!$uploadedFile) {
+                $this->addFlash('error', 'Aucun fichier reçu.');
+                return $this->redirectToRoute('yaml_upload');
+            }
+
+            $extension = strtolower($uploadedFile->getClientOriginalExtension());
+            if (!in_array($extension, ['yaml', 'yml'])) {
+                $this->addFlash('error', 'Seuls les fichiers .yaml ou .yml sont autorisés.');
+                return $this->redirectToRoute('yaml_upload');
+            }
+
+            $nameFile = $uploadedFile->getClientOriginalName();
+
             $results = $entityManager
                 ->getRepository(YamlFile::class)
-                ->findByNomEtUtilisateur($yamlFile->getNameFile(), $utilisateur->getUserIdentifier());
+                ->findByNomEtUtilisateur($nameFile, $utilisateur->getUserIdentifier());
 
             if (count($results) > 0) {
                 $this->addFlash('error', sprintf(
                     'Un fichier nommé "%s" existe déjà pour votre compte.',
-                    $yamlFile->getNameFile()
+                    $nameFile
                 ));
                 return $this->redirectToRoute('yaml_upload');
             }
 
-            if ($uploadedFile) {
+            try {
+                $content = file_get_contents($uploadedFile->getRealPath());
 
-                if ($uploadedFile) {
-                    $extension = strtolower($uploadedFile->getClientOriginalExtension());
-                    if (!in_array($extension, ['yaml', 'yml'])) {
-                        $this->addFlash('error', 'Seuls les fichiers .yaml ou .yml sont autorisés.');
-                        return $this->redirectToRoute('yaml_upload');
-                    }
-                }
-
-                try {
-                    $content = file_get_contents($uploadedFile->getRealPath());
-                    $yamlFile->setNameFile($uploadedFile->getClientOriginalName());
-                    $yamlFile->setBodyFile($content);
-                    $yamlFile->setLogin($utilisateur->getUserIdentifier());
-
-                    $entityManager->persist($yamlFile);
-                    $entityManager->flush();
-
-                    $this->addFlash('success', 'Fichier YAML importé avec succès.');
+                if (trim($content) === '') {
+                    $this->addFlash('error', 'Le fichier YAML ne peut pas être vide');
                     return $this->redirectToRoute('yaml_upload');
-                } catch (FileException $e) {
-                    $this->addFlash('error', 'Erreur lors de la lecture du fichier');
                 }
+
+                $yamlFile = new YamlFile();
+                $yamlFile->setNameFile($nameFile);
+                $yamlFile->setBodyFile($content);
+                $yamlFile->setLogin($utilisateur->getUserIdentifier());
+
+                $entityManager->persist($yamlFile);
+                $entityManager->flush();
+
+                $this->addFlash('success', 'Fichier YAML importé avec succès.');
+                return $this->redirectToRoute('yaml_upload');
+            } catch (FileException $e) {
+                $this->addFlash('error', 'Erreur lors de la lecture du fichier');
             }
         }
 

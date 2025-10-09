@@ -8,7 +8,8 @@ class DockerService
     {
 
         $dockerPath = '/usr/bin/docker';
-        $cmd = $all ? "$dockerPath ps -a --format \"{{.ID}}|{{.Names}}|{{.Status}}\" 2>&1" : "$dockerPath ps --format \"{{.ID}}|{{.Names}}|{{.Status}}\" 2>&1";
+        $cmd = $all ? "$dockerPath ps -a --format \"{{.ID}}|{{.Names}}|{{.Status}}\" 2>&1" :
+            "$dockerPath ps -a --format \"{{.ID}}|{{.Names}}|{{.Status}}\" 2>&1";
         $output = shell_exec($cmd);
 
 

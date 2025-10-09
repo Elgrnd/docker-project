@@ -38,6 +38,21 @@ final class EtrePartageController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+
+            $yamlFile = $etrePartage->getYamlFile();
+            $cible = $etrePartage->getUtilisateur();
+
+            if ($cible === $utilisateur) {
+                $this->addFlash('error', 'Vous ne pouvez pas vous partager un fichier à vous-même.');
+                return $this->redirectToRoute('partagerYamlFileAdmin');
+            }
+
+            $repository = $entityManager->getRepository(EtrePartage::class);
+            if ($repository->existeDeja($cible, $yamlFile)) {
+                $this->addFlash('error', 'Ce fichier a déjà été partagé avec cet utilisateur.');
+                return $this->redirectToRoute('partagerYamlFileAdmin');
+            }
+
             $etrePartage->setDatePartage(new \DateTimeImmutable());
 
             $entityManager->persist($etrePartage);

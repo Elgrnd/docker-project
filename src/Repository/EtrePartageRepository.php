@@ -3,6 +3,8 @@
 namespace App\Repository;
 
 use App\Entity\EtrePartage;
+use App\Entity\Utilisateur;
+use App\Entity\YamlFile;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -15,6 +17,18 @@ class EtrePartageRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, EtrePartage::class);
     }
+
+    public function existeDeja(Utilisateur $utilisateur, YamlFile $yamlFile): bool
+    {
+        return $this->createQueryBuilder('ep')
+                ->andWhere('ep.utilisateur = :utilisateur')
+                ->andWhere('ep.yamlFile = :yamlFile')
+                ->setParameter('utilisateur', $utilisateur)
+                ->setParameter('yamlFile', $yamlFile)
+                ->getQuery()
+                ->getOneOrNullResult() !== null;
+    }
+
 
     //    /**
     //     * @return EtrePartage[] Returns an array of EtrePartage objects

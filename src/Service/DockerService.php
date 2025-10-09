@@ -45,7 +45,8 @@ class DockerService
     }
 
     private function executeCommand(string $action, string $id) : array {
-        $command = escapeshellcmd("$this->dockerPath $action" . escapeshellarg($id) . " 2>&1");
+        $command = $this->dockerPath . " " . escapeshellcmd($action) . " " . escapeshellarg($id) . " 2>&1";
+        var_dump($command);
         exec($command, $output, $returnCode);
         if ($returnCode === 0) {
             return [

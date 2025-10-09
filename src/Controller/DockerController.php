@@ -40,7 +40,7 @@ final class DockerController extends AbstractController
         if ($result['success']) {
             $this->addFlash('success', 'Container started successfully.');
         } else {
-            $this->addFlash('danger', $result['message']);
+            $this->addFlash('error', $result['message']);
         }
 
         return $this->redirectToRoute('listContainers');
@@ -54,7 +54,7 @@ final class DockerController extends AbstractController
         if ($result['success']) {
             $this->addFlash('success', 'Container stopped successfully.');
         } else {
-            $this->addFlash('danger', $result['message']);
+            $this->addFlash('error', $result['message']);
         }
 
         return $this->redirectToRoute('listContainers');
@@ -68,7 +68,7 @@ final class DockerController extends AbstractController
         if ($result['success']) {
             $this->addFlash('success', 'Container removed successfully.');
         } else {
-            $this->addFlash('danger', $result['message']);
+            $this->addFlash('error', $result['message']);
         }
 
         return $this->redirectToRoute('listContainers');

@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UtilisateurRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -45,6 +47,14 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\NotNull]
     #[Assert\Email(message: "Cette adresse email n'est pas valide !")]
     private ?string $adresseMail = null;
+
+    #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: YamlFile::class, orphanRemoval: true)]
+    private Collection $yamlFiles;
+
+    public function __construct()
+    {
+        $this->yamlFiles = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -124,6 +134,32 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     public function setAdresseMail(string $adresseMail): static
     {
         $this->adresseMail = $adresseMail;
+
+        return $this;
+    }
+
+    public function getYamlFiles(): Collection
+    {
+        return $this->yamlFiles;
+    }
+
+    public function addYamlFile(YamlFile $yamlFile): static
+    {
+        if (!$this->yamlFiles->contains($yamlFile)) {
+            $this->yamlFiles->add($yamlFile);
+            $yamlFile->setUtilisateur($this);
+        }
+
+        return $this;
+    }
+
+    public function removeYamlFile(YamlFile $yamlFile): static
+    {
+        if ($this->yamlFiles->removeElement($yamlFile)) {
+            if ($yamlFile->getUtilisateur() === $this) {
+                $yamlFile->setUtilisateur(null);
+            }
+        }
 
         return $this;
     }

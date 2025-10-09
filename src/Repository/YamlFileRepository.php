@@ -2,9 +2,11 @@
 
 namespace App\Repository;
 
+use App\Entity\Utilisateur;
 use App\Entity\YamlFile;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @extends ServiceEntityRepository<YamlFile>
@@ -16,21 +18,18 @@ class YamlFileRepository extends ServiceEntityRepository
         parent::__construct($registry, YamlFile::class);
     }
 
-    public function findByNomEtUtilisateur(string $nomFichier, string $utilisateur): array
+    public function findByNomEtUtilisateur(string $nomFichier, UserInterface $utilisateur): array
     {
         return $this->findBy([
             'nameFile' => $nomFichier,
-            'login' => $utilisateur,
+            'utilisateur' => $utilisateur,
         ]);
     }
 
-    public function findByLogin(string $login) : array {
-        return $this->createQueryBuilder('y')
-            ->andWhere('y.login = :login')
-            ->setParameter('login', $login)
-            ->orderBy('y.nameFile', 'ASC')
-            ->getQuery()
-            ->getResult();
+    public function findByUtilisateur(UserInterface $utilisateur) : array {
+        return $this->findBy([
+            'utilisateur' => $utilisateur,
+        ]);
     }
 
     //    /**

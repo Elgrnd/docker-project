@@ -25,8 +25,9 @@ class YamlFile
     #[ORM\Column(type: Types::TEXT)]
     private ?string $bodyFile = null;
 
-    #[ORM\Column]
-    private ?string $login = null;
+    #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'yamlFiles')]
+    #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
+    private ?Utilisateur $utilisateur = null;
 
     public function getId(): ?int
     {
@@ -57,15 +58,14 @@ class YamlFile
         return $this;
     }
 
-    public function getLogin(): ?int
+    public function getUtilisateur(): ?Utilisateur
     {
-        return $this->login;
+        return $this->utilisateur;
     }
 
-    public function setLogin(string $login): static
+    public function setUtilisateur(?Utilisateur $utilisateur): static
     {
-        $this->login = $login;
-
+        $this->utilisateur = $utilisateur;
         return $this;
     }
 }

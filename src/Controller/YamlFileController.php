@@ -51,6 +51,15 @@ final class YamlFileController extends AbstractController
             }
 
             if ($uploadedFile) {
+
+                if ($uploadedFile) {
+                    $extension = strtolower($uploadedFile->getClientOriginalExtension());
+                    if (!in_array($extension, ['yaml', 'yml'])) {
+                        $this->addFlash('error', 'Seuls les fichiers .yaml ou .yml sont autorisés.');
+                        return $this->redirectToRoute('yaml_upload');
+                    }
+                }
+
                 try {
                     $content = file_get_contents($uploadedFile->getRealPath());
                     $yamlFile->setNameFile($uploadedFile->getClientOriginalName());

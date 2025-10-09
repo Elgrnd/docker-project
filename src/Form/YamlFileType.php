@@ -33,6 +33,9 @@ class YamlFileType extends AbstractType
                         'mimeTypesMessage' => 'Veuillez importer un fichier YAML valide',
                     ]),
                 ],
+                'attr' => [
+                    'accept' => '.yaml,.yml'
+                ],
             ]);
     }
 

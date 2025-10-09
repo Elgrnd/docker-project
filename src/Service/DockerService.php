@@ -28,4 +28,20 @@ class DockerService
         return $containers;
     }
 
+    public function startContainer(string $id): void
+    {
+        shell_exec("/usr/bin/docker start " . escapeshellarg($id));
+    }
+
+    public function stopContainer(string $id): void
+    {
+        shell_exec("/usr/bin/docker stop " . escapeshellarg($id));
+    }
+
+    public function removeContainer(string $id): void
+    {
+        shell_exec("/usr/bin/docker rm " . escapeshellarg($id));
+    }
+
+
 }

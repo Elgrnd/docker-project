@@ -4,7 +4,6 @@ namespace App\Entity;
 
 use App\Repository\EtrePartageRepository;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: EtrePartageRepository::class)]
 class EtrePartage
@@ -14,15 +13,13 @@ class EtrePartage
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 180)]
-    #[Assert\NotNull]
-    #[Assert\NotBlank]
-    #[Assert\Length(min: 4, minMessage: 'Il faut au moins 4 caractères!')]
-    #[Assert\Length(max: 200, maxMessage: 'Il faut moins de 200 caractères!')]
-    private ?string $login = null;
+    #[ORM\ManyToOne(targetEntity: Utilisateur::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Utilisateur $utilisateur = null;
 
-    #[ORM\Column]
-    private ?int $idFile = null;
+    #[ORM\ManyToOne(targetEntity: YamlFile::class)]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?YamlFile $yamlFile = null;
 
     #[ORM\Column(type: 'datetime_immutable')]
     private ?\DateTimeImmutable $datePartage = null;
@@ -32,27 +29,25 @@ class EtrePartage
         return $this->id;
     }
 
-    public function getLogin(): ?string
+    public function getUtilisateur(): ?Utilisateur
     {
-        return $this->login;
+        return $this->utilisateur;
     }
 
-    public function setLogin(string $login): static
+    public function setUtilisateur(?Utilisateur $utilisateur): static
     {
-        $this->login = $login;
-
+        $this->utilisateur = $utilisateur;
         return $this;
     }
 
-    public function getIdFile(): ?int
+    public function getYamlFile(): ?YamlFile
     {
-        return $this->idFile;
+        return $this->yamlFile;
     }
 
-    public function setIdFile(int $idFile): static
+    public function setYamlFile(?YamlFile $yamlFile): static
     {
-        $this->idFile = $idFile;
-
+        $this->yamlFile = $yamlFile;
         return $this;
     }
 
@@ -64,7 +59,6 @@ class EtrePartage
     public function setDatePartage(\DateTimeImmutable $datePartage): static
     {
         $this->datePartage = $datePartage;
-
         return $this;
     }
 }

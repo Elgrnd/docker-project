@@ -1,9 +1,9 @@
-{# templates/docker/containers.html.twig #}
 {% extends 'base.html.twig' %}
 
-{% block title %}Liste des conteneurs{% endblock %}
+{% block title %}Liste des conteneurs {% endblock %}
 
-{% block body %}
+{% block page_content %}
+<main>
     <h2 class="mb-4">Conteneurs Docker en cours d’exécution</h2>
 
     <table class="table table-striped">
@@ -28,4 +28,5 @@
         {% endfor %}
         </tbody>
     </table>
+</main>
 {% endblock %}

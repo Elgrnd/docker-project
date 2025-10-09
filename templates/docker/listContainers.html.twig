@@ -20,6 +20,12 @@
                 <td>{{ c.name }}</td>
                 <td>{{ c.id }}</td>
                 <td>{{ c.status }}</td>
+                <td>
+                    <a href="{{ path('container_start', {'id': c.id}) }}" class="btn btn-success btn-sm">Run</a>
+                    <a href="{{ path('container_stop', {'id': c.id}) }}" class="btn btn-warning btn-sm">Down</a>
+                    <a href="{{ path('container_remove', {'id': c.id}) }}" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ce conteneur ?')">Delete</a>
+                </td>
+
             </tr>
         {% else %}
             <tr>

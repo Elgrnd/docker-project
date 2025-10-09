@@ -14,7 +14,7 @@ final class DockerController extends AbstractController
     public function list(DockerService $dockerService): Response
     {
         $isAdmin = $this->isGranted('ROLE_ADMIN');
-        $containers = $dockerService->listContainers($isAdmin);
+        $containers = $dockerService->listContainers();
 
         if(!$isAdmin) {
             $newContainer = [];

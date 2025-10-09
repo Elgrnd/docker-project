@@ -4,14 +4,12 @@ namespace App\Service;
 
 class DockerService
 {
-    public function listContainers(bool $all = false): array
+    public function listContainers(): array
     {
 
         $dockerPath = '/usr/bin/docker';
-        $cmd = $all ? "$dockerPath ps -a --format \"{{.ID}}|{{.Names}}|{{.Status}}\" 2>&1" :
-            "$dockerPath ps -a --format \"{{.ID}}|{{.Names}}|{{.Status}}\" 2>&1";
+        $cmd = "$dockerPath ps -a --format \"{{.ID}}|{{.Names}}|{{.Status}}\" 2>&1";
         $output = shell_exec($cmd);
-
 
         $containers = [];
 

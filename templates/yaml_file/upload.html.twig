@@ -1,0 +1,19 @@
+{% extends "base.html.twig" %}
+
+{% block title %}<title>Uploader un fichier YAML</title>{% endblock %}
+
+{% block page_content %}
+    <main class="center basic-form">
+        <fieldset>
+            <legend>Uploader un fichier YAML</legend>
+
+            {{ form_start(formulaireYaml, {'attr': {'enctype': 'multipart/form-data'}}) }}
+            {{ form_label(formulaireYaml.nameFile) }}
+            {{ form_widget(formulaireYaml.nameFile) }}
+            {{ form_label(formulaireYaml.yamlFile) }}
+            {{ form_widget(formulaireYaml.yamlFile) }}
+            <button type="submit" class="btn">Envoyer</button>
+            {{ form_end(formulaireYaml) }}
+        </fieldset>
+    </main>
+{% endblock %}

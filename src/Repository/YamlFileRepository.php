@@ -16,6 +16,23 @@ class YamlFileRepository extends ServiceEntityRepository
         parent::__construct($registry, YamlFile::class);
     }
 
+    public function findByNomEtUtilisateur(string $nomFichier, string $utilisateur): array
+    {
+        return $this->findBy([
+            'nameFile' => $nomFichier,
+            'login' => $utilisateur,
+        ]);
+    }
+
+    public function findByLogin(string $login) : array {
+        return $this->createQueryBuilder('y')
+            ->andWhere('y.login = :login')
+            ->setParameter('login', $login)
+            ->orderBy('y.nameFile', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return YamlFile[] Returns an array of YamlFile objects
     //     */

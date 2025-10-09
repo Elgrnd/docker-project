@@ -36,6 +36,7 @@ final class DockerController extends AbstractController
     public function start(string $id, DockerService $dockerService): Response
     {
         $dockerService->startContainer($id);
+        $this->addFlash('success', 'Container started');
         return $this->redirectToRoute('listContainers');
     }
 

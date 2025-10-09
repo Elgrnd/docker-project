@@ -4,11 +4,13 @@ namespace App\Service;
 
 class DockerService
 {
+
+    private string $dockerPath = '/usr/bin/docker';
+
     public function listContainers(): array
     {
 
-        $dockerPath = '/usr/bin/docker';
-        $cmd = "$dockerPath ps -a --format \"{{.ID}}|{{.Names}}|{{.Status}}\" 2>&1";
+        $cmd = "$this->dockerPath ps -a --format \"{{.ID}}|{{.Names}}|{{.Status}}\" 2>&1";
         $output = shell_exec($cmd);
 
         $containers = [];
@@ -27,19 +29,35 @@ class DockerService
         return $containers;
     }
 
-    public function startContainer(string $id): void
+    public function startContainer(string $id): array
     {
-        shell_exec("/usr/bin/docker start " . escapeshellarg($id));
+        return $this->executeCommand("start", $id);
     }
 
-    public function stopContainer(string $id): void
+    public function stopContainer(string $id): array
     {
-        shell_exec("/usr/bin/docker stop " . escapeshellarg($id));
+        return $this->executeCommand("stop", $id);
     }
 
-    public function removeContainer(string $id): void
+    public function removeContainer(string $id): array
     {
-        shell_exec("/usr/bin/docker rm " . escapeshellarg($id));
+        return $this->executeCommand("rm", $id);
+    }
+
+    private function executeCommand(string $action, string $id) : array {
+        $command = escapeshellcmd("$this->dockerPath $action" . escapeshellarg($id) . " 2>&1");
+        exec($command, $output, $returnCode);
+        if ($returnCode === 0) {
+            return [
+                'success' => true,
+                'message' => "Container $action successful: " . implode(' ', $output)
+            ];
+        } else {
+            return [
+                'success' => false,
+                'message' => "Error while running '$action' on container $id: " . implode(' ', $output)
+            ];
+        }
     }
 
 

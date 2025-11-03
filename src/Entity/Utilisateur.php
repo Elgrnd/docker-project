@@ -51,6 +51,9 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: YamlFile::class, orphanRemoval: true)]
     private Collection $yamlFiles;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $proxmoxVmid = null;
+
     public function __construct()
     {
         $this->yamlFiles = new ArrayCollection();
@@ -160,6 +163,18 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
                 $yamlFile->setUtilisateur(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getProxmoxVmid(): ?int
+    {
+        return $this->proxmoxVmid;
+    }
+
+    public function setProxmoxVmid(?int $proxmoxVmid): static
+    {
+        $this->proxmoxVmid = $proxmoxVmid;
 
         return $this;
     }

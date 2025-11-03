@@ -8,11 +8,13 @@ use App\Form\YamlFileType;
 use App\Service\FlashMessageHelperInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use App\Repository\YamlFileRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 final class YamlFileController extends AbstractController
 {
@@ -104,30 +106,29 @@ final class YamlFileController extends AbstractController
         ]);
     }
 
-    #[Route('/yamlfile/{id}/supprimer', name: 'delete', methods: ['POST'])]
-    public function supprimerYamlFile(YamlFile $yamlFile, Request $request, EntityManagerInterface $entityManager, FlashMessageHelperInterface $flashMessageHelperInterface): Response
+    #[IsGranted('ROLE_USER')]
+    #[Route('/yamlfile/supprimer/{id}', name: 'deleteYamlFile', options: ["expose" => true], methods: ['DELETE'])]
+    public function supprimerYamlFile(?YamlFile $yamlFile, Request $request, EntityManagerInterface $entityManager, FlashMessageHelperInterface $flashMessageHelperInterface): Response
     {
         $utilisateur = $this->getUser();
 
-        if ($utilisateur === null) {
-            $this->addFlash('error', 'Vous devez être connecté pour supprimer un fichier');
-            return $this->redirectToRoute('connexion');
+        if (!$yamlFile) {
+            return new JsonResponse(null,Response::HTTP_NOT_FOUND);
         }
 
         if ($yamlFile->getUtilisateur() !== $utilisateur) {
-            $this->addFlash("error", "Ce fichier ne vous appartient pas");
-            return $this->redirectToRoute('repertoire');
+            return new JsonResponse(null, Response::HTTP_FORBIDDEN);
         }
 
-        if (!$this->isCsrfTokenValid('delete'.$yamlFile->getId(), $request->request->get('_token'))) {
-            $this->addFlash('error', 'Token CSRF invalide');
-            return $this->redirectToRoute('repertoire');
+        $submittedToken = $request->getPayload()->get('_token');
+
+        if (!$this->isCsrfTokenValid('delete'.$yamlFile->getId(), $submittedToken)) {
+            return new JsonResponse(null, Response::HTTP_FORBIDDEN);
         }
 
         $entityManager->remove($yamlFile);
         $entityManager->flush();
 
-        $this->addFlash("success", "Fichier supprimé avec succès");
-        return $this->redirectToRoute('repertoire');
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 }

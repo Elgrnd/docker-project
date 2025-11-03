@@ -13,23 +13,35 @@ function cacherBlur() {
     document.body.style.overflow = "auto";
 }
 
-async function deleteYamlFile(url, element) {
-    if (!confirm("Supprimer ce fichier ?")) return;
+async function deleteYamlFile(event) {
+    const fichierId = event.currentTarget.dataset.fichierId;
+    const csrfToken = event.currentTarget.dataset.csrfToken;
 
-    alert("Suppression en cours...")
+    let url = Routing.generate("deleteYamlFile",  {"id": fichierId});
 
-    const token = element.dataset.token;
-    const formData = new FormData();
-    formData.append('_token', token);
-
-    const response = await fetch(url, { method: 'POST', body: formData });
-
-    if (response.ok) {
-        location.reload();
-    } else {
-        alert('Impossible de supprimer le fichier.');
+    const response = await fetch(url, {
+        method: 'DELETE',
+        body: JSON.stringify({
+            '_token': csrfToken
+        })});
+    if (response.status === 204) {
+        const button = event.target;
+        const fichier = button.closest(".file-item");
+        fichier.remove();
+        const fileList = document.querySelector('.file-list ul');
+        if (fileList && fileList.children.length === 0) {
+            // Remplacer la liste vide par le message
+            fileList.remove();
+            const fileListContainer = document.querySelector('.file-list');
+            fileListContainer.innerHTML = '<p class="empty-msg">Aucun fichier dans le répertoire</p>';
+        }
     }
 }
+
+const buttons = document.getElementsByClassName("supprimerFichier");
+Array.from(buttons).forEach(function (button) {
+    button.addEventListener("click", deleteYamlFile);
+});
 
 
 

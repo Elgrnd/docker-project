@@ -1,11 +1,10 @@
 {% extends 'base.html.twig' %}
 {% block title %}<title>Répertoire perso</title>{% endblock %}
 {% block page_content %}
+{% block scriptJs %} <script defer type="text/javascript" src="{{ asset('js/gestionEvent.js') }}"></script> {% endblock %}
 
-    <!-- Overlay blur -->
     <div id="overlayBlur" class="overlay-blur" onclick="cacherBlur()"></div>
 
-    <!-- Modal pour afficher le contenu -->
     <div id="modalContent" class="modal-yaml">
         <div class="modal-header">
             <span class="close-modal" onclick="cacherBlur()">&times;</span>
@@ -29,11 +28,10 @@
                                    onclick="afficherContenuYamlFile('{{ file.bodyFile|escape('js') }}')"></i>
                                 <i class="bi bi-download download-icon" title="Télécharger"></i>
                                 <i class="bi bi-pencil edit-icon" title="Modifier"></i>
-                                <i class="bi bi-trash bin-icon"
-                                   title="Supprimer"
-                                   data-token="{{ csrf_token('delete' ~ file.id) }}"
-                                   onclick="deleteYamlFile('{{ path('delete', {'id': file.id}) }}', this)"></i>
-
+                                <button data-fichier-id="{{ file.id }}" class="supprimerFichier"
+                                        data-csrf-token="{{ csrf_token('delete' ~ file.id) }}">
+                                    <i class="bi bi-trash bin-icon"></i>
+                                </button>
                             </div>
                         </li>
                     {% endfor %}

@@ -41,7 +41,7 @@ class ProxmoxService
             'storage' => 'local-lvm',
         ];
 
-        $response = $this->client->request(
+        $this->client->request(
             'POST',
             "{$this->apiUrl}/nodes/proxmox/qemu/100/clone",
             [
@@ -55,5 +55,23 @@ class ProxmoxService
         );
 
         return $vmid;
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     */
+    public function deleteVM(string $vmid): bool {
+        $response = $this->client->request(
+            'DELETE',
+            "{$this->apiUrl}/nodes/proxmox/qemu/$vmid",
+            [
+                'headers' => [
+                    'Authorization' => "PVEAPIToken={$this->tokenId}={$this->secret}",
+                ],
+                'verify_peer' => false,
+                'verify_host' => false,
+            ]
+        );
+        return in_array($response->getStatusCode(), [200, 204]);
     }
 }

@@ -2,8 +2,8 @@
 
 namespace App\Service;
 
+use phpDocumentor\Reflection\Types\Integer;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
-use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
@@ -21,14 +21,13 @@ class ProxmoxService
         $this->client = $client;
         $this->apiUrl = $_ENV['PROXMOX_API_URL'];
         $this->tokenId = $_ENV['PROXMOX_TOKEN_ID'];
-        $this->secret = $_ENV['PROXMOX_SECRET'];
+        $this->secret = $_ENV['PROXMOX_TOKEN_SECRET'];
     }
 
     /**
      * @throws TransportExceptionInterface
      * @throws ServerExceptionInterface
      * @throws RedirectionExceptionInterface
-     * @throws DecodingExceptionInterface
      * @throws ClientExceptionInterface
      */
     public function cloneUserVM(string $username): ?int
@@ -36,9 +35,10 @@ class ProxmoxService
         $vmid = rand(200, 999);
         $data = [
             'newid' => $vmid,
-            'name' => "vm_$username",
+            'name' => "vm-$username",
             'full' => 1,
             'target' => 'proxmox',
+            'storage' => 'local-lvm',
         ];
 
         $response = $this->client->request(
@@ -49,6 +49,8 @@ class ProxmoxService
                     'Authorization' => "PVEAPIToken={$this->tokenId}={$this->secret}",
                 ],
                 'body' => $data,
+                'verify_peer' => false,
+                'verify_host' => false,
             ]
         );
 

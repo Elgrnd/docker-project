@@ -14,11 +14,19 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use Symfony\Component\ExpressionLanguage\Expression;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 final class UtilisateurController extends AbstractController
 {
+    public function __construct(UtilisateurRepository $repository)
+    {
+        $this->repository = $repository;
+    }
+
     #[Route('/', name:'index', methods:['GET'])]
-    public function index() {
+    public function index(): Response
+    {
         return $this->render('base.html.twig');
     }
 
@@ -61,5 +69,14 @@ final class UtilisateurController extends AbstractController
         return $this->render('utilisateur/connexion.html.twig', ['lastUsername' => $lastUsername]);
     }
 
+    #[IsGranted(new Expression("is_granted('ROLE_ADMIN')"))]
+    #[Route('/panneauAdmin',  name: 'panneauAdmin', methods: ['GET'])]
+    public function panneauAdmin(): Response
+    {
+        $utilisateurs = $this->repository->findAll();
+        return $this->render("utilisateur/panneauAdmin.html.twig", [
+            'utilisateurs' => $utilisateurs
+        ]);
+    }
 
 }

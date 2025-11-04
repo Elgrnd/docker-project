@@ -21,9 +21,11 @@ class AuthentificationSubscriber
     #[AsEventListener]
     public function loginSuccess(LoginSuccessEvent $event) {
         if($event->getAuthenticator()) {
-            $vmId = $this->proxmoxService->cloneUserVM($event->getUser()->getLogin());
-            $event->getUser()->setProxmoxVmid($vmId);
-            $this->entityManager->flush();
+            if($event->getUser()->getProxmoxVmid() === null) {
+                $vmId = $this->proxmoxService->cloneUserVM($event->getUser()->getLogin());
+                $event->getUser()->setProxmoxVmid($vmId);
+                $this->entityManager->flush();
+            }
 
             $flashBag = $this->requestStack->getSession()->getFlashBag();
             $flashBag->add("success", "Connexion réussie !");

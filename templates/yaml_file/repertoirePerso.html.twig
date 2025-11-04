@@ -1,7 +1,8 @@
 {% extends 'base.html.twig' %}
 {% block title %}<title>Répertoire perso</title>{% endblock %}
 {% block page_content %}
-{% block scriptJs %} <script defer type="text/javascript" src="{{ asset('js/gestionEvent.js') }}"></script> {% endblock %}
+    {% block scriptJs %}
+        <script defer type="text/javascript" src="{{ asset('js/gestionEvent.js') }}"></script> {% endblock %}
 
     <div id="overlayBlur" class="overlay-blur" onclick="cacherBlur()"></div>
 
@@ -27,10 +28,12 @@
                                 <i class="bi bi-eye view-icon" title="Afficher"
                                    onclick="afficherContenuYamlFile('{{ file.bodyFile|escape('js') }}')"></i>
                                 <i class="bi bi-download download-icon" title="Télécharger"></i>
-                                <i class="bi bi-pencil edit-icon" title="Modifier"></i>
+                                <a href="{{ path('modifierYamlFile', {"id": file.id}) }}">
+                                    <i class="bi bi-pencil edit-icon" title="Modifier"></i>
+                                </a>
                                 <button data-fichier-id="{{ file.id }}" class="supprimerFichier"
                                         data-csrf-token="{{ csrf_token('delete' ~ file.id) }}">
-                                    <i class="bi bi-trash bin-icon"></i>
+                                    <i class="bi bi-trash bin-icon" title="Supprimer"></i>
                                 </button>
                             </div>
                         </li>
@@ -111,7 +114,7 @@
             padding: 16px;
             max-width: 600px;
             background-color: #fafafa;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
             font-family: system-ui, sans-serif;
         }
 

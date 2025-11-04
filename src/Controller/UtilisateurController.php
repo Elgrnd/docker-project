@@ -10,6 +10,7 @@ use App\Service\FlashMessageHelperInterface;
 use App\Service\UtilisateurManagerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -70,13 +71,33 @@ final class UtilisateurController extends AbstractController
     }
 
     #[IsGranted(new Expression("is_granted('ROLE_ADMIN')"))]
-    #[Route('/panneauAdmin',  name: 'panneauAdmin', methods: ['GET'])]
-    public function panneauAdmin(): Response
+    #[Route('/panneauadmin', name: 'panneauAdmin', methods: ['GET'])]
+    public function panneauAdmin() : Response {
+        return $this->render('utilisateur/panneauAdmin.html.twig');
+    }
+
+    #[IsGranted(new Expression("is_granted('ROLE_ADMIN')"))]
+    #[Route('/panneauadmin/listeutilisateurs',  name: 'listeUtilisateurs', methods: ['GET'])]
+    public function listeUtilisateurs(): Response
     {
         $utilisateurs = $this->repository->findAll();
-        return $this->render("utilisateur/panneauAdmin.html.twig", [
-            'utilisateurs' => $utilisateurs
+        $appRoles = $this->getParameter('security.role_hierarchy.roles');
+        return $this->render('utilisateur/listeUtilisateurs.html.twig', [
+            'utilisateurs' => $utilisateurs,
+            'appRoles' => $appRoles
         ]);
+    }
+
+    #[Route('/panneauadmin/listeutilisateurs/{login}', name: 'changeRole', options: ['expose' => true], methods: ['GET'])]
+    public function changerRole(?Utilisateur $utilisateur, EntityManagerInterface $entityManager): Response
+    {
+        if ($utilisateur != null) {
+            //$utilisateur->setRoles();
+            $entityManager->flush();
+        } else {
+            return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        }
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
 }

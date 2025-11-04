@@ -1,0 +1,52 @@
+{% extends "base.html.twig" %}
+{% block title %}<title>Liste des utilisateurs</title>{% endblock %}
+{% block scriptJs %}
+    <script defer src="{{ asset('js/searchUsers.js') }}"></script>
+    <script defer src="{{ asset('js/changeRole.js') }}"></script>
+{% endblock %}
+{% block page_content %}
+    <main>
+        <h2 class="mb-4">Liste des utilisateurs</h2>
+
+        <div class="mb-3">
+            <input type="text" id="searchInput" class="form-control" placeholder="Rechercher par login ou par ID...">
+        </div>
+
+        <table class="table table-striped" id="usersTable">
+            <thead>
+            <tr>
+                <th>Login</th>
+                <th>ID</th>
+                <th>Rôles</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for u in utilisateurs %}
+                <tr>
+                    <td>{{ u.login }}</td>
+                    <td>{{ u.id }}</td>
+                    <td>
+                        <select class="form-select" id="role-select">
+                            <option value="" selected></option>
+                            {% for roleApp in appRoles|keys %}
+                                <option
+                                        {% if roleApp in u.roles %}
+                                            selected
+                                        {% endif %}
+                                        data-utilisateur-login="{{ u.login }}"
+                                        value="{{ roleApp }}">
+                                    {{ (roleApp|trim('ROLE', 'left'))|trim('_', 'left') }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="3" class="text-center">Aucun utilisateur trouvé.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </main>
+{% endblock %}

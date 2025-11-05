@@ -22,7 +22,7 @@ class YamlFile
     #[ORM\Column(length: 255)]
     #[Assert\NotNull]
     #[Assert\NotBlank]
-    private ?string $nameFile = null;
+    private ?string $nameFile = ".";
 
     #[ORM\Column(type: Types::TEXT)]
     private ?string $bodyFile = null;
@@ -37,6 +37,9 @@ class YamlFile
     #[ORM\ManyToMany(targetEntity: EtrePartageGroupe::class, mappedBy: 'yamlFile')]
     private Collection $etrePartageGroupes;
 
+    #[ORM\ManyToOne(targetEntity: Repertoire::class, inversedBy: 'yamlFiles')]
+    #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
+    private ?Repertoire $repertoire = null;
     public function __construct()
     {
         $this->etrePartageGroupes = new ArrayCollection();
@@ -79,6 +82,18 @@ class YamlFile
     public function setUtilisateur(?Utilisateur $utilisateur): static
     {
         $this->utilisateur = $utilisateur;
+        return $this;
+    }
+
+    // NOUVEAU : Getter/Setter pour Repertoire
+    public function getRepertoire(): ?Repertoire
+    {
+        return $this->repertoire;
+    }
+
+    public function setRepertoire(?Repertoire $repertoire): static
+    {
+        $this->repertoire = $repertoire;
         return $this;
     }
 }

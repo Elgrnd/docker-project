@@ -63,11 +63,18 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\ManyToMany(targetEntity: Groupe::class, mappedBy: 'utilisateurs')]
     private Collection $groupesMembre;
 
+    /**
+     * @var Collection<int, Repertoire>
+     */
+    #[ORM\OneToMany(targetEntity: Repertoire::class, mappedBy: 'utilisateur_id', orphanRemoval: true)]
+    private Collection $repertoires;
+
     public function __construct()
     {
         $this->yamlFiles = new ArrayCollection();
         $this->groupes = new ArrayCollection();
         $this->groupesMembre = new ArrayCollection();
+        $this->repertoires = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -230,6 +237,36 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if ($this->groupesMembre->removeElement($groupesMembre)) {
             $groupesMembre->removeUtilisateur($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Repertoire>
+     */
+    public function getRepertoires(): Collection
+    {
+        return $this->repertoires;
+    }
+
+    public function addRepertoire(Repertoire $repertoire): static
+    {
+        if (!$this->repertoires->contains($repertoire)) {
+            $this->repertoires->add($repertoire);
+            $repertoire->setUtilisateurId($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRepertoire(Repertoire $repertoire): static
+    {
+        if ($this->repertoires->removeElement($repertoire)) {
+            // set the owning side to null (unless already changed)
+            if ($repertoire->getUtilisateurId() === $this) {
+                $repertoire->setUtilisateurId(null);
+            }
         }
 
         return $this;

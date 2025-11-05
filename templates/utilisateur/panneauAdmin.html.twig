@@ -1,0 +1,10 @@
+{% extends "base.html.twig" %}
+{% block title %}<title>Panneau de bord</title>{% endblock %}
+{% block scriptJs %}
+    <script src="{{ asset('js/searchUsers.js') }}"></script>{% endblock %}
+{% block page_content %}
+    <main>
+        <!-- Placeholder -->
+        <div><a class="btn btn-success btn-sm" href="{{ path('listeUtilisateurs') }}">Liste</a></div>
+    </main>
+{% endblock %}

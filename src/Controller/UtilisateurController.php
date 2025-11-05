@@ -10,15 +10,24 @@ use App\Service\FlashMessageHelperInterface;
 use App\Service\UtilisateurManagerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use Symfony\Component\ExpressionLanguage\Expression;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 final class UtilisateurController extends AbstractController
 {
+    public function __construct(UtilisateurRepository $repository)
+    {
+        $this->repository = $repository;
+    }
+
     #[Route('/', name:'index', methods:['GET'])]
-    public function index() {
+    public function index(): Response
+    {
         return $this->render('base.html.twig');
     }
 
@@ -61,5 +70,39 @@ final class UtilisateurController extends AbstractController
         return $this->render('utilisateur/connexion.html.twig', ['lastUsername' => $lastUsername]);
     }
 
+    #[IsGranted(new Expression("is_granted('ROLE_ADMIN')"))]
+    #[Route('/panneauadmin', name: 'panneauAdmin', methods: ['GET'])]
+    public function panneauAdmin() : Response {
+        return $this->render('utilisateur/panneauAdmin.html.twig');
+    }
+
+    #[IsGranted(new Expression("is_granted('ROLE_ADMIN')"))]
+    #[Route('/panneauadmin/listeutilisateurs',  name: 'listeUtilisateurs', methods: ['GET'])]
+    public function listeUtilisateurs(): Response
+    {
+        $utilisateurs = $this->repository->findAll();
+        $appRoles = $this->getParameter('security.role_hierarchy.roles');
+        return $this->render('utilisateur/listeUtilisateurs.html.twig', [
+            'utilisateurs' => $utilisateurs,
+            'appRoles' => $appRoles
+        ]);
+    }
+
+    #[IsGranted(attribute: 'CHANGE_ROLE', subject: 'utilisateur')]
+    #[Route('/panneauadmin/listeutilisateurs/{login}/{role}', name: 'changeRole', options: ['expose' => true], methods: ['POST'])]
+    public function changerRole(?Utilisateur $utilisateur, ?string $role, EntityManagerInterface $entityManager): Response
+    {
+        if ($utilisateur != null) {
+            if ($role === "~") {
+                $utilisateur->setRoles([]);
+            } else {
+                $utilisateur->setRoles([$role]);
+            }
+            $entityManager->flush();
+        } else {
+            return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+        }
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
 
 }

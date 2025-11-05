@@ -14,9 +14,11 @@
     <table class="table table-striped" id="containersTable">
         <thead>
         <tr>
+            <th>Utilisateur</th>
             <th>Nom</th>
             <th>ID</th>
             <th>Statut</th>
+            <th>Actions</th>
         </tr>
         </thead>
         <tbody>
@@ -35,7 +37,7 @@
             </tr>
         {% else %}
             <tr>
-                <td colspan="3" class="text-center">Aucun conteneur trouvé.</td>
+                <td colspan="5" class="text-center">Aucun conteneur trouvé.</td>
             </tr>
         {% endfor %}
         </tbody>

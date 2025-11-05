@@ -60,10 +60,17 @@ final class DockerController extends AbstractController
         ]);
     }
 
-    #[Route('/container/{id}/start', name: 'container_start')]
-    public function start(string $id, DockerService $dockerService, ProxmoxService $proxmoxService): Response
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
+     */
+    #[Route('/container/{vmid}/{id}/start', name: 'container_start')]
+    public function start(string $id, string $vmid, DockerService $dockerService, ProxmoxService $proxmoxService): Response
     {
-        $result = $dockerService->startContainer($id, $proxmoxService->getVMIp($this->getUser()->getProxmoxVmid()));
+        $vmIp = $proxmoxService->getVMIp($vmid);
+        $result = $dockerService->startContainer($id, $vmIp);
 
         if ($result['success']) {
             $this->addFlash('success', 'Container started successfully.');
@@ -74,10 +81,18 @@ final class DockerController extends AbstractController
         return $this->redirectToRoute("listContainers");
     }
 
-    #[Route('/container/{id}/stop', name: 'container_stop')]
-    public function stop(string $id, DockerService $dockerService, ProxmoxService $proxmoxService): Response
+
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
+     */
+    #[Route('/container/{vmid}/{id}/stop', name: 'container_stop')]
+    public function stop(string $id, string $vmid, DockerService $dockerService, ProxmoxService $proxmoxService): Response
     {
-        $result = $dockerService->stopContainer($id, $proxmoxService->getVMIp($this->getUser()->getProxmoxVmid()));
+        $vmIp = $proxmoxService->getVMIp($vmid);
+        $result = $dockerService->stopContainer($id, $vmIp);
 
         if ($result['success']) {
             $this->addFlash('success', 'Container stopped successfully.');
@@ -88,10 +103,17 @@ final class DockerController extends AbstractController
         return $this->redirectToRoute('listContainers');
     }
 
-    #[Route('/container/{id}/remove', name: 'container_remove')]
-    public function remove(string $id, DockerService $dockerService, ProxmoxService $proxmoxService): Response
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
+     */
+    #[Route('/container/{vmid}/{id}/remove', name: 'container_remove')]
+    public function remove(string $id, string $vmid, DockerService $dockerService, ProxmoxService $proxmoxService): Response
     {
-        $result = $dockerService->removeContainer($id, $proxmoxService->getVMIp($this->getUser()->getProxmoxVmid()));
+        $vmIp = $proxmoxService->getVMIp($vmid);
+        $result = $dockerService->removeContainer($id, $vmIp);
 
         if ($result['success']) {
             $this->addFlash('success', 'Container removed successfully.');

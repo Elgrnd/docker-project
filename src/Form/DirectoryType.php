@@ -3,16 +3,15 @@
 namespace App\Form;
 
 use App\Entity\Repertoire;
-use App\Entity\YamlFile;
+use App\Entity\Utilisateur;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\FileType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Security\Core\Security;
-use Symfony\Component\Validator\Constraints\File;
 
-class YamlFileType extends AbstractType
+class DirectoryType extends AbstractType
 {
     private Security $security;
 
@@ -26,36 +25,21 @@ class YamlFileType extends AbstractType
         $user = $this->security->getUser();
 
         $builder
-            ->add('yamlFile', FileType::class, [
-                'label' => 'Fichier YAML',
-                'mapped' => false,
-                'required' => true,
-                'constraints' => [
-                    new File([
-                        'maxSize' => '2M',
-                        'mimeTypes' => [
-                            'text/plain',
-                            'application/x-yaml',
-                            'application/yaml',
-                            'text/yaml',
-                            'text/x-yaml',
-                        ],
-                        'mimeTypesMessage' => 'Veuillez importer un fichier YAML valide',
-                    ]),
-                ],
+            ->add('name', TextType::class, [
+                'label' => 'Nom du répertoire',
                 'attr' => [
-                    'accept' => '.yaml,.yml',
+                    'placeholder' => 'Mon nouveau répertoire',
                     'class' => 'form-control'
                 ],
+                'required' => true
             ])
-            ->add('repertoire', EntityType::class, [
+            ->add('parent', EntityType::class, [
                 'class' => Repertoire::class,
                 'choice_label' => function (Repertoire $repertoire) {
                     return $repertoire->getFullPath();
                 },
-                'label' => 'Répertoire de destination',
-                'required' => true,
-                'placeholder' => 'Sélectionnez un répertoire',
+                'label' => 'Répertoire parent',
+                'required' => false,
                 'attr' => [
                     'class' => 'form-select'
                 ],
@@ -68,15 +52,14 @@ class YamlFileType extends AbstractType
                 // Sélectionner le répertoire racine par défaut
                 'preferred_choices' => function ($repertoire, $key, $value) {
                     return $repertoire->isRoot();
-                },
-                'help' => 'Choisissez le répertoire où sera enregistré votre fichier'
+                }
             ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'data_class' => YamlFile::class,
+            'data_class' => Repertoire::class,
         ]);
     }
 }

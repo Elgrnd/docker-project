@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Repertoire;
 use App\Entity\Utilisateur;
 use App\Form\UtilisateurType;
 use App\Repository\UtilisateurRepository;
@@ -25,20 +26,24 @@ final class UtilisateurController extends AbstractController
         $this->repository = $repository;
     }
 
-    #[Route('/', name:'index', methods:['GET'])]
+    #[Route('/', name: 'index', methods: ['GET'])]
     public function index(): Response
     {
         return $this->render('base.html.twig');
     }
 
     #[Route('/inscription', name: 'inscription', methods: ['GET', 'POST'])]
-    public function inscrire(Request  $request, EntityManagerInterface $entityManager, FlashMessageHelperInterface $flashMessageHelperInterface, UtilisateurManagerInterface $utilisateurManager): Response
+    public function inscrire(Request                     $request,
+                             EntityManagerInterface      $entityManager,
+                             FlashMessageHelperInterface $flashMessageHelperInterface,
+                             UtilisateurManagerInterface $utilisateurManager): Response
     {
         if ($this->isGranted('ROLE_USER')) {
             return $this->redirectToRoute('index');
         }
 
         $utilisateur = new Utilisateur();
+
 
         $form = $this->createForm(UtilisateurType::class,
             $utilisateur,
@@ -47,6 +52,11 @@ final class UtilisateurController extends AbstractController
         $form->handleRequest($request);
         if ($form->isSubmitted() && $form->isValid()) {
             $utilisateurManager->processNewUtilisateur($utilisateur, $form["plainPassword"]->getData());
+            $repertoire = new Repertoire();
+            $repertoire->setUtilisateurId($utilisateur);
+            $repertoire->setName('Répertoire personnel');
+
+            $entityManager->persist($repertoire);
             $entityManager->persist($utilisateur);
             $entityManager->flush();
             $this->addFlash('success', 'Inscription réussie !');
@@ -60,7 +70,7 @@ final class UtilisateurController extends AbstractController
     }
 
     #[Route('/connexion', name: 'connexion', methods: ['GET', 'POST'])]
-    public function connecter(AuthenticationUtils $authenticationUtils) : Response
+    public function connecter(AuthenticationUtils $authenticationUtils): Response
     {
         if ($this->isGranted('ROLE_USER')) {
             return $this->redirectToRoute('index');
@@ -72,12 +82,13 @@ final class UtilisateurController extends AbstractController
 
     #[IsGranted(new Expression("is_granted('ROLE_ADMIN')"))]
     #[Route('/panneauadmin', name: 'panneauAdmin', methods: ['GET'])]
-    public function panneauAdmin() : Response {
+    public function panneauAdmin(): Response
+    {
         return $this->render('utilisateur/panneauAdmin.html.twig');
     }
 
     #[IsGranted(new Expression("is_granted('ROLE_ADMIN')"))]
-    #[Route('/panneauadmin/listeutilisateurs',  name: 'listeUtilisateurs', methods: ['GET'])]
+    #[Route('/panneauadmin/listeutilisateurs', name: 'listeUtilisateurs', methods: ['GET'])]
     public function listeUtilisateurs(): Response
     {
         $utilisateurs = $this->repository->findAll();

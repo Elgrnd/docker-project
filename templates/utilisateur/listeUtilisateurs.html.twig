@@ -26,14 +26,13 @@
                     <td>{{ u.login }}</td>
                     <td>{{ u.id }}</td>
                     <td>
-                        <select class="form-select" id="role-select">
-                            <option value="" selected></option>
+                        <select data-utilisateur-login="{{ u.login }}" class="form-select" id="role-select">
+                            <option value="~" selected></option>
                             {% for roleApp in appRoles|keys %}
                                 <option
                                         {% if roleApp in u.roles %}
                                             selected
                                         {% endif %}
-                                        data-utilisateur-login="{{ u.login }}"
                                         value="{{ roleApp }}">
                                     {{ (roleApp|trim('ROLE', 'left'))|trim('_', 'left') }}
                                 </option>

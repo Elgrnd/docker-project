@@ -1,10 +1,11 @@
-const selectRole = document.getElementById('role-select');
-
-selectRole.addEventListener('selectionchange', function () {
-    changerRole()
+const roleSelectors = document.querySelectorAll('select');
+Array.from(roleSelectors).forEach(function(selector) {
+    selector.addEventListener('change', changerRole)
 })
 
-async function changerRole() {
-    let URL = Routing.generate('changeRole', {"login": selectRole.dataset.utilisateurId})
-    const response = await fetch(URL, {method:"GET"})
+
+async function changerRole(event) {
+    let selectRole = event.target;
+    let URL = Routing.generate('changeRole', {"login": selectRole.dataset.utilisateurLogin, "role": selectRole.value})
+    await fetch(URL, {method:"POST"})
 }

@@ -88,11 +88,16 @@ final class UtilisateurController extends AbstractController
         ]);
     }
 
-    #[Route('/panneauadmin/listeutilisateurs/{login}', name: 'changeRole', options: ['expose' => true], methods: ['GET'])]
-    public function changerRole(?Utilisateur $utilisateur, EntityManagerInterface $entityManager): Response
+    #[IsGranted(attribute: 'CHANGE_ROLE', subject: 'utilisateur')]
+    #[Route('/panneauadmin/listeutilisateurs/{login}/{role}', name: 'changeRole', options: ['expose' => true], methods: ['POST'])]
+    public function changerRole(?Utilisateur $utilisateur, ?string $role, EntityManagerInterface $entityManager): Response
     {
         if ($utilisateur != null) {
-            //$utilisateur->setRoles();
+            if ($role === "~") {
+                $utilisateur->setRoles([]);
+            } else {
+                $utilisateur->setRoles([$role]);
+            }
             $entityManager->flush();
         } else {
             return new JsonResponse(null, Response::HTTP_NOT_FOUND);

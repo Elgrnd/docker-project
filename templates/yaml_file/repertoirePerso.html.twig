@@ -8,8 +8,17 @@
 
 {% block page_content %}
 
+    <div id="overlayBlur" class="overlay-blur" onclick="cacherBlur()"></div>
 
-<div class="container mt-4">
+    <div id="modalContent" class="modal-yaml">
+        <div class="modal-header">
+            <span class="close-modal" onclick="cacherBlur()">&times;</span>
+        </div>
+        <div id="contentDisplay" class="modal-body-yaml"></div>
+    </div>
+
+
+    <div class="container mt-4">
         <h1>Gestion des répertoires</h1>
 
         {# Messages flash #}
@@ -204,6 +213,64 @@
             padding: 0;
             cursor: pointer;
         }
+
+        /* L’arrière-plan flou */
+        .overlay-blur {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+        }
+
+        /* La fenêtre modale */
+        .modal-yaml {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%;
+            max-height: 80%;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+            z-index: 1001;
+            overflow: auto;
+        }
+
+        /* En-tête de la modale */
+        .modal-header {
+            display: flex;
+            justify-content: flex-end;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .close-modal {
+            cursor: pointer;
+            font-size: 24px;
+            color: #666;
+            transition: color 0.2s;
+        }
+
+        .close-modal:hover {
+            color: #000;
+        }
+
+        /* Corps de la modale */
+        .modal-body-yaml {
+            padding: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            background: #f9f9f9;
+            border-radius: 10px;
+        }
+
     </style>
 
 {% endblock %}

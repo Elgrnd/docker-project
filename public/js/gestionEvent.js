@@ -1,17 +1,18 @@
-function afficherContenuYamlFile(content) {
-    document.getElementById("overlayBlur").style.display = "block";
-    document.getElementById("modalContent").style.display = "block";
-    document.getElementById("contentDisplay").textContent = content;
-    document.getElementById("fileExplorer").classList.add("blur-content");
-    document.body.style.overflow = "hidden";
+function afficherContenuYamlFile(contenu) {
+    const overlay = document.getElementById("overlayBlur");
+    const modal = document.getElementById("modalContent");
+    const contentDisplay = document.getElementById("contentDisplay");
+
+    contentDisplay.textContent = contenu; // affiche le contenu YAML
+    overlay.style.display = "block";
+    modal.style.display = "block";
 }
 
 function cacherBlur() {
     document.getElementById("overlayBlur").style.display = "none";
     document.getElementById("modalContent").style.display = "none";
-    document.getElementById("fileExplorer").classList.remove("blur-content");
-    document.body.style.overflow = "auto";
 }
+
 
 async function deleteYamlFile(event) {
     const fichierId = event.currentTarget.dataset.fichierId;

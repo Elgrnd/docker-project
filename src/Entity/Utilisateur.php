@@ -51,9 +51,23 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: YamlFile::class, orphanRemoval: true)]
     private Collection $yamlFiles;
 
+    /**
+     * @var Collection<int, Groupe>
+     */
+    #[ORM\OneToMany(targetEntity: Groupe::class, mappedBy: 'utilisateurChef', orphanRemoval: true)]
+    private Collection $groupes;
+
+    /**
+     * @var Collection<int, Groupe>
+     */
+    #[ORM\ManyToMany(targetEntity: Groupe::class, mappedBy: 'utilisateurs')]
+    private Collection $groupesMembre;
+
     public function __construct()
     {
         $this->yamlFiles = new ArrayCollection();
+        $this->groupes = new ArrayCollection();
+        $this->groupesMembre = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -159,6 +173,63 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
             if ($yamlFile->getUtilisateur() === $this) {
                 $yamlFile->setUtilisateur(null);
             }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Groupe>
+     */
+    public function getGroupes(): Collection
+    {
+        return $this->groupes;
+    }
+
+    public function addGroupe(Groupe $groupe): static
+    {
+        if (!$this->groupes->contains($groupe)) {
+            $this->groupes->add($groupe);
+            $groupe->setUtilisateurChef($this);
+        }
+
+        return $this;
+    }
+
+    public function removeGroupe(Groupe $groupe): static
+    {
+        if ($this->groupes->removeElement($groupe)) {
+            // set the owning side to null (unless already changed)
+            if ($groupe->getUtilisateurChef() === $this) {
+                $groupe->setUtilisateurChef(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Groupe>
+     */
+    public function getGroupesMembre(): Collection
+    {
+        return $this->groupesMembre;
+    }
+
+    public function addGroupesMembre(Groupe $groupesMembre): static
+    {
+        if (!$this->groupesMembre->contains($groupesMembre)) {
+            $this->groupesMembre->add($groupesMembre);
+            $groupesMembre->addUtilisateur($this);
+        }
+
+        return $this;
+    }
+
+    public function removeGroupesMembre(Groupe $groupesMembre): static
+    {
+        if ($this->groupesMembre->removeElement($groupesMembre)) {
+            $groupesMembre->removeUtilisateur($this);
         }
 
         return $this;

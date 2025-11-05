@@ -173,6 +173,13 @@ class ProxmoxService
         return in_array($response->getStatusCode(), [200, 202]);
     }
 
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws ClientExceptionInterface
+     */
     private function getTaskStatus($upid)
     {
         $response = $this->client->request(

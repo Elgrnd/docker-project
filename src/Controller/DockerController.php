@@ -28,12 +28,11 @@ final class DockerController extends AbstractController
         $containers = [];
         if(in_array('ROLE_ADMIN', $user->getRoles())) {
             $users = $utilisateurManager->getUtilisateursAvecVm();
-
             foreach ($users as $user) {
-                $vmIp = $proxmoxService->getVMIp($user->getgetProxmoxVmid());
+                $vmIp = $proxmoxService->getVMIp($user->getProxmoxVmid());
                 if($vmIp) {
                     $userContainers = $dockerService->listContainers($vmIp);
-                    foreach ($userContainers as $userContainer) {
+                    foreach ($userContainers as &$userContainer) {
                         $userContainer['user'] = $user->getLogin();
                         $userContainer['vmid'] = $user->getProxmoxVmid();
                     }

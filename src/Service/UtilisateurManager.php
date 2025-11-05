@@ -32,7 +32,7 @@ class UtilisateurManager implements UtilisateurManagerInterface
     }
 
     public function getUtilisateursAvecVm() : array {
-        return $this->utilisateurRepository->findBy(["proxmoxVmid" => ['not' => null]]);
+        return $this->utilisateurRepository->getUtilisateursAvecVm();
     }
 
 }

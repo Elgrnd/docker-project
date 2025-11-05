@@ -5,24 +5,25 @@ namespace App\Service;
 class DockerService
 {
 
-        private string $dockerPath = '/usr/bin/docker';
-        private string $sshUser = 'root';
-        private string $sshPrivateKey = '/var/www/.ssh/id_rsa_proxmox';
+    private string $dockerPath = '/usr/bin/docker';
+    private string $sshUser = 'root';
+    private string $sshPrivateKey = '/var/www/.ssh/id_rsa_proxmox';
 
 
-        private function runInVm(string $cmd, string $vmIp): string {
-            $sshCommand = 'ssh -i ' . escapeshellarg($this->sshPrivateKey) .
-                ' -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ' .
-                escapeshellarg($this->sshUser) . '@' . escapeshellarg($vmIp) .
-                ' ' . escapeshellarg($cmd);
 
-            return trim(shell_exec($sshCommand));
-        }
+    public function runInVm(string $cmd, string $vmIp): string {
+        $sshCommand = 'ssh -i ' . escapeshellarg($this->sshPrivateKey) .
+            ' -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ' .
+            escapeshellarg($this->sshUser) . '@' . escapeshellarg($vmIp) .
+            ' ' . escapeshellarg($cmd);
+
+        return trim(shell_exec($sshCommand));
+    }
 
 
     public function listContainers(string $vmIp): array
     {
-        $cmd = 'docker ps -a --format \'{{.ID}}|{{.Names}}|{{.Status}}\'';
+        $cmd = $this->dockerPath . ' ps -a --format "{{.ID}}|{{.Names}}|{{.Status}}"';
         $output = $this->runInVm($cmd, $vmIp);
 
         $containers = [];
@@ -59,7 +60,10 @@ class DockerService
 
     private function executeCommand(string $action, string $id, $vmIp): array
     {
-        $output = $this->runInVM("$this->dockerPath $action $id", $vmIp);
+        $command = "$this->dockerPath $action $id 2>&1";
+        var_dump($command);
+        $output = $this->runInVm($command, $vmIp);
+        var_dump($output);
         return [
             'success' => str_contains($output, $id) || str_contains($output, 'running'),
             'message' => trim($output),

@@ -2,7 +2,6 @@
 
 namespace App\Service;
 
-use phpDocumentor\Reflection\Types\Integer;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;

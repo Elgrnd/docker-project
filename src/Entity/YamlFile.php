@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\YamlFileRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -28,6 +30,17 @@ class YamlFile
     #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'yamlFiles')]
     #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
     private ?Utilisateur $utilisateur = null;
+
+    /**
+     * @var Collection<int, EtrePartageGroupe>
+     */
+    #[ORM\ManyToMany(targetEntity: EtrePartageGroupe::class, mappedBy: 'yamlFile')]
+    private Collection $etrePartageGroupes;
+
+    public function __construct()
+    {
+        $this->etrePartageGroupes = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {

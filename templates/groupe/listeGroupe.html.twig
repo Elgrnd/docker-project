@@ -1,0 +1,32 @@
+{% extends "base.html.twig" %}
+
+{% block title %}<title> Mes Groupes </title>{% endblock %}
+
+{% block page_content %}
+    <main class="center">
+        <h2>Mes Groupes</h2>
+        <ul>
+            {% for g in groupesMembre %}
+                <li>
+                    <a href="{{ path('voir_groupe', {id: g.id}) }}">{{ g.nom }}</a>
+
+                    {% if app.user and g.utilisateurChef == app.user %}
+                        <form method="post" action="{{ path('supprimer_groupe', {id: g.id}) }}" style="display:inline;" onsubmit="return confirm('Supprimer ce groupe ?');">
+                            <button type="submit" class="btn btn-danger">Supprimer</button>
+                        </form>
+                    {% endif %}
+                </li>
+            {% else %}
+                <li>Aucun groupe rejoint.</li>
+            {% endfor %}
+        </ul>
+
+        <fieldset>
+            <legend>Créer un groupe</legend>
+            {{ form_start(formGroupe) }}
+            {{ form_row(formGroupe.nom) }}
+            <button type="submit" class="btn">Créer</button>
+            {{ form_end(formGroupe) }}
+        </fieldset>
+    </main>
+{% endblock %}

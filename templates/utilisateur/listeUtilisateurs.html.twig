@@ -27,7 +27,7 @@
                     <td>{{ u.login }}</td>
                     <td>{{ u.id }}</td>
                     <td>
-                        <select data-utilisateur-login="{{ u.login }}" class="form-select" id="role-select">
+                        <select data-utilisateur-login="{{ u.login }}" class="form-select role-select">
                             <option value="~" selected></option>
                             {% for roleApp in appRoles|keys %}
                                 <option
@@ -59,7 +59,7 @@
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="3" class="text-center">Aucun utilisateur trouvé.</td>
+                    <td colspan="4" class="text-center">Aucun utilisateur trouvé.</td>
                 </tr>
             {% endfor %}
             </tbody>

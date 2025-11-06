@@ -35,7 +35,7 @@ final class DockerController extends AbstractController
                 try {
                     $vmIp = $proxmoxService->getVMIp($user->getProxmoxVmid());
                 } catch (\Exception $e) {
-                    $this->addFlash('danger', "le QGA n'est pas encore prêt pour la VM");
+                    $this->addFlash('error', "le QGA n'est pas encore prêt pour la VM");
                     return $this->redirectToRoute("index");
                 }
                 if($vmIp) {
@@ -52,7 +52,7 @@ final class DockerController extends AbstractController
                 try {
                     $vmIp = $proxmoxService->getVMIp($user->getProxmoxVmid());
                 } catch (\Exception $e) {
-                    $this->addFlash('danger', "le QGA n'est pas encore prêt pour la VM");
+                    $this->addFlash('error', "le QGA n'est pas encore prêt pour la VM");
                     return $this->redirectToRoute("index");
                 }
                 if ($vmIp) {

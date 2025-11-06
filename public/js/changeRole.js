@@ -1,4 +1,4 @@
-const roleSelectors = document.querySelectorAll('.role-select');
+const roleSelectors = document.querySelectorAll('select');
 Array.from(roleSelectors).forEach(function(selector) {
     selector.addEventListener('change', changerRole)
 })

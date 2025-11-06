@@ -27,7 +27,7 @@
                     <td>{{ u.login }}</td>
                     <td>{{ u.id }}</td>
                     <td>
-                        <select data-utilisateur-login="{{ u.login }}" class="form-select role-select">
+                        <select data-utilisateur-login="{{ u.login }}" class="form-select" id="role-select">
                             <option value="~" selected></option>
                             {% for roleApp in appRoles|keys %}
                                 <option
@@ -41,20 +41,11 @@
                         </select>
                     </td>
                     <td>
-                        <form action="{{ path('creerVmUtilisateur', {'login': u.login}) }}" method="post">
-                            <button type="submit" class="btn btn-success btn-sm"
-                                    {% if u.proxmoxVmid is not null %}disabled{% endif %}>
-                                Créer une VM
-                            </button>
-                        </form>
-
-                        <form action="{{ path('supprimerVmUtilisateur', {'login': u.login}) }}" method="post"
-                              onsubmit="return confirm('Supprimer la VM de cet utilisateur ?');">
-                            <button type="submit" class="btn btn-danger btn-sm"
-                                    {% if u.proxmoxVmid is null %}disabled{% endif %}>
-                                Supprimer la VM
-                            </button>
-                        </form>
+                        {% if u.proxmoxVmid is null %}
+                            <a href="{{ path('creerVmUtilisateur', {'login': u.login}) }}" class="btn btn-success btn-sm">Creer VM</a>
+                        {% else  %}
+                            <a href="{{ path('supprimerVmUtilisateur', {'login': u.login}) }}" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ce conteneur ?')">Supprimer VM</a>
+                        {% endif %}
                     </td>
                 </tr>
             {% else %}

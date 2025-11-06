@@ -28,7 +28,7 @@
                                 <i class="bi bi-eye view-icon" title="Afficher"
                                    onclick="afficherContenuYamlFile('{{ file.bodyFile|escape('js') }}')"></i>
                                 <i class="bi bi-download download-icon" title="Télécharger"></i>
-                                <a href="{{ path('modifierYamlFile', {"id": file.id}) }}">
+                                <a href="{{ path('modifierYamlF     ile', {"id": file.id}) }}">
                                     <i class="bi bi-pencil edit-icon" title="Modifier"></i>
                                 </a>
                                 <button data-fichier-id="{{ file.id }}" class="supprimerFichier"

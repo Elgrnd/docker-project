@@ -34,8 +34,9 @@ class YamlFile
     /**
      * @var Collection<int, EtrePartageGroupe>
      */
-    #[ORM\ManyToMany(targetEntity: EtrePartageGroupe::class, mappedBy: 'yamlFile')]
+    #[ORM\OneToMany(mappedBy: 'yamlFile', targetEntity: EtrePartageGroupe::class)]
     private Collection $etrePartageGroupes;
+
 
     public function __construct()
     {

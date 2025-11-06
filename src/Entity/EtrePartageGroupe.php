@@ -15,23 +15,18 @@ class EtrePartageGroupe
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'yamlFiles')]
+    #[ORM\ManyToOne(inversedBy: 'etrePartageGroupes')]
     #[ORM\JoinColumn(nullable: false)]
     private ?Groupe $groupe = null;
 
-    /**
-     * @var Collection<int, YamlFile>
-     */
-    #[ORM\ManyToMany(targetEntity: YamlFile::class)]
-    private Collection $yamlFile;
+
+
+    #[ORM\ManyToOne(targetEntity: YamlFile::class, inversedBy: 'etrePartageGroupes')]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    private ?YamlFile $yamlFile = null;
 
     #[ORM\Column(length: 255)]
     private ?string $droit = null;
-
-    public function __construct()
-    {
-        $this->yamlFile = new ArrayCollection();
-    }
 
     public function getId(): ?int
     {
@@ -50,27 +45,14 @@ class EtrePartageGroupe
         return $this;
     }
 
-    /**
-     * @return Collection<int, YamlFile>
-     */
-    public function getYamlFile(): Collection
+    public function getYamlFile(): ?YamlFile
     {
         return $this->yamlFile;
     }
 
-    public function addYamlFile(YamlFile $yamlFile): static
+    public function setYamlFile(?YamlFile $yamlFile): static
     {
-        if (!$this->yamlFile->contains($yamlFile)) {
-            $this->yamlFile->add($yamlFile);
-        }
-
-        return $this;
-    }
-
-    public function removeYamlFile(YamlFile $yamlFile): static
-    {
-        $this->yamlFile->removeElement($yamlFile);
-
+        $this->yamlFile = $yamlFile;
         return $this;
     }
 

@@ -6,7 +6,6 @@ use App\Entity\Repertoire;
 use App\Entity\Utilisateur;
 use App\Form\UtilisateurType;
 use App\Repository\UtilisateurRepository;
-use App\Repository\YamlFileRepository;
 use App\Service\FlashMessageHelperInterface;
 use App\Service\ProxmoxService;
 use App\Service\UtilisateurManagerInterface;

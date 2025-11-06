@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Service\DockerService;
 use App\Service\ProxmoxService;
 use App\Service\UtilisateurManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -22,14 +23,21 @@ final class DockerController extends AbstractController
      * @throws ClientExceptionInterface
      */
     #[Route('/containers', name: 'listContainers')]
-    public function list(DockerService $dockerService, ProxmoxService $proxmoxService, UtilisateurManagerInterface $utilisateurManager): Response
+    public function list(DockerService $dockerService,
+                         ProxmoxService $proxmoxService,
+                         UtilisateurManagerInterface $utilisateurManager): Response
     {
         $user = $this->getUser();
         $containers = [];
         if(in_array('ROLE_ADMIN', $user->getRoles())) {
             $users = $utilisateurManager->getUtilisateursAvecVm();
             foreach ($users as $user) {
-                $vmIp = $proxmoxService->getVMIp($user->getProxmoxVmid());
+                try {
+                    $vmIp = $proxmoxService->getVMIp($user->getProxmoxVmid());
+                } catch (\Exception $e) {
+                    $this->addFlash('danger', "le QGA n'est pas encore prêt pour la VM");
+                    return $this->redirectToRoute("index");
+                }
                 if($vmIp) {
                     $userContainers = $dockerService->listContainers($vmIp);
                     foreach ($userContainers as &$userContainer) {
@@ -41,7 +49,12 @@ final class DockerController extends AbstractController
             }
         } else {
             if ($user->getProxmoxVmid()) {
-                $vmIp = $proxmoxService->getVMIp($user->getProxmoxVmid());
+                try {
+                    $vmIp = $proxmoxService->getVMIp($user->getProxmoxVmid());
+                } catch (\Exception $e) {
+                    $this->addFlash('danger', "le QGA n'est pas encore prêt pour la VM");
+                    return $this->redirectToRoute("index");
+                }
                 if ($vmIp) {
                     $containers = $dockerService->listContainers($vmIp);
                     foreach ($containers as &$container) {

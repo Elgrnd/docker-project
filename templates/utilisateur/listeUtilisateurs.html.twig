@@ -48,7 +48,7 @@
                             </button>
                         </form>
 
-                        <form action="{{ path('suppressionVmUtilisateur', {'login': u.login}) }}" method="post"
+                        <form action="{{ path('supprimerVmUtilisateur', {'login': u.login}) }}" method="post"
                               onsubmit="return confirm('Supprimer la VM de cet utilisateur ?');">
                             <button type="submit" class="btn btn-danger btn-sm"
                                     {% if u.proxmoxVmid is null %}disabled{% endif %}>

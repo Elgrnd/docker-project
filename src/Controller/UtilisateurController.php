@@ -19,6 +19,11 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use Symfony\Component\ExpressionLanguage\Expression;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
 final class UtilisateurController extends AbstractController
 {
@@ -117,6 +122,13 @@ final class UtilisateurController extends AbstractController
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws ClientExceptionInterface
+     */
     #[IsGranted(new Expression("is_granted('ROLE_ADMIN')"))]
     #[Route('/panneauadmin/listeutilisateurs/{login}/creationVM', name: 'creerVmUtilisateur', methods: ['POST'])]
     public function creerVmUtilisateur(?Utilisateur $utilisateur, ProxmoxService $proxmoxService) : Response {
@@ -129,6 +141,25 @@ final class UtilisateurController extends AbstractController
         } else {
             $proxmoxService->cloneUserVM($utilisateur->getLogin());
             $this->addFlash('success', "Une VM a été ajouté à l'utilisateur" . $utilisateur->getLogin());
+            return $this->redirectToRoute('listeUtilisateurs');
+        }
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     */
+    #[IsGranted(new Expression("is_granted('ROLE_ADMIN')"))]
+    #[Route('/panneauadmin/listeutilisateurs/{login}/suppressionVM', name: 'suppressionVmUtilisateur', methods: ['POST'])]
+    public function suppressionVmUtilisateur(?Utilisateur $utilisateur, ProxmoxService $proxmoxService) : Response {
+        if($utilisateur === null) {
+            $this->addFlash('danger', "L'utilisateur n'existe pas");
+            return $this->redirectToRoute('listeUtilisateurs');
+        } else if($utilisateur->getProxmoxVmid() === null) {
+            $this->addFlash('danger', "Cette Utilisateur n'a pas de VM actif");
+            return $this->redirectToRoute('listeUtilisateurs');
+        } else {
+            $proxmoxService->deleteVM($utilisateur->getLogin());
+            $this->addFlash('success', "La VM a été supprimé à l'utilisateur" . $utilisateur->getLogin());
             return $this->redirectToRoute('listeUtilisateurs');
         }
     }

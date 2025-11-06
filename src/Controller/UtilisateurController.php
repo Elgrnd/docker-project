@@ -131,7 +131,7 @@ final class UtilisateurController extends AbstractController
      */
     #[IsGranted(new Expression("is_granted('ROLE_ADMIN')"))]
     #[Route('/panneauadmin/listeutilisateurs/{login}/creationVM', name: 'creerVmUtilisateur', methods: ['POST'])]
-    public function creerVmUtilisateur(?Utilisateur $utilisateur, ProxmoxService $proxmoxService) : Response {
+    public function creerVmUtilisateur(?Utilisateur $utilisateur, ProxmoxService $proxmoxService, EntityManagerInterface $entityManager) : Response {
         if($utilisateur === null) {
             $this->addFlash('danger', "L'utilisateur n'existe pas");
             return $this->redirectToRoute('listeUtilisateurs');
@@ -139,7 +139,10 @@ final class UtilisateurController extends AbstractController
             $this->addFlash('danger', "Cette Utilisateur à déjà une VM actif");
             return $this->redirectToRoute('listeUtilisateurs');
         } else {
-            $proxmoxService->cloneUserVM($utilisateur->getLogin());
+            $vmId = $proxmoxService->cloneUserVM($utilisateur->getLogin());
+            $utilisateur->setProxmoxVmid($vmId);
+            $entityManager->flush();
+
             $this->addFlash('success', "Une VM a été ajouté à l'utilisateur" . $utilisateur->getLogin());
             return $this->redirectToRoute('listeUtilisateurs');
         }
@@ -150,7 +153,7 @@ final class UtilisateurController extends AbstractController
      */
     #[IsGranted(new Expression("is_granted('ROLE_ADMIN')"))]
     #[Route('/panneauadmin/listeutilisateurs/{login}/suppressionVM', name: 'suppressionVmUtilisateur', methods: ['POST'])]
-    public function suppressionVmUtilisateur(?Utilisateur $utilisateur, ProxmoxService $proxmoxService) : Response {
+    public function suppressionVmUtilisateur(?Utilisateur $utilisateur, ProxmoxService $proxmoxService, EntityManagerInterface $entityManager) : Response {
         if($utilisateur === null) {
             $this->addFlash('danger', "L'utilisateur n'existe pas");
             return $this->redirectToRoute('listeUtilisateurs');
@@ -159,6 +162,9 @@ final class UtilisateurController extends AbstractController
             return $this->redirectToRoute('listeUtilisateurs');
         } else {
             $proxmoxService->deleteVM($utilisateur->getLogin());
+            $utilisateur->setProxmoxVmid(null);
+            $entityManager->flush();
+
             $this->addFlash('success', "La VM a été supprimé à l'utilisateur" . $utilisateur->getLogin());
             return $this->redirectToRoute('listeUtilisateurs');
         }

@@ -152,7 +152,7 @@ final class UtilisateurController extends AbstractController
      * @throws TransportExceptionInterface
      */
     #[IsGranted(new Expression("is_granted('ROLE_ADMIN')"))]
-    #[Route('/panneauadmin/listeutilisateurs/{login}/suppressionVM', name: 'suppressionVmUtilisateur', methods: ['POST'])]
+    #[Route('/panneauadmin/listeutilisateurs/{login}/suppressionVM', name: 'supprimerVmUtilisateur', methods: ['POST'])]
     public function suppressionVmUtilisateur(?Utilisateur $utilisateur, ProxmoxService $proxmoxService, EntityManagerInterface $entityManager) : Response {
         if($utilisateur === null) {
             $this->addFlash('danger', "L'utilisateur n'existe pas");

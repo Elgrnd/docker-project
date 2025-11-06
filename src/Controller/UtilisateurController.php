@@ -8,6 +8,7 @@ use App\Form\UtilisateurType;
 use App\Repository\UtilisateurRepository;
 use App\Repository\YamlFileRepository;
 use App\Service\FlashMessageHelperInterface;
+use App\Service\ProxmoxService;
 use App\Service\UtilisateurManagerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -114,6 +115,22 @@ final class UtilisateurController extends AbstractController
             return new JsonResponse(null, Response::HTTP_NOT_FOUND);
         }
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
+
+    #[IsGranted(new Expression("is_granted('ROLE_ADMIN')"))]
+    #[Route('/panneauadmin/listeutilisateurs/{login}/creationVM', name: 'creerVmUtilisateur', methods: ['POST'])]
+    public function creerVmUtilisateur(?Utilisateur $utilisateur, ProxmoxService $proxmoxService) : Response {
+        if($utilisateur === null) {
+            $this->addFlash('danger', "L'utilisateur n'existe pas");
+            return $this->redirectToRoute('listeUtilisateurs');
+        } else if($utilisateur->getProxmoxVmid() !== null) {
+            $this->addFlash('danger', "Cette Utilisateur à déjà une VM actif");
+            return $this->redirectToRoute('listeUtilisateurs');
+        } else {
+            $proxmoxService->cloneUserVM($utilisateur->getLogin());
+            $this->addFlash('success', "Une VM a été ajouté à l'utilisateur" . $utilisateur->getLogin());
+            return $this->redirectToRoute('listeUtilisateurs');
+        }
     }
 
 }

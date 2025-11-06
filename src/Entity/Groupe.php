@@ -31,13 +31,14 @@ class Groupe
     /**
      * @var Collection<int, EtrePartageGroupe>
      */
-    #[ORM\OneToMany(targetEntity: EtrePartageGroupe::class, mappedBy: 'groupe', orphanRemoval: true)]
-    private Collection $yamlFiles;
+    #[ORM\OneToMany(mappedBy: 'groupe', targetEntity: EtrePartageGroupe::class, cascade: ['remove'])]
+    private Collection $etrePartageGroupes;
+
 
     public function __construct()
     {
         $this->utilisateurs = new ArrayCollection();
-        $this->yamlFiles = new ArrayCollection();
+        $this->etrePartageGroupes = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -96,27 +97,26 @@ class Groupe
     /**
      * @return Collection<int, EtrePartageGroupe>
      */
-    public function getYamlFiles(): Collection
+    public function getEtrePartageGroupes(): Collection
     {
-        return $this->yamlFiles;
+        return $this->etrePartageGroupes;
     }
 
-    public function addYamlFile(EtrePartageGroupe $yamlFile): static
+    public function addEtrePartageGroupe(EtrePartageGroupe $epg): static
     {
-        if (!$this->yamlFiles->contains($yamlFile)) {
-            $this->yamlFiles->add($yamlFile);
-            $yamlFile->setGroupe($this);
+        if (!$this->etrePartageGroupes->contains($epg)) {
+            $this->etrePartageGroupes->add($epg);
+            $epg->setGroupe($this);
         }
 
         return $this;
     }
 
-    public function removeYamlFile(EtrePartageGroupe $yamlFile): static
+    public function removeEtrePartageGroupe(EtrePartageGroupe $epg): static
     {
-        if ($this->yamlFiles->removeElement($yamlFile)) {
-            // set the owning side to null (unless already changed)
-            if ($yamlFile->getGroupe() === $this) {
-                $yamlFile->setGroupe(null);
+        if ($this->etrePartageGroupes->removeElement($epg)) {
+            if ($epg->getGroupe() === $this) {
+                $epg->setGroupe(null);
             }
         }
 

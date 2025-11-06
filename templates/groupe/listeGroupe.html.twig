@@ -1,6 +1,6 @@
 {% extends "base.html.twig" %}
 
-{% block title %}<title> Mes Groupes </title>{% endblock %}
+{% block title %}<title>Mes Groupes</title>{% endblock %}
 
 {% block page_content %}
     <main class="center">
@@ -8,13 +8,21 @@
         <ul>
             {% for g in groupesMembre %}
                 <li>
-                    <a href="{{ path('voir_groupe', {id: g.id}) }}">{{ g.nom }}</a>
+                    <strong>{{ g.nom }}</strong>
 
-                    {% if app.user and g.utilisateurChef == app.user %}
-                        <form method="post" action="{{ path('supprimer_groupe', {id: g.id}) }}" style="display:inline;" onsubmit="return confirm('Supprimer ce groupe ?');">
-                            <button type="submit" class="btn btn-danger">Supprimer</button>
-                        </form>
-                    {% endif %}
+                    <div style="display: inline-flex; gap: 8px;">
+                        <a href="{{ path('voir_groupe', {id: g.id}) }}" class="btn btn-secondary">Membres</a>
+                        <a href="{{ path('fichiers_groupe', {id: g.id}) }}" class="btn btn-primary">Fichiers YAML</a>
+
+                        {% if app.user and g.utilisateurChef == app.user %}
+                            <form method="post"
+                                  action="{{ path('supprimer_groupe', {id: g.id}) }}"
+                                  style="display:inline;"
+                                  onsubmit="return confirm('Supprimer ce groupe ?');">
+                                <button type="submit" class="btn btn-danger">Supprimer</button>
+                            </form>
+                        {% endif %}
+                    </div>
                 </li>
             {% else %}
                 <li>Aucun groupe rejoint.</li>

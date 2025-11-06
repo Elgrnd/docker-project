@@ -34,7 +34,7 @@ class YamlFile
     /**
      * @var Collection<int, EtrePartageGroupe>
      */
-    #[ORM\ManyToMany(targetEntity: EtrePartageGroupe::class, mappedBy: 'yamlFile')]
+    #[ORM\OneToMany(mappedBy: 'yamlFile', targetEntity: EtrePartageGroupe::class)]
     private Collection $etrePartageGroupes;
 
     #[ORM\ManyToOne(targetEntity: Repertoire::class, inversedBy: 'yamlFiles')]

@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\YamlFileRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
@@ -20,7 +22,7 @@ class YamlFile
     #[ORM\Column(length: 255)]
     #[Assert\NotNull]
     #[Assert\NotBlank]
-    private ?string $nameFile = null;
+    private ?string $nameFile = ".";
 
     #[ORM\Column(type: Types::TEXT)]
     private ?string $bodyFile = null;
@@ -28,6 +30,20 @@ class YamlFile
     #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'yamlFiles')]
     #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
     private ?Utilisateur $utilisateur = null;
+
+    /**
+     * @var Collection<int, EtrePartageGroupe>
+     */
+    #[ORM\ManyToMany(targetEntity: EtrePartageGroupe::class, mappedBy: 'yamlFile')]
+    private Collection $etrePartageGroupes;
+
+    #[ORM\ManyToOne(targetEntity: Repertoire::class, inversedBy: 'yamlFiles')]
+    #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
+    private ?Repertoire $repertoire = null;
+    public function __construct()
+    {
+        $this->etrePartageGroupes = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -66,6 +82,18 @@ class YamlFile
     public function setUtilisateur(?Utilisateur $utilisateur): static
     {
         $this->utilisateur = $utilisateur;
+        return $this;
+    }
+
+    // NOUVEAU : Getter/Setter pour Repertoire
+    public function getRepertoire(): ?Repertoire
+    {
+        return $this->repertoire;
+    }
+
+    public function setRepertoire(?Repertoire $repertoire): static
+    {
+        $this->repertoire = $repertoire;
         return $this;
     }
 }

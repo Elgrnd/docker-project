@@ -2,11 +2,136 @@
 
 {% block title %}<title>Bibliothèque</title>{% endblock %}
 
+{% block scriptJs %}
+    <script defer type="text/javascript" src="{{ asset('js/gestionEvent.js') }}"></script>
+{% endblock %}
+
 {% block page_content %}
 
+    <div id="overlayBlur" class="overlay-blur" onclick="cacherBlur()"></div>
+
+    <div id="modalContent" class="modal-yaml">
+        <div class="modal-header">
+            <span class="close-modal" onclick="cacherBlur()">&times;</span>
+        </div>
+        <div id="contentDisplay" class="modal-body-yaml"></div>
+    </div>
+
     {% if is_granted("ROLE_PROF") %}
-        <a href="{{ path("biblio_upload") }}">Importer un fichier</a>
+        <div>
+            <a href="{{ path("biblio_upload") }}">Importer un fichier</a>
+        </div>
     {% endif %}
+
+    <div class="file-list">
+        {% for file in fichiers %}
+            <div class="file-item">
+                <div class="file-info">
+                    <i class="bi bi-file-earmark-text file-icon"></i>
+                    <span class="file-name">{{ file.nameFile }}</span>
+                </div>
+                <div class="file-actions">
+                    <i class="bi bi-eye view-icon" title="Afficher"
+                       onclick="afficherContenuYamlFile('{{ file.bodyFile|escape('js') }}')"></i>
+                    <i class="bi bi-download download-icon" title="Télécharger"></i>
+                    <a href="{{ path("ajouterAuRepertoire", {"id": file.id}) }}">
+                        <i class="bi bi-box-arrow-up-right" title="Ajouter au répertoire"></i>
+                    </a>
+
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <style>
+        .file-icon {
+            color: #17a2b8;
+            margin-right: 5px;
+        }
+
+        .file-actions {
+            display: inline-flex;
+            gap: 10px;
+            margin-left: 10px;
+        }
+
+        .file-actions i {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .view-icon:hover { color: #007bff; }
+        .download-icon:hover { color: #28a745; }
+
+        .file-item {
+            padding: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+        }
+
+        /* L’arrière-plan flou */
+        .overlay-blur {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+        }
+
+        /* La fenêtre modale */
+        .modal-yaml {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%;
+            max-height: 80%;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+            z-index: 1001;
+            overflow: auto;
+        }
+
+        /* En-tête de la modale */
+        .modal-header {
+            display: flex;
+            justify-content: flex-end;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .close-modal {
+            cursor: pointer;
+            font-size: 24px;
+            color: #666;
+            transition: color 0.2s;
+        }
+
+        .close-modal:hover {
+            color: #000;
+        }
+
+        /* Corps de la modale */
+        .modal-body-yaml {
+            padding: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            background: #f9f9f9;
+            border-radius: 10px;
+        }
+    </style>
 
 {% endblock %}
 

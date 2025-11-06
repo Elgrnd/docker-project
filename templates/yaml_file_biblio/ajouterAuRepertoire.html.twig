@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}<title>Ajouter à son répertoire</title>{% endblock %}
+
+{% block page_content %}
+
+    <div class="container mt-4">
+        <h2>Ajouter le fichier à un répertoire</h2>
+
+        <div class="alert alert-info">
+            <i class="bi bi-file-earmark-text"></i>
+            Fichier : <strong>{{ yamlFileBiblio.nameFile }}</strong>
+        </div>
+
+        {{ form_start(formulaire) }}
+
+        <div class="mb-3">
+            {{ form_label(formulaire.repertoire, null, {
+                'label_attr': {'class': 'form-label fw-bold'}
+            }) }}
+            <i class="bi bi-folder"></i>
+            {{ form_widget(formulaire.repertoire) }}
+            {{ form_errors(formulaire.repertoire) }}
+            {{ form_help(formulaire.repertoire) }}
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">Ajouter au répertoire</button>
+            <a href="{{ path('bibliotheque') }}" class="btn btn-secondary">Annuler</a>
+        </div>
+
+        {{ form_end(formulaire) }}
+    </div>
+
+{% endblock %}

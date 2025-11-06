@@ -2,9 +2,12 @@
 
 namespace App\Controller;
 
+use App\Entity\YamlFile;
 use App\Entity\YamlFileBiblio;
+use App\Form\AjouterBiblioRepertoireType;
 use App\Form\YamlFileBiblioType;
 use App\Form\YamlFileType;
+use App\Repository\YamlFileBiblioRepository;
 use App\Service\FlashMessageHelperInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -18,7 +21,7 @@ final class YamlFileBiblioController extends AbstractController
 {
 
     #[Route('/bibliotheque', name: 'bibliotheque')]
-    public function bibliotheque(): Response
+    public function bibliotheque(YamlFileBiblioRepository $repository): Response
     {
         $utilisateur = $this->getUser();
 
@@ -27,7 +30,9 @@ final class YamlFileBiblioController extends AbstractController
             return $this->redirectToRoute('connexion');
         }
 
-        return $this->render('yaml_file_biblio/bibliotheque.html.twig');
+        $fichiers = $repository->findAll();
+
+        return $this->render('yaml_file_biblio/bibliotheque.html.twig', ["fichiers" => $fichiers]);
     }
 
     #[IsGranted("ROLE_PROF")]
@@ -111,4 +116,61 @@ final class YamlFileBiblioController extends AbstractController
             'formulaireYaml' => $form
         ]);
     }
+
+    #[IsGranted("ROLE_USER")]
+    #[Route("/bibliotheque/ajouterAuRepertoire/{id}", name: 'ajouterAuRepertoire', methods: ['GET', 'POST'])]
+    public function ajouterAuRepertoire(?YamlFileBiblio $yamlFileBiblio, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        if (!$yamlFileBiblio) {
+            $this->addFlash("error", "Le fichier n'existe pas");
+        }
+
+        $form = $this->createForm(AjouterBiblioRepertoireType::class, null, [
+            'method' => 'POST',
+            'action' => $this->generateUrl('ajouterAuRepertoire', ['id' => $yamlFileBiblio->getId()]),
+        ]);
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $data = $form->getData();
+            $repertoire = $data['repertoire'];
+
+            // Récupérer l'utilisateur courant
+            $utilisateur = $this->getUser();
+
+            // Créer un nouveau YamlFile à partir du YamlFileBiblio
+            $yamlFile = new YamlFile();
+            $yamlFile->setNameFile($yamlFileBiblio->getNameFile());
+            $yamlFile->setBodyFile($yamlFileBiblio->getBodyFile());
+            $yamlFile->setUtilisateur($utilisateur);
+            $yamlFile->setRepertoire($repertoire);
+
+            $results = $entityManager
+                ->getRepository(YamlFile::class)
+                ->findByNomEtUtilisateur($yamlFile->getNameFile(), $utilisateur);
+
+            if (count($results) > 0) {
+                $this->addFlash('error', sprintf(
+                    'Un fichier nommé "%s" existe déjà pour votre compte.',
+                    $yamlFile->getNameFile()
+                ));
+                return $this->redirectToRoute('bibliotheque');
+            }
+
+            $entityManager->persist($yamlFile);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Fichier ajouté à votre répertoire avec succès');
+
+            return $this->redirectToRoute('bibliotheque');
+        }
+
+        return $this->render('yaml_file_biblio/ajouterAuRepertoire.html.twig', [
+            'formulaire' => $form->createView(),
+            'yamlFileBiblio' => $yamlFileBiblio
+        ]);
+    }
+
+
 }

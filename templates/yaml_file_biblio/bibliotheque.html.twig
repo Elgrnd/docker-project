@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}<title>Bibliothèque</title>{% endblock %}
+
+{% block page_content %}
+
+    {% if is_granted("ROLE_PROF") %}
+        <a href="{{ path("biblio_upload") }}">Importer un fichier</a>
+    {% endif %}
+
+{% endblock %}
+

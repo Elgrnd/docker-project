@@ -10,7 +10,6 @@ class DockerService
     private string $sshPrivateKey = '/var/www/.ssh/id_rsa_proxmox';
 
 
-
     public function runInVm(string $cmd, string $vmIp): string {
         $sshCommand = 'ssh -i ' . escapeshellarg($this->sshPrivateKey) .
             ' -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ' .

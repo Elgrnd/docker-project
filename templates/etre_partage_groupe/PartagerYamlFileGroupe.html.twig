@@ -35,18 +35,12 @@
                                 <i class="bi bi-eye view-icon" title="Afficher"
                                    onclick="afficherContenuYamlFile('{{ fichier.bodyFile|escape('js') }}')"></i>
 
-                                {# ✏️ Bouton Modifier visible si :
-                                   - l'utilisateur a le droit 'edition'
-                                   - ou est chef du groupe
-                                   - ou est admin
-                                #}
                                 {% if partage.droit == 'edition' or groupe.utilisateurChef == app.user or is_granted('ROLE_ADMIN') %}
-                                    <a href="{{ path('modifierYamlFile', {'id': fichier.id}) }}">
+                                    <a href="{{ path('modifier_yaml_file_groupe', {'id': groupe.id, 'yamlId': fichier.id}) }}">
                                         <i class="bi bi-pencil edit-icon" title="Modifier"></i>
                                     </a>
                                 {% endif %}
 
-                                {# 🗑️ Bouton Supprimer réservé au chef de groupe ou admin #}
                                 {% if groupe.utilisateurChef == app.user or is_granted('ROLE_ADMIN') %}
                                     <form method="post" action="{{ path('supprimer_yaml_groupe', {'id': groupe.id, 'yamlId': fichier.id}) }}" style="display:inline-block;">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ fichier.id) }}">

@@ -163,7 +163,7 @@ final class EtrePartageGroupeController extends AbstractController
             ->findOneBy(['groupe' => $groupe, 'yamlFile' => $yamlId]);
 
         if (!$epg) {
-            $this->addFlash('error', 'Fichier introuvable.');
+            $this->addFlash('error', 'Fichier introuvable dans ce groupe.');
             return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
         }
 
@@ -181,7 +181,7 @@ final class EtrePartageGroupeController extends AbstractController
         if ($request->isMethod('POST')) {
             $submittedToken = $request->request->get('_token');
 
-            if ($this->isCsrfTokenValid('edit-yaml-groupe', $submittedToken)) {
+            if ($this->isCsrfTokenValid('edit-yaml', $submittedToken)) {
                 $yamlContent = $request->request->get('content');
 
                 try {
@@ -192,19 +192,19 @@ final class EtrePartageGroupeController extends AbstractController
                     $this->addFlash('success', 'Fichier YAML modifié avec succès.');
                     return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
                 } catch (ParseException $e) {
-                    $this->addFlash('error', 'Erreur YAML : ' . $e->getMessage());
+                    $this->addFlash('error', 'Erreur dans le format YAML : ' . $e->getMessage());
                 }
             } else {
                 $this->addFlash('error', 'Token CSRF invalide.');
-                return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
             }
         }
 
-        return $this->render('etre_partage_groupe/edityamlfile_groupe.html.twig', [
+        return $this->render('yaml_file/edityamlfilegroupe.html.twig', [
             'yamlfile' => $yamlFile,
             'groupe' => $groupe,
         ]);
     }
+
 
     #[Route('/groupe/{id}/ajouter-yaml', name: 'ajouter_yaml_existant_groupe', methods: ['POST'])]
     public function ajouterYamlExistant(

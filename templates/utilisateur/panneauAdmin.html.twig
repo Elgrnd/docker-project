@@ -1,10 +1,31 @@
 {% extends "base.html.twig" %}
 {% block title %}<title>Panneau de bord</title>{% endblock %}
-{% block scriptJs %}
-    <script src="{{ asset('js/searchUsers.js') }}"></script>{% endblock %}
 {% block page_content %}
-    <main>
-        <!-- Placeholder -->
-        <div><a class="btn btn-success btn-sm" href="{{ path('listeUtilisateurs') }}">Liste</a></div>
+    <main class="d-flex align-items-center">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-md-10 col-lg-8">
+                    <div class="row g-3">
+                        <div class="col-12 col-sm-6">
+                            <a class="btn col btn-info btn-lg w-100 py-4" href="{{ path('listeUtilisateurs') }}">Liste
+                                des utilisateurs</a>
+                        </div>
+
+                        <!--           Placeholders           -->
+                         <div class="col-12 col-sm-6">
+                            <a class="btn col btn-danger btn-lg w-100 py-4" href="{{ path('listeUtilisateurs') }}">Exemple</a>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <a class="btn col btn-warning btn-lg w-100 py-4" href="{{ path('listeUtilisateurs') }}">Exemple</a>
+                        </div>
+
+                        <div class="col-12 col-sm-6">
+                            <a class="btn col btn-primary btn-lg w-100 py-4" href="{{ path('listeUtilisateurs') }}">Exemple</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 {% endblock %}

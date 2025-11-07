@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
+use App\Repository\RepertoireRepository;
 
 final class EtrePartageGroupeController extends AbstractController
 {
@@ -23,7 +24,8 @@ final class EtrePartageGroupeController extends AbstractController
         Groupe $groupe,
         Request $request,
         EntityManagerInterface $entityManager,
-        FlashMessageHelperInterface $flashMessageHelper
+        FlashMessageHelperInterface $flashMessageHelper,
+        RepertoireRepository $repertoireRepository
     ): Response {
         $utilisateur = $this->getUser();
         if (!$utilisateur) {
@@ -50,6 +52,7 @@ final class EtrePartageGroupeController extends AbstractController
             }
 
             $nameFile = $uploadedFile->getClientOriginalName();
+
             $exists = $entityManager
                 ->getRepository(YamlFile::class)
                 ->findByNomEtUtilisateur($nameFile, $utilisateur);
@@ -69,10 +72,21 @@ final class EtrePartageGroupeController extends AbstractController
                     return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
                 }
 
+                $repertoirePersonnel = $repertoireRepository->findOneBy([
+                    'utilisateur_id' => $utilisateur,
+                    'name' => 'Répertoire personnel'
+                ]);
+
+                if (!$repertoirePersonnel) {
+                    $this->addFlash('error', 'Votre répertoire personnel est introuvable.');
+                    return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
+                }
+
                 $yamlFile = new YamlFile();
                 $yamlFile->setNameFile($nameFile);
                 $yamlFile->setBodyFile($content);
                 $yamlFile->setUtilisateur($utilisateur);
+                $yamlFile->setRepertoire($repertoirePersonnel);
 
                 $epg = new EtrePartageGroupe();
                 $epg->setGroupe($groupe);
@@ -112,6 +126,7 @@ final class EtrePartageGroupeController extends AbstractController
             'yamlFilesUtilisateur' => $yamlFilesUtilisateur,
         ]);
     }
+
 
     #[Route('/groupe/{id}/supprimer-fichier/{yamlId}', name: 'supprimer_yaml_groupe', methods: ['POST'])]
     public function supprimerYamlDuGroupe(

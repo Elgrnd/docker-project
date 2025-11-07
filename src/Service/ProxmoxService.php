@@ -44,7 +44,7 @@ class ProxmoxService
 
         $response = $this->client->request(
             'POST',
-            "{$this->apiUrl}/nodes/proxmox/qemu/101/clone",
+            "{$this->apiUrl}/nodes/proxmox/qemu/100/clone",
             [
                 'headers' => [
                     'Authorization' => "PVEAPIToken={$this->tokenId}={$this->secret}",

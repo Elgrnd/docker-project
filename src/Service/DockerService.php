@@ -7,14 +7,21 @@ class DockerService
 
     private string $dockerPath = '/usr/bin/docker';
     private string $sshUser = 'root';
-    private string $sshPrivateKey = '/var/www/.ssh/id_rsa_proxmox';
+    private string $sshPrivateKey = '/var/www/.ssh/id_rsa';
+    private string $hoteProxMoxIp;
 
+    public function __construct()
+    {
+        $this->hoteProxMoxIp = $_ENV['PROXMOX_HOTE'];
+    }
 
     public function runInVm(string $cmd, string $vmIp): string {
         $sshCommand = 'ssh -i ' . escapeshellarg($this->sshPrivateKey) .
             ' -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ' .
+            '-J ' . escapeshellarg($this->sshUser) . '@' . escapeshellarg($this->hoteProxMoxIp) . ' ' .
             escapeshellarg($this->sshUser) . '@' . escapeshellarg($vmIp) .
             ' ' . escapeshellarg($cmd);
+
 
         return trim(shell_exec($sshCommand));
     }
@@ -60,9 +67,7 @@ class DockerService
     private function executeCommand(string $action, string $id, $vmIp): array
     {
         $command = "$this->dockerPath $action $id 2>&1";
-        var_dump($command);
         $output = $this->runInVm($command, $vmIp);
-        var_dump($output);
         return [
             'success' => str_contains($output, $id) || str_contains($output, 'running'),
             'message' => trim($output),

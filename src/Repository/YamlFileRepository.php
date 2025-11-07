@@ -32,6 +32,21 @@ class YamlFileRepository extends ServiceEntityRepository
         ]);
     }
 
+    public function findForUser(Utilisateur $utilisateur, bool $isAdmin): array
+    {
+        $qb = $this->createQueryBuilder('y');
+
+        if (!$isAdmin) {
+            $qb->where('y.utilisateur = :utilisateur')
+                ->setParameter('utilisateur', $utilisateur);
+        }
+
+        return $qb->orderBy('y.nameFile', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+
     //    /**
     //     * @return YamlFile[] Returns an array of YamlFile objects
     //     */

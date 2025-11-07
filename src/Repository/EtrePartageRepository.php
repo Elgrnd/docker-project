@@ -30,6 +30,19 @@ class EtrePartageRepository extends ServiceEntityRepository
     }
 
 
+    public function existsPartage(Utilisateur $utilisateur, YamlFile $yamlFile): bool
+    {
+        return (bool) $this->createQueryBuilder('e')
+            ->select('COUNT(e.id)')
+            ->where('e.utilisateur = :utilisateur')
+            ->andWhere('e.yamlFile = :yamlFile')
+            ->setParameter('utilisateur', $utilisateur)
+            ->setParameter('yamlFile', $yamlFile)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+
     //    /**
     //     * @return EtrePartage[] Returns an array of EtrePartage objects
     //     */

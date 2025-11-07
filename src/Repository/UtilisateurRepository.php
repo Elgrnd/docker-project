@@ -33,6 +33,16 @@ class UtilisateurRepository extends ServiceEntityRepository implements PasswordU
         $this->getEntityManager()->flush();
     }
 
+    public function findAllExcept(Utilisateur $utilisateur): array
+    {
+        return $this->createQueryBuilder('u')
+            ->where('u != :utilisateur')
+            ->setParameter('utilisateur', $utilisateur)
+            ->orderBy('u.login', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return Utilisateur[] Returns an array of Utilisateur objects
     //     */

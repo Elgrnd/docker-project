@@ -7,18 +7,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const filter = searchInput.value.toLowerCase().trim();
 
         for (let i = 1; i < rows.length; i++) {
-            const nameCell = rows[i].getElementsByTagName('td')[0];
-            const idCell = rows[i].getElementsByTagName('td')[1];
+            const cells = rows[i].getElementsByTagName('td');
+            if (cells.length < 3) continue;
 
-            if (nameCell && idCell) {
-                const name = nameCell.textContent.toLowerCase();
-                const id = idCell.textContent.toLowerCase();
+            const userCell = cells[0];
+            const nameCell = cells[1];
+            const idCell = cells[2];
 
-                if (name.includes(filter) || id.includes(filter)) {
-                    rows[i].style.display = '';
-                } else {
-                    rows[i].style.display = 'none';
-                }
+            const user = userCell.textContent.toLowerCase();
+            const name = nameCell.textContent.toLowerCase();
+            const id = idCell.textContent.toLowerCase();
+
+            if (user.includes(filter) || name.includes(filter) || id.includes(filter)) {
+                rows[i].style.display = '';
+            } else {
+                rows[i].style.display = 'none';
             }
         }
     });

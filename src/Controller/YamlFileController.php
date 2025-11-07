@@ -243,7 +243,6 @@ final class YamlFileController extends AbstractController
                 try {
                     Yaml::parse($yamlContent);
 
-                    // Mise à jour en BDD
                     $yamlFile->setBodyFile($yamlContent);
                     $entityManager->flush();
 

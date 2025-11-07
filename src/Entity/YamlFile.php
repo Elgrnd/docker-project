@@ -96,4 +96,8 @@ class YamlFile
         $this->repertoire = $repertoire;
         return $this;
     }
+
+    public function getEtrePartageGroupes(): Collection {
+        return $this->etrePartageGroupes;
+    }
 }

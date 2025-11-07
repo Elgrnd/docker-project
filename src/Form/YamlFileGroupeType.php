@@ -2,6 +2,7 @@
 
 namespace App\Form;
 
+use App\Entity\YamlFileGroupe;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
@@ -41,15 +42,17 @@ class YamlFileGroupeType extends AbstractType
                     'Lecture seule' => 'lecture',
                     'Éditeur' => 'edition',
                 ],
-                'expanded' => true, // boutons radio
+                'expanded' => true,
                 'multiple' => false,
                 'required' => true,
-                'mapped' => false, // idem : on gère nous-mêmes
+                'mapped' => false,
             ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setDefaults([]);
+        $resolver->setDefaults([
+            'data_class' => YamlFileGroupe::class,
+        ]);
     }
 }

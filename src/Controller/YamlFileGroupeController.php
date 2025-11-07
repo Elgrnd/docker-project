@@ -2,10 +2,11 @@
 
 namespace App\Controller;
 
-use App\Entity\EtrePartageGroupe;
 use App\Entity\YamlFile;
+use App\Entity\YamlFileGroupe;
 use App\Entity\Groupe;
 use App\Form\YamlFileGroupeType;
+use App\Repository\YamlFileRepository;
 use App\Service\FlashMessageHelperInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,17 +16,15 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
-use App\Repository\RepertoireRepository;
 
-final class EtrePartageGroupeController extends AbstractController
+final class YamlFileGroupeController extends AbstractController
 {
     #[Route('/groupe/{id}/fichiers', name: 'fichiers_groupe', methods: ['GET', 'POST'])]
     public function fichiersGroupe(
         Groupe $groupe,
         Request $request,
         EntityManagerInterface $entityManager,
-        FlashMessageHelperInterface $flashMessageHelper,
-        RepertoireRepository $repertoireRepository
+        FlashMessageHelperInterface $flashMessageHelper
     ): Response {
         $utilisateur = $this->getUser();
         if (!$utilisateur) {
@@ -51,20 +50,6 @@ final class EtrePartageGroupeController extends AbstractController
                 return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
             }
 
-            $nameFile = $uploadedFile->getClientOriginalName();
-
-            $exists = $entityManager
-                ->getRepository(YamlFile::class)
-                ->findByNomEtUtilisateur($nameFile, $utilisateur);
-
-            if (count($exists) > 0) {
-                $this->addFlash('error', sprintf(
-                    'Un fichier nommé "%s" existe déjà pour votre compte.',
-                    $nameFile
-                ));
-                return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
-            }
-
             try {
                 $content = file_get_contents($uploadedFile->getRealPath());
                 if (trim($content) === '') {
@@ -72,34 +57,19 @@ final class EtrePartageGroupeController extends AbstractController
                     return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
                 }
 
-                $repertoirePersonnel = $repertoireRepository->findOneBy([
-                    'utilisateur_id' => $utilisateur,
-                    'name' => 'Répertoire personnel'
-                ]);
+                // Création du YamlFileGroupe directement
+                $yamlFileGroupe = new YamlFileGroupe();
+                $yamlFileGroupe->setNameFile($uploadedFile->getClientOriginalName());
+                $yamlFileGroupe->setBodyFile($content);
+                $yamlFileGroupe->setDroit($droit);
+                $yamlFileGroupe->setGroupe($groupe);
 
-                if (!$repertoirePersonnel) {
-                    $this->addFlash('error', 'Votre répertoire personnel est introuvable.');
-                    return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
-                }
-
-                $yamlFile = new YamlFile();
-                $yamlFile->setNameFile($nameFile);
-                $yamlFile->setBodyFile($content);
-                $yamlFile->setUtilisateur($utilisateur);
-                $yamlFile->setRepertoire($repertoirePersonnel);
-
-                $epg = new EtrePartageGroupe();
-                $epg->setGroupe($groupe);
-                $epg->setYamlFile($yamlFile);
-                $epg->setDroit($droit);
-
-                $entityManager->persist($yamlFile);
-                $entityManager->persist($epg);
+                $entityManager->persist($yamlFileGroupe);
                 $entityManager->flush();
 
                 $this->addFlash('success', sprintf(
                     'Fichier "%s" ajouté avec succès au groupe "%s".',
-                    $nameFile,
+                    $uploadedFile->getClientOriginalName(),
                     $groupe->getNom()
                 ));
 
@@ -111,22 +81,26 @@ final class EtrePartageGroupeController extends AbstractController
 
         $flashMessageHelper->addFormErrorsAsFlash($form);
 
-        $fichiersPartages = $entityManager
-            ->getRepository(EtrePartageGroupe::class)
+        $fichiersGroupe = $entityManager
+            ->getRepository(YamlFileGroupe::class)
             ->findBy(['groupe' => $groupe]);
 
-        $yamlFilesUtilisateur = $entityManager
-            ->getRepository(YamlFile::class)
-            ->findBy(['utilisateur' => $utilisateur]);
+        $yamlFilesUtilisateur = $entityManager->createQueryBuilder()
+            ->select('y')
+            ->from(YamlFile::class, 'y')
+            ->where('y.utilisateur = :utilisateur')
+            ->setParameter('utilisateur', $utilisateur->getId()) // ⚠️ on passe l'ID, pas l'objet complet
+            ->getQuery()
+            ->getResult();
 
-        return $this->render('etre_partage_groupe/PartagerYamlFileGroupe.html.twig', [
+
+        return $this->render('yaml_file_groupe/PartagerYamlFileGroupe.html.twig', [
             'groupe' => $groupe,
-            'fichiersPartages' => $fichiersPartages,
+            'fichiersGroupe' => $fichiersGroupe,
             'formImport' => $form,
             'yamlFilesUtilisateur' => $yamlFilesUtilisateur,
         ]);
     }
-
 
     #[Route('/groupe/{id}/supprimer-fichier/{yamlId}', name: 'supprimer_yaml_groupe', methods: ['POST'])]
     public function supprimerYamlDuGroupe(
@@ -140,15 +114,14 @@ final class EtrePartageGroupeController extends AbstractController
             return $this->redirectToRoute('connexion');
         }
 
-        $epg = $entityManager
-            ->getRepository(EtrePartageGroupe::class)
-            ->findOneBy(['groupe' => $groupe, 'yamlFile' => $yamlId]);
+        $yamlFileGroupe = $entityManager->getRepository(YamlFileGroupe::class)->find($yamlId);
 
-        if (!$epg) {
+        if (!$yamlFileGroupe || $yamlFileGroupe->getGroupe() !== $groupe) {
             $this->addFlash('error', 'Fichier introuvable.');
             return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
         }
 
+        // Droits : seuls chef ou admin peuvent tout supprimer
         if (
             !$this->isGranted('ROLE_ADMIN') &&
             $groupe->getUtilisateurChef() !== $utilisateur
@@ -157,7 +130,7 @@ final class EtrePartageGroupeController extends AbstractController
             return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
         }
 
-        $entityManager->remove($epg);
+        $entityManager->remove($yamlFileGroupe);
         $entityManager->flush();
 
         $this->addFlash('success', 'Fichier supprimé du groupe.');
@@ -173,21 +146,18 @@ final class EtrePartageGroupeController extends AbstractController
     ): Response {
         $utilisateur = $this->getUser();
 
-        $epg = $entityManager
-            ->getRepository(EtrePartageGroupe::class)
-            ->findOneBy(['groupe' => $groupe, 'yamlFile' => $yamlId]);
+        $yamlFileGroupe = $entityManager->getRepository(YamlFileGroupe::class)->find($yamlId);
 
-        if (!$epg) {
+        if (!$yamlFileGroupe || $yamlFileGroupe->getGroupe() !== $groupe) {
             $this->addFlash('error', 'Fichier introuvable dans ce groupe.');
             return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
         }
 
-        $yamlFile = $epg->getYamlFile();
-
+        // Droits
         if (
             !$this->isGranted('ROLE_ADMIN') &&
             $groupe->getUtilisateurChef() !== $utilisateur &&
-            $epg->getDroit() !== 'edition'
+            $yamlFileGroupe->getDroit() !== 'edition'
         ) {
             $this->addFlash('error', "Vous n’avez pas les droits pour modifier ce fichier.");
             return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
@@ -201,7 +171,7 @@ final class EtrePartageGroupeController extends AbstractController
 
                 try {
                     Yaml::parse($yamlContent);
-                    $yamlFile->setBodyFile($yamlContent);
+                    $yamlFileGroupe->setBodyFile($yamlContent);
                     $entityManager->flush();
 
                     $this->addFlash('success', 'Fichier YAML modifié avec succès.');
@@ -214,19 +184,18 @@ final class EtrePartageGroupeController extends AbstractController
             }
         }
 
-        return $this->render('yaml_file/edityamlfilegroupe.html.twig', [
-            'yamlfile' => $yamlFile,
+        return $this->render('yaml_file_groupe/edityamlfilegroupe.html.twig', [
+            'yamlfile' => $yamlFileGroupe,
             'groupe' => $groupe,
         ]);
     }
-
 
     #[Route('/groupe/{id}/ajouter-yaml', name: 'ajouter_yaml_existant_groupe', methods: ['POST'])]
     public function ajouterYamlExistant(
         Request $request,
         Groupe $groupe,
         EntityManagerInterface $entityManager,
-        \App\Repository\YamlFileRepository $yamlFileRepository
+        YamlFileRepository $yamlFileRepository
     ): Response {
         $user = $this->getUser();
         $yamlId = $request->request->get('yamlId');
@@ -238,19 +207,14 @@ final class EtrePartageGroupeController extends AbstractController
             return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
         }
 
-        foreach ($groupe->getEtrePartageGroupes() as $partage) {
-            if ($partage->getYamlFile() === $yamlFile) {
-                $this->addFlash('warning', "Ce fichier est déjà partagé dans ce groupe.");
-                return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
-            }
-        }
+        // Création d'une copie dans le groupe
+        $yamlFileGroupe = new YamlFileGroupe();
+        $yamlFileGroupe->setNameFile($yamlFile->getNameFile());
+        $yamlFileGroupe->setBodyFile($yamlFile->getBodyFile());
+        $yamlFileGroupe->setDroit($droit);
+        $yamlFileGroupe->setGroupe($groupe);
 
-        $partage = new EtrePartageGroupe();
-        $partage->setGroupe($groupe);
-        $partage->setYamlFile($yamlFile);
-        $partage->setDroit($droit);
-
-        $entityManager->persist($partage);
+        $entityManager->persist($yamlFileGroupe);
         $entityManager->flush();
 
         $this->addFlash('success', 'Fichier ajouté au groupe avec succès.');

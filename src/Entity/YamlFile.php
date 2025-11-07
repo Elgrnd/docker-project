@@ -31,18 +31,11 @@ class YamlFile
     #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
     private ?Utilisateur $utilisateur = null;
 
-    /**
-     * @var Collection<int, EtrePartageGroupe>
-     */
-    #[ORM\OneToMany(mappedBy: 'yamlFile', targetEntity: EtrePartageGroupe::class)]
-    private Collection $etrePartageGroupes;
-
     #[ORM\ManyToOne(targetEntity: Repertoire::class, inversedBy: 'yamlFiles')]
     #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
     private ?Repertoire $repertoire = null;
     public function __construct()
     {
-        $this->etrePartageGroupes = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -95,9 +88,5 @@ class YamlFile
     {
         $this->repertoire = $repertoire;
         return $this;
-    }
-
-    public function getEtrePartageGroupes(): Collection {
-        return $this->etrePartageGroupes;
     }
 }

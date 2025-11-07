@@ -29,16 +29,16 @@ class Groupe
     private ?string $nom = null;
 
     /**
-     * @var Collection<int, EtrePartageGroupe>
+     * @var Collection<int, YamlFileGroupe>
      */
-    #[ORM\OneToMany(mappedBy: 'groupe', targetEntity: EtrePartageGroupe::class, cascade: ['remove'])]
-    private Collection $etrePartageGroupes;
+    #[ORM\OneToMany(targetEntity: YamlFileGroupe::class, mappedBy: 'groupe', orphanRemoval: true)]
+    private Collection $yamlFiles;
 
 
     public function __construct()
     {
         $this->utilisateurs = new ArrayCollection();
-        $this->etrePartageGroupes = new ArrayCollection();
+        $this->yamlFiles = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -95,28 +95,29 @@ class Groupe
     }
 
     /**
-     * @return Collection<int, EtrePartageGroupe>
+     * @return Collection<int, YamlFileGroupe>
      */
-    public function getEtrePartageGroupes(): Collection
+    public function getYamlFiles(): Collection
     {
-        return $this->etrePartageGroupes;
+        return $this->yamlFiles;
     }
 
-    public function addEtrePartageGroupe(EtrePartageGroupe $epg): static
+    public function addYamlFile(YamlFileGroupe $yamlFile): static
     {
-        if (!$this->etrePartageGroupes->contains($epg)) {
-            $this->etrePartageGroupes->add($epg);
-            $epg->setGroupe($this);
+        if (!$this->yamlFiles->contains($yamlFile)) {
+            $this->yamlFiles->add($yamlFile);
+            $yamlFile->setGroupe($this);
         }
 
         return $this;
     }
 
-    public function removeEtrePartageGroupe(EtrePartageGroupe $epg): static
+    public function removeYamlFile(YamlFileGroupe $yamlFile): static
     {
-        if ($this->etrePartageGroupes->removeElement($epg)) {
-            if ($epg->getGroupe() === $this) {
-                $epg->setGroupe(null);
+        if ($this->yamlFiles->removeElement($yamlFile)) {
+            // set the owning side to null (unless already changed)
+            if ($yamlFile->getGroupe() === $this) {
+                $yamlFile->setGroupe(null);
             }
         }
 

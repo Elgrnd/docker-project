@@ -14,7 +14,7 @@
                         <a href="{{ path('voir_groupe', {id: g.id}) }}" class="btn btn-secondary">Membres</a>
                         <a href="{{ path('fichiers_groupe', {id: g.id}) }}" class="btn btn-primary">Fichiers YAML</a>
 
-                        {% if app.user and g.utilisateurChef == app.user %}
+                        {% if app.user and (g.utilisateurChef == app.user or is_granted('ROLE_ADMIN')) %}
                             <form method="post"
                                   action="{{ path('supprimer_groupe', {id: g.id}) }}"
                                   style="display:inline;"
@@ -22,6 +22,7 @@
                                 <button type="submit" class="btn btn-danger">Supprimer</button>
                             </form>
                         {% endif %}
+
                     </div>
                 </li>
             {% else %}

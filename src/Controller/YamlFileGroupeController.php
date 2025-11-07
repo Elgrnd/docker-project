@@ -207,7 +207,6 @@ final class YamlFileGroupeController extends AbstractController
             return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
         }
 
-        // Création d'une copie dans le groupe
         $yamlFileGroupe = new YamlFileGroupe();
         $yamlFileGroupe->setNameFile($yamlFile->getNameFile());
         $yamlFileGroupe->setBodyFile($yamlFile->getBodyFile());

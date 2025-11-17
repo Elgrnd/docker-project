@@ -15,30 +15,37 @@ class Groupe
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'groupes')]
+    #[ORM\Column(length: 255)]
+    private ?string $nom = null;
+
+    #[ORM\ManyToOne(inversedBy: 'etrechef')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Utilisateur $utilisateurChef = null;
+    private ?Utilisateur $etreChef = null;
+
+
+
+    /**
+     * @var Collection<int, Repertoire>
+     */
+    #[ORM\OneToMany(targetEntity: Repertoire::class, mappedBy: 'groupe_repertoire', orphanRemoval: true)]
+    private Collection $groupe_repertoire;
 
     /**
      * @var Collection<int, Utilisateur>
      */
-    #[ORM\ManyToMany(targetEntity: Utilisateur::class, inversedBy: 'groupesMembre')]
-    private Collection $utilisateurs;
+    #[ORM\ManyToMany(targetEntity: Utilisateur::class, mappedBy: 'utilisateur_groupe')]
+    private Collection $utilisateur_groupe;
 
-    #[ORM\Column(length: 255)]
-    private ?string $nom = null;
-
-    /**
-     * @var Collection<int, YamlFileGroupe>
-     */
-    #[ORM\OneToMany(targetEntity: YamlFileGroupe::class, mappedBy: 'groupe', orphanRemoval: true)]
-    private Collection $yamlFiles;
+    #[ORM\OneToMany(mappedBy: "utilisateur", targetEntity: GroupeYamlFileRepertoire::class)]
+    private Collection $yamlfilesParRepertoire;
 
 
     public function __construct()
     {
         $this->utilisateurs = new ArrayCollection();
         $this->yamlFiles = new ArrayCollection();
+        $this->groupe_repertoire = new ArrayCollection();
+        $this->utilisateur_groupe = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -119,6 +126,102 @@ class Groupe
             if ($yamlFile->getGroupe() === $this) {
                 $yamlFile->setGroupe(null);
             }
+        }
+
+        return $this;
+    }
+
+    public function getEtreChef(): ?Utilisateur
+    {
+        return $this->etreChef;
+    }
+
+    public function setEtreChef(?Utilisateur $etreChef): static
+    {
+        $this->etreChef = $etreChef;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Utilisateur>
+     */
+    public function getAppartenir(): Collection
+    {
+        return $this->appartenir;
+    }
+
+    public function addAppartenir(Utilisateur $appartenir): static
+    {
+        if (!$this->appartenir->contains($appartenir)) {
+            $this->appartenir->add($appartenir);
+            $appartenir->addAppartenir($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAppartenir(Utilisateur $appartenir): static
+    {
+        if ($this->appartenir->removeElement($appartenir)) {
+            $appartenir->removeAppartenir($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Repertoire>
+     */
+    public function getGroupeRepertoire(): Collection
+    {
+        return $this->groupe_repertoire;
+    }
+
+    public function addGroupeRepertoire(Repertoire $groupeRepertoire): static
+    {
+        if (!$this->groupe_repertoire->contains($groupeRepertoire)) {
+            $this->groupe_repertoire->add($groupeRepertoire);
+            $groupeRepertoire->setGroupeRepertoire($this);
+        }
+
+        return $this;
+    }
+
+    public function removeGroupeRepertoire(Repertoire $groupeRepertoire): static
+    {
+        if ($this->groupe_repertoire->removeElement($groupeRepertoire)) {
+            // set the owning side to null (unless already changed)
+            if ($groupeRepertoire->getGroupeRepertoire() === $this) {
+                $groupeRepertoire->setGroupeRepertoire(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Utilisateur>
+     */
+    public function getUtilisateurGroupe(): Collection
+    {
+        return $this->utilisateur_groupe;
+    }
+
+    public function addUtilisateurGroupe(Utilisateur $utilisateurGroupe): static
+    {
+        if (!$this->utilisateur_groupe->contains($utilisateurGroupe)) {
+            $this->utilisateur_groupe->add($utilisateurGroupe);
+            $utilisateurGroupe->addUtilisateurGroupe($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUtilisateurGroupe(Utilisateur $utilisateurGroupe): static
+    {
+        if ($this->utilisateur_groupe->removeElement($utilisateurGroupe)) {
+            $utilisateurGroupe->removeUtilisateurGroupe($this);
         }
 
         return $this;

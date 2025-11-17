@@ -24,13 +24,21 @@ class Repertoire
     #[ORM\OneToMany(mappedBy: 'parent', targetEntity: self::class, cascade: ['persist', 'remove'])]
     private Collection $children;
 
-    #[ORM\ManyToOne(inversedBy: 'repertoires')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?Utilisateur $utilisateur_id = null;
 
-    // NOUVEAU : Relation avec YamlFile
-    #[ORM\OneToMany(mappedBy: 'repertoire', targetEntity: YamlFile::class, cascade: ['persist'])]
-    private Collection $yamlFiles;
+    #[ORM\ManyToOne(inversedBy: 'groupe_repertoire')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Groupe $groupe_repertoire = null;
+
+    #[ORM\ManyToOne(inversedBy: 'utilisateur_repertoire')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Utilisateur $utilisateur_repertoire = null;
+
+    #[ORM\OneToMany(mappedBy: "repertoire", targetEntity: UtilisateurYamlfileRepertoire::class)]
+    private Collection $accesYamlFilesUtilisateur;
+
+    #[ORM\OneToMany(mappedBy: "repertoire", targetEntity: GroupeYamlFileRepertoire::class)]
+    private Collection $accesYamlFilesGroupe;
+
 
     public function __construct()
     {
@@ -130,5 +138,29 @@ class Repertoire
             return $this->name;
         }
         return $this->parent->getFullPath() . ' / ' . $this->name;
+    }
+
+    public function getGroupeRepertoire(): ?Groupe
+    {
+        return $this->groupe_repertoire;
+    }
+
+    public function setGroupeRepertoire(?Groupe $groupe_repertoire): static
+    {
+        $this->groupe_repertoire = $groupe_repertoire;
+
+        return $this;
+    }
+
+    public function getUtilisateurRepertoire(): ?Utilisateur
+    {
+        return $this->utilisateur_repertoire;
+    }
+
+    public function setUtilisateurRepertoire(?Utilisateur $utilisateur_repertoire): static
+    {
+        $this->utilisateur_repertoire = $utilisateur_repertoire;
+
+        return $this;
     }
 }

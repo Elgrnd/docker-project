@@ -27,13 +27,16 @@ class YamlFile
     #[ORM\Column(type: Types::TEXT)]
     private ?string $bodyFile = null;
 
-    #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'yamlFiles')]
-    #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
-    private ?Utilisateur $utilisateur = null;
+    #[ORM\ManyToOne(inversedBy: 'utilisateur_yamlfile')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Utilisateur $utilisateur_yamlfile = null;
 
-    #[ORM\ManyToOne(targetEntity: Repertoire::class, inversedBy: 'yamlFiles')]
-    #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
-    private ?Repertoire $repertoire = null;
+    #[ORM\OneToMany(mappedBy: "yamlFile", targetEntity: UtilisateurYamlfileRepertoire::class)]
+    private Collection $utilisateursParRepertoire;
+
+    #[ORM\OneToMany(mappedBy: "yamlFile", targetEntity: GroupeYamlFileRepertoire::class)]
+    private Collection $groupeParRepertoire;
+
     public function __construct()
     {
     }
@@ -87,6 +90,30 @@ class YamlFile
     public function setRepertoire(?Repertoire $repertoire): static
     {
         $this->repertoire = $repertoire;
+        return $this;
+    }
+
+    public function getPartager(): ?Utilisateur
+    {
+        return $this->partager;
+    }
+
+    public function setPartager(?Utilisateur $partager): static
+    {
+        $this->partager = $partager;
+
+        return $this;
+    }
+
+    public function getUtilisateurYamlfile(): ?Utilisateur
+    {
+        return $this->utilisateur_yamlfile;
+    }
+
+    public function setUtilisateurYamlfile(?Utilisateur $utilisateur_yamlfile): static
+    {
+        $this->utilisateur_yamlfile = $utilisateur_yamlfile;
+
         return $this;
     }
 }

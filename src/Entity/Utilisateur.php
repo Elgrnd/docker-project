@@ -48,26 +48,33 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\Email(message: "Cette adresse email n'est pas valide !")]
     private ?string $adresseMail = null;
 
-    #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: YamlFile::class, orphanRemoval: true)]
-    private Collection $yamlFiles;
+    /**
+     * @var Collection<int, Groupe>
+     */
+    #[ORM\OneToMany(targetEntity: Groupe::class, mappedBy: 'etreChef', orphanRemoval: true)]
+    private Collection $etrechef;
 
     /**
      * @var Collection<int, Groupe>
      */
-    #[ORM\OneToMany(targetEntity: Groupe::class, mappedBy: 'utilisateurChef', orphanRemoval: true)]
-    private Collection $groupes;
+    #[ORM\ManyToMany(targetEntity: Groupe::class, inversedBy: 'utilisateur_groupe')]
+    #[ORM\JoinTable(name: "utilisateur_groupe")]
+    private Collection $utilisateur_groupe;
 
     /**
-     * @var Collection<int, Groupe>
+     * @var Collection<int, YamlFile>
      */
-    #[ORM\ManyToMany(targetEntity: Groupe::class, mappedBy: 'utilisateurs')]
-    private Collection $groupesMembre;
+    #[ORM\OneToMany(targetEntity: YamlFile::class, mappedBy: 'utilisateur_yamlfile', orphanRemoval: true)]
+    private Collection $utilisateur_yamlfile;
 
     /**
      * @var Collection<int, Repertoire>
      */
-    #[ORM\OneToMany(targetEntity: Repertoire::class, mappedBy: 'utilisateur_id', orphanRemoval: true)]
-    private Collection $repertoires;
+    #[ORM\OneToMany(targetEntity: Repertoire::class, mappedBy: 'utilisateur_repertoire', orphanRemoval: true)]
+    private Collection $utilisateur_repertoire;
+
+    #[ORM\OneToMany(mappedBy: "utilisateur", targetEntity: UtilisateurYamlfileRepertoire::class)]
+    private Collection $yamlfilesParRepertoire;
 
     public function __construct()
     {
@@ -75,6 +82,11 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         $this->groupes = new ArrayCollection();
         $this->groupesMembre = new ArrayCollection();
         $this->repertoires = new ArrayCollection();
+        $this->etrechef = new ArrayCollection();
+        $this->utilisateur_groupe = new ArrayCollection();
+        $this->utilisateur_yamlfile = new ArrayCollection();
+        $this->utilisateur_repertoire = new ArrayCollection();
+
     }
 
     public function getId(): ?int
@@ -266,6 +278,120 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($repertoire->getUtilisateurId() === $this) {
                 $repertoire->setUtilisateurId(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Groupe>
+     */
+    public function getEtrechef(): Collection
+    {
+        return $this->etrechef;
+    }
+
+    public function addEtrechef(Groupe $etrechef): static
+    {
+        if (!$this->etrechef->contains($etrechef)) {
+            $this->etrechef->add($etrechef);
+            $etrechef->setEtreChef($this);
+        }
+
+        return $this;
+    }
+
+    public function removeEtrechef(Groupe $etrechef): static
+    {
+        if ($this->etrechef->removeElement($etrechef)) {
+            // set the owning side to null (unless already changed)
+            if ($etrechef->getEtreChef() === $this) {
+                $etrechef->setEtreChef(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Groupe>
+     */
+    public function getUtilisateurGroupe(): Collection
+    {
+        return $this->utilisateur_groupe;
+    }
+
+    public function addUtilisateurGroupe(Groupe $utilisateurGroupe): static
+    {
+        if (!$this->utilisateur_groupe->contains($utilisateurGroupe)) {
+            $this->utilisateur_groupe->add($utilisateurGroupe);
+        }
+
+        return $this;
+    }
+
+    public function removeUtilisateurGroupe(Groupe $utilisateurGroupe): static
+    {
+        $this->utilisateur_groupe->removeElement($utilisateurGroupe);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, YamlFile>
+     */
+    public function getUtilisateurYamlfile(): Collection
+    {
+        return $this->utilisateur_yamlfile;
+    }
+
+    public function addUtilisateurYamlfile(YamlFile $utilisateurYamlfile): static
+    {
+        if (!$this->utilisateur_yamlfile->contains($utilisateurYamlfile)) {
+            $this->utilisateur_yamlfile->add($utilisateurYamlfile);
+            $utilisateurYamlfile->setUtilisateurYamlfile($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUtilisateurYamlfile(YamlFile $utilisateurYamlfile): static
+    {
+        if ($this->utilisateur_yamlfile->removeElement($utilisateurYamlfile)) {
+            // set the owning side to null (unless already changed)
+            if ($utilisateurYamlfile->getUtilisateurYamlfile() === $this) {
+                $utilisateurYamlfile->setUtilisateurYamlfile(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Repertoire>
+     */
+    public function getUtilisateurRepertoire(): Collection
+    {
+        return $this->utilisateur_repertoire;
+    }
+
+    public function addUtilisateurRepertoire(Repertoire $utilisateurRepertoire): static
+    {
+        if (!$this->utilisateur_repertoire->contains($utilisateurRepertoire)) {
+            $this->utilisateur_repertoire->add($utilisateurRepertoire);
+            $utilisateurRepertoire->setUtilisateurRepertoire($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUtilisateurRepertoire(Repertoire $utilisateurRepertoire): static
+    {
+        if ($this->utilisateur_repertoire->removeElement($utilisateurRepertoire)) {
+            // set the owning side to null (unless already changed)
+            if ($utilisateurRepertoire->getUtilisateurRepertoire() === $this) {
+                $utilisateurRepertoire->setUtilisateurRepertoire(null);
             }
         }
 

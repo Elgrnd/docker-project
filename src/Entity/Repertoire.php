@@ -26,11 +26,11 @@ class Repertoire
 
 
     #[ORM\ManyToOne(inversedBy: 'groupe_repertoire')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)]
     private ?Groupe $groupe_repertoire = null;
 
     #[ORM\ManyToOne(inversedBy: 'utilisateur_repertoire')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)]
     private ?Utilisateur $utilisateur_repertoire = null;
 
     #[ORM\OneToMany(mappedBy: "repertoire", targetEntity: UtilisateurYamlfileRepertoire::class)]

@@ -73,7 +73,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Repertoire::class, mappedBy: 'utilisateur_repertoire', orphanRemoval: true)]
     private Collection $utilisateur_repertoire;
 
-    #[ORM\OneToMany(mappedBy: "utilisateur", targetEntity: UtilisateurYamlfileRepertoire::class)]
+    #[ORM\OneToMany(mappedBy: "utilisateur", targetEntity: UtilisateurYamlFileRepertoire::class)]
     private Collection $yamlfilesParRepertoire;
 
     public function __construct()

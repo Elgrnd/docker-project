@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\Groupe;
+use App\Entity\Repertoire;
+use App\Entity\Utilisateur;
 use App\Form\AjouterMembreGroupeType;
 use App\Form\GroupeType;
 use App\Repository\GroupeRepository;
@@ -27,7 +29,7 @@ final class GroupeController extends AbstractController
         if ($this->isGranted('ROLE_ADMIN')) {
             $groupesMembre = $em->getRepository(Groupe::class)->findAll();
         } else {
-            $groupesMembre = $utilisateur->getGroupesMembre();
+            $groupesMembre = $utilisateur->getUtilisateurGroupe();
         }
 
         $groupe = new Groupe();
@@ -35,9 +37,14 @@ final class GroupeController extends AbstractController
         $formGroupe->handleRequest($request);
 
         if ($formGroupe->isSubmitted() && $formGroupe->isValid()) {
-            $groupe->setUtilisateurChef($utilisateur);
-            $groupe->addUtilisateur($utilisateur);
+            $repertoire = new Repertoire();
+            $repertoire->setGroupeRepertoire($groupe);
+            $repertoire->setName('Répertoire groupe');
+
+            $groupe->setEtreChef($utilisateur);
+            $groupe->addUtilisateurGroupe($utilisateur);
             $em->persist($groupe);
+            $em->persist($repertoire);
             $em->flush();
             $this->addFlash('success', 'Groupe créé avec succès.');
             return $this->redirectToRoute('mes_groupes');
@@ -62,7 +69,9 @@ final class GroupeController extends AbstractController
             return $this->redirectToRoute('connexion');
         }
 
-        $isChef = $groupe->getUtilisateurChef() === $utilisateur || $this->isGranted('ROLE_ADMIN');
+        $isChef = $groupe->getEtreChef() === $utilisateur || $this->isGranted('ROLE_ADMIN');
+
+
 
         $formAjouterMembre = $this->createForm(AjouterMembreGroupeType::class);
         $formAjouterMembre->handleRequest($request);
@@ -71,10 +80,10 @@ final class GroupeController extends AbstractController
             $data = $formAjouterMembre->getData();
             $nouveauMembre = $data['utilisateur'];
 
-            if ($groupe->getUtilisateurs()->contains($nouveauMembre)) {
+            if ($groupe->getUtilisateurGroupe()->contains($nouveauMembre)) {
                 $this->addFlash('error', 'Cet utilisateur est déjà dans le groupe.');
             } else {
-                $groupe->addUtilisateur($nouveauMembre);
+                $groupe->addUtilisateurGroupe($nouveauMembre);
                 $em->persist($groupe);
                 $em->flush();
                 $this->addFlash('success', 'Utilisateur ajouté avec succès au groupe.');
@@ -100,7 +109,7 @@ final class GroupeController extends AbstractController
             return $this->redirectToRoute('connexion');
         }
 
-        if ($groupe->getUtilisateurChef() !== $utilisateur && !$this->isGranted('ROLE_ADMIN')) {
+        if ($groupe->getEtreChef() !== $utilisateur && !$this->isGranted('ROLE_ADMIN')) {
             $this->addFlash('error', 'Vous n’êtes pas autorisé à supprimer ce groupe.');
             return $this->redirectToRoute('mes_groupes');
         }
@@ -118,16 +127,16 @@ final class GroupeController extends AbstractController
         Groupe $groupe,
         string $login,
         EntityManagerInterface $em,
-        UtilisateurRepository $utilisateurRepository
     ): Response {
         $utilisateurConnecte = $this->getUser();
+        $utilisateurRepository = $em->getRepository(Utilisateur::class);
 
         if (!$utilisateurConnecte) {
             $this->addFlash('error', 'Veuillez vous connecter.');
             return $this->redirectToRoute('connexion');
         }
 
-        $isChef = $groupe->getUtilisateurChef() === $utilisateurConnecte;
+        $isChef = $groupe->getEtreChef() === $utilisateurConnecte;
         $isAdmin = $this->isGranted('ROLE_ADMIN');
 
         if (!$isChef && !$isAdmin) {
@@ -141,12 +150,12 @@ final class GroupeController extends AbstractController
             return $this->redirectToRoute('voir_groupe', ['id' => $groupe->getId()]);
         }
 
-        if (!$groupe->getUtilisateurs()->contains($membre)) {
+        if (!$groupe->getUtilisateurGroupe()->contains($membre)) {
             $this->addFlash('error', 'Cet utilisateur ne fait pas partie de ce groupe.');
             return $this->redirectToRoute('voir_groupe', ['id' => $groupe->getId()]);
         }
 
-        $groupe->removeUtilisateur($membre);
+        $groupe->removeUtilisateurGroupe($membre);
         $em->flush();
 
         $this->addFlash('success', sprintf('L’utilisateur "%s" a été retiré du groupe.', $membre->getLogin()));
@@ -165,7 +174,7 @@ final class GroupeController extends AbstractController
         }
 
         // Le chef ne peut pas "quitter" son propre groupe
-        if ($groupe->getUtilisateurChef() === $utilisateur) {
+        if ($groupe->getEtreChef() === $utilisateur) {
             $this->addFlash('error', 'Le chef ne peut pas quitter le groupe. Supprimez-le à la place.');
             return $this->redirectToRoute('voir_groupe', ['id' => $groupe->getId()]);
         }

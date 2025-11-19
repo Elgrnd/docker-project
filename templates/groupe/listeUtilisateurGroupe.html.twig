@@ -8,10 +8,10 @@
 
         <h3>Membres du groupe</h3>
         <ul>
-            {% for membre in groupe.utilisateurs %}
+            {% for membre in groupe.utilisateurGroupe %}
                 <li>
                     {{ membre.login }}
-                    {% if (groupe.utilisateurChef == app.user or is_granted('ROLE_ADMIN')) and membre != groupe.utilisateurChef %}
+                    {% if (groupe.etreChef == app.user or is_granted('ROLE_ADMIN')) and membre != groupe.etreChef %}
                         <form method="post"
                               action="{{ path('supprimer_membre_groupe', {id: groupe.id, login: membre.login}) }}"
                               style="display:inline-block;"
@@ -25,7 +25,7 @@
             {% endfor %}
         </ul>
 
-        {% if groupe.utilisateurChef == app.user or is_granted('ROLE_ADMIN') %}
+        {% if groupe.etreChef == app.user or is_granted('ROLE_ADMIN') %}
 
             <fieldset>
                 <legend>Ajouter un membre</legend>

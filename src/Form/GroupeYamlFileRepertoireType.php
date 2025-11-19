@@ -2,7 +2,11 @@
 
 namespace App\Form;
 
-use App\Entity\YamlFileGroupe;
+use App\Entity\Groupe;
+use App\Entity\GroupeYamlFileRepertoire;
+use App\Entity\Repertoire;
+use App\Entity\YamlFile;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
@@ -10,7 +14,7 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\File;
 
-class YamlFileGroupeType extends AbstractType
+class GroupeYamlFileRepertoireType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -52,7 +56,7 @@ class YamlFileGroupeType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'data_class' => YamlFileGroupe::class,
+            'data_class' => GroupeYamlFileRepertoire::class,
         ]);
     }
 }

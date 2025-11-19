@@ -2,16 +2,17 @@
 
 namespace App\Entity;
 
-use App\Repository\UtilisateurYamlFileGroupeRepository;
+use App\Repository\GroupeYamlFileRepertoireRepository;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: UtilisateurYamlFileGroupeRepository::class)]
+#[ORM\Entity(repositoryClass: GroupeYamlFileRepertoireRepository::class)]
 class GroupeYamlFileRepertoire
 {
-    #[ORM\Id]
+    // Decommenter + enlever le null
+//    #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: Repertoire::class)]
-    #[ORM\JoinColumn(nullable: false)]
-    private Repertoire $repertoire;
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Repertoire $repertoire = null;
 
     #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: YamlFile::class)]
@@ -37,4 +38,36 @@ class GroupeYamlFileRepertoire
 
         return $this;
     }
+
+    public function getRepertoire(): Repertoire
+    {
+        return $this->repertoire;
+    }
+
+    public function setRepertoire(Repertoire $repertoire): void
+    {
+        $this->repertoire = $repertoire;
+    }
+
+    public function getYamlFile(): YamlFile
+    {
+        return $this->yamlFile;
+    }
+
+    public function setYamlFile(YamlFile $yamlFile): void
+    {
+        $this->yamlFile = $yamlFile;
+    }
+
+    public function getGroupe(): Groupe
+    {
+        return $this->groupe;
+    }
+
+    public function setGroupe(Groupe $groupe): void
+    {
+        $this->groupe = $groupe;
+    }
+
+
 }

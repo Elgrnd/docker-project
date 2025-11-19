@@ -25,21 +25,21 @@
                         <li class="file-item">
                             <div class="file-info">
                                 <i class="bi bi-file-earmark-text file-icon"></i>
-                                <span class="file-name">{{ fichier.nameFile }}</span>
+                                <span class="file-name">{{ fichier.yamlFile.nameFile }}</span>
                             </div>
                             <div class="file-actions">
                                 <i class="bi bi-eye view-icon" title="Afficher"
-                                   onclick="afficherContenuYamlFile('{{ fichier.bodyFile|escape('js') }}')"></i>
+                                   onclick="afficherContenuYamlFile('{{ fichier.yamlFile.bodyFile|escape('js') }}')"></i>
 
-                                {% if fichier.droit == 'edition' or groupe.utilisateurChef == app.user or is_granted('ROLE_ADMIN') %}
-                                    <a href="{{ path('modifier_yaml_file_groupe', {'id': groupe.id, 'yamlId': fichier.id}) }}">
+                                {% if fichier.droit == 'edition' or groupe.etreChef == app.user or is_granted('ROLE_ADMIN') %}
+                                    <a href="{{ path('modifier_yaml_file_groupe', {'id': groupe.id, 'yamlId': fichier.yamlFile.id}) }}">
                                         <i class="bi bi-pencil edit-icon" title="Modifier"></i>
                                     </a>
                                 {% endif %}
 
-                                {% if groupe.utilisateurChef == app.user or is_granted('ROLE_ADMIN') %}
-                                    <form method="post" action="{{ path('supprimer_yaml_groupe', {'id': groupe.id, 'yamlId': fichier.id}) }}" style="display:inline-block;">
-                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ fichier.id) }}">
+                                {% if groupe.etreChef == app.user or is_granted('ROLE_ADMIN') %}
+                                    <form method="post" action="{{ path('supprimer_yaml_groupe', {'id': groupe.id, 'yamlId': fichier.yamlFile.id}) }}" style="display:inline-block;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ fichier.yamlFile.id) }}">
                                         <button type="submit" class="btn btn-link p-0 m-0 supprimerFichier">
                                             <i class="bi bi-trash bin-icon" title="Supprimer"></i>
                                         </button>

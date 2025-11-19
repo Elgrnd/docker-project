@@ -2,10 +2,11 @@
 
 namespace App\Controller;
 
-use App\Entity\YamlFile;
-use App\Entity\YamlFileGroupe;
 use App\Entity\Groupe;
-use App\Form\YamlFileGroupeType;
+use App\Entity\GroupeYamlFileRepertoire;
+use App\Entity\Utilisateur;
+use App\Entity\YamlFile;
+use App\Form\GroupeYamlFileRepertoireType;
 use App\Repository\YamlFileRepository;
 use App\Service\FlashMessageHelperInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -17,7 +18,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
-final class YamlFileGroupeController extends AbstractController
+final class GroupeYamlFileRepertoireController extends AbstractController
 {
     #[Route('/groupe/{id}/fichiers', name: 'fichiers_groupe', methods: ['GET', 'POST'])]
     public function fichiersGroupe(
@@ -32,7 +33,7 @@ final class YamlFileGroupeController extends AbstractController
             return $this->redirectToRoute('connexion');
         }
 
-        $form = $this->createForm(YamlFileGroupeType::class);
+        $form = $this->createForm(GroupeYamlFileRepertoireType::class);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -58,13 +59,20 @@ final class YamlFileGroupeController extends AbstractController
                 }
 
                 // Création du YamlFileGroupe directement
-                $yamlFileGroupe = new YamlFileGroupe();
-                $yamlFileGroupe->setNameFile($uploadedFile->getClientOriginalName());
-                $yamlFileGroupe->setBodyFile($content);
-                $yamlFileGroupe->setDroit($droit);
-                $yamlFileGroupe->setGroupe($groupe);
+                $gyr = new GroupeYamlFileRepertoire();
+                $yamlFile = new YamlFile();
 
-                $entityManager->persist($yamlFileGroupe);
+                $yamlFile->setNameFile($uploadedFile->getClientOriginalName());
+                $yamlFile->setBodyFile($content);
+                $yamlFile->setUtilisateurYamlfile($utilisateur);
+
+                $gyr->setDroit($droit);
+                $gyr->setGroupe($groupe);
+                $gyr->setYamlFile($yamlFile);
+//                $gyr->setRepertoire(null);
+
+                $entityManager->persist($yamlFile);
+                $entityManager->persist($gyr);
                 $entityManager->flush();
 
                 $this->addFlash('success', sprintf(
@@ -80,19 +88,11 @@ final class YamlFileGroupeController extends AbstractController
         }
 
         $flashMessageHelper->addFormErrorsAsFlash($form);
+        $yamlFilesUtilisateur = $entityManager->getRepository(YamlFile::class)->findByUtilisateur($utilisateur);
 
         $fichiersGroupe = $entityManager
-            ->getRepository(YamlFileGroupe::class)
+            ->getRepository(GroupeYamlFileRepertoire::class)
             ->findBy(['groupe' => $groupe]);
-
-        $yamlFilesUtilisateur = $entityManager->createQueryBuilder()
-            ->select('y')
-            ->from(YamlFile::class, 'y')
-            ->where('y.utilisateur = :utilisateur')
-            ->setParameter('utilisateur', $utilisateur->getId()) // ⚠️ on passe l'ID, pas l'objet complet
-            ->getQuery()
-            ->getResult();
-
 
         return $this->render('yaml_file_groupe/PartagerYamlFileGroupe.html.twig', [
             'groupe' => $groupe,
@@ -124,7 +124,7 @@ final class YamlFileGroupeController extends AbstractController
         // Droits : seuls chef ou admin peuvent tout supprimer
         if (
             !$this->isGranted('ROLE_ADMIN') &&
-            $groupe->getUtilisateurChef() !== $utilisateur
+            $groupe->getEtreChef() !== $utilisateur
         ) {
             $this->addFlash('error', 'Vous n’êtes pas autorisé à supprimer ce fichier.');
             return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
@@ -156,7 +156,7 @@ final class YamlFileGroupeController extends AbstractController
         // Droits
         if (
             !$this->isGranted('ROLE_ADMIN') &&
-            $groupe->getUtilisateurChef() !== $utilisateur &&
+            $groupe->getEtreChef() !== $utilisateur &&
             $yamlFileGroupe->getDroit() !== 'edition'
         ) {
             $this->addFlash('error', "Vous n’avez pas les droits pour modifier ce fichier.");

@@ -9,7 +9,7 @@ use Doctrine\Persistence\ManagerRegistry;
 /**
  * @extends ServiceEntityRepository<GroupeYamlFileRepertoire>
  */
-class UtilisateurYamlFileGroupeRepository extends ServiceEntityRepository
+class GroupeYamlFileRepertoireRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {

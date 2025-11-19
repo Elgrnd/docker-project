@@ -22,8 +22,6 @@ class Groupe
     #[ORM\JoinColumn(nullable: false)]
     private ?Utilisateur $etreChef = null;
 
-
-
     /**
      * @var Collection<int, Repertoire>
      */
@@ -143,32 +141,6 @@ class Groupe
         return $this;
     }
 
-    /**
-     * @return Collection<int, Utilisateur>
-     */
-    public function getAppartenir(): Collection
-    {
-        return $this->appartenir;
-    }
-
-    public function addAppartenir(Utilisateur $appartenir): static
-    {
-        if (!$this->appartenir->contains($appartenir)) {
-            $this->appartenir->add($appartenir);
-            $appartenir->addAppartenir($this);
-        }
-
-        return $this;
-    }
-
-    public function removeAppartenir(Utilisateur $appartenir): static
-    {
-        if ($this->appartenir->removeElement($appartenir)) {
-            $appartenir->removeAppartenir($this);
-        }
-
-        return $this;
-    }
 
     /**
      * @return Collection<int, Repertoire>

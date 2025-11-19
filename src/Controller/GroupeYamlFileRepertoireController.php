@@ -114,9 +114,9 @@ final class GroupeYamlFileRepertoireController extends AbstractController
             return $this->redirectToRoute('connexion');
         }
 
-        $yamlFileGroupe = $entityManager->getRepository(YamlFileGroupe::class)->find($yamlId);
+        $gyr = $entityManager->getRepository(GroupeYamlFileRepertoire::class)->recupererYamlFileDepuisGroupe($yamlId);
 
-        if (!$yamlFileGroupe || $yamlFileGroupe->getGroupe() !== $groupe) {
+        if (!$gyr || $gyr->getGroupe() !== $groupe) {
             $this->addFlash('error', 'Fichier introuvable.');
             return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
         }
@@ -130,7 +130,7 @@ final class GroupeYamlFileRepertoireController extends AbstractController
             return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
         }
 
-        $entityManager->remove($yamlFileGroupe);
+        $entityManager->remove($gyr);
         $entityManager->flush();
 
         $this->addFlash('success', 'Fichier supprimé du groupe.');
@@ -146,9 +146,10 @@ final class GroupeYamlFileRepertoireController extends AbstractController
     ): Response {
         $utilisateur = $this->getUser();
 
-        $yamlFileGroupe = $entityManager->getRepository(YamlFileGroupe::class)->find($yamlId);
+        $gyr = $entityManager->getRepository(GroupeYamlFileRepertoire::class)->recupererYamlFileDepuisGroupe($yamlId);
 
-        if (!$yamlFileGroupe || $yamlFileGroupe->getGroupe() !== $groupe) {
+        $yamlFile = $gyr->getYamlFile();
+        if (!$gyr || $gyr->getGroupe() !== $groupe) {
             $this->addFlash('error', 'Fichier introuvable dans ce groupe.');
             return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
         }
@@ -157,7 +158,7 @@ final class GroupeYamlFileRepertoireController extends AbstractController
         if (
             !$this->isGranted('ROLE_ADMIN') &&
             $groupe->getEtreChef() !== $utilisateur &&
-            $yamlFileGroupe->getDroit() !== 'edition'
+            $gyr->getDroit() !== 'edition'
         ) {
             $this->addFlash('error', "Vous n’avez pas les droits pour modifier ce fichier.");
             return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
@@ -171,7 +172,7 @@ final class GroupeYamlFileRepertoireController extends AbstractController
 
                 try {
                     Yaml::parse($yamlContent);
-                    $yamlFileGroupe->setBodyFile($yamlContent);
+                    $yamlFile->setBodyFile($yamlContent);
                     $entityManager->flush();
 
                     $this->addFlash('success', 'Fichier YAML modifié avec succès.');
@@ -185,7 +186,7 @@ final class GroupeYamlFileRepertoireController extends AbstractController
         }
 
         return $this->render('yaml_file_groupe/edityamlfilegroupe.html.twig', [
-            'yamlfile' => $yamlFileGroupe,
+            'yamlfile' => $yamlFile,
             'groupe' => $groupe,
         ]);
     }
@@ -202,18 +203,18 @@ final class GroupeYamlFileRepertoireController extends AbstractController
         $droit = $request->request->get('droit', 'lecture');
 
         $yamlFile = $yamlFileRepository->find($yamlId);
-        if (!$yamlFile || $yamlFile->getUtilisateur() !== $user) {
+        if (!$yamlFile || $yamlFile->getUtilisateurYamlfile() !== $user) {
             $this->addFlash('error', "Fichier invalide ou non autorisé.");
             return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
         }
 
-        $yamlFileGroupe = new YamlFileGroupe();
-        $yamlFileGroupe->setNameFile($yamlFile->getNameFile());
-        $yamlFileGroupe->setBodyFile($yamlFile->getBodyFile());
-        $yamlFileGroupe->setDroit($droit);
-        $yamlFileGroupe->setGroupe($groupe);
+        $gyr = new GroupeYamlFileRepertoire();
+        $gyr->setYamlFile($yamlFile);
+        $gyr->setDroit($droit);
+        $gyr->setGroupe($groupe);
 
-        $entityManager->persist($yamlFileGroupe);
+        //ajouter ici le repertoire aussi
+        $entityManager->persist($gyr);
         $entityManager->flush();
 
         $this->addFlash('success', 'Fichier ajouté au groupe avec succès.');

@@ -16,6 +16,15 @@ class GroupeYamlFileRepertoireRepository extends ServiceEntityRepository
         parent::__construct($registry, GroupeYamlFileRepertoire::class);
     }
 
+    public function recupererYamlFileDepuisGroupe($idYamlFile)
+    {
+        return $this->createQueryBuilder('g')
+            ->andWhere('g.yamlFile = :yamlFile')
+            ->setParameter('yamlFile', $idYamlFile)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     //    /**
     //     * @return GroupeYamlFileRepertoire[] Returns an array of GroupeYamlFileRepertoire objects
     //     */

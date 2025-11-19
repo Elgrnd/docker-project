@@ -16,22 +16,33 @@ class RepertoireRepository extends ServiceEntityRepository
         parent::__construct($registry, Repertoire::class);
     }
 
-    public function repertoireUtilisateur($idUtilisateur)
+    public function recupererRepertoireUtilisateur($idUtilisateur)
     {
         return $this->createQueryBuilder('r')
-            ->andWhere('r.utilisateur_repertoire = :idutilisteur')
-            ->setParameter('idutilisteur', $idUtilisateur)
+            ->andWhere('r.utilisateur_repertoire = :idutilisateur')
+            ->setParameter('idutilisateur', $idUtilisateur)
             ->getQuery()
             ->getResult();
     }
 
-    public function repertoireGroupe($idGroupe)
+    public function recupererRepertoireGroupe($idGroupe)
     {
         return $this->createQueryBuilder('r')
             ->andWhere('r.utilisateur_repertoire = :idgroupe')
             ->setParameter('idgroupe', $idGroupe)
             ->getQuery()
             ->getResult();
+    }
+
+    public function recupererRepertoireRacineUtilisateur($idUtilisateur)
+    {
+        return $this->createQueryBuilder('r')
+            ->andWhere('r.utilisateur_repertoire = :idutilisateur')
+            ->andWhere('r.parent IS NULL')
+            ->setParameter('idutilisateur', $idUtilisateur)
+            ->getQuery()
+            ->getOneOrNullResult();
+
     }
 
 //    /**

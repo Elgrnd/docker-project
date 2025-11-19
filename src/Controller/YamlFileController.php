@@ -47,10 +47,7 @@ final class YamlFileController extends AbstractController
         $yamlFile = new YamlFile();
 
         // Définir le répertoire par défaut (racine) si disponible
-        $repertoireRacine = $repertoireRepository->findOneBy([
-            'utilisateur_id' => $utilisateur,
-            'parent' => null
-        ]);
+        $repertoireRacine = $repertoireRepository->recupererRepertoireRacineUtilisateur($utilisateur->getId());
 
         if ($repertoireRacine) {
             $yamlFile->setRepertoire($repertoireRacine);
@@ -105,7 +102,7 @@ final class YamlFileController extends AbstractController
                 // Le répertoire a déjà été défini par le formulaire via setRepertoire()
                 $yamlFile->setNameFile($nameFile);
                 $yamlFile->setBodyFile($content);
-                $yamlFile->setUtilisateur($utilisateur);
+                $yamlFile->setUtilisateurYamlfile($utilisateur);
 
                 $entityManager->persist($yamlFile);
                 $entityManager->flush();

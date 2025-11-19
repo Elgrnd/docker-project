@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\Repertoire;
 use App\Entity\YamlFile;
+use App\Repository\RepertoireRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
@@ -15,15 +16,16 @@ use Symfony\Component\Validator\Constraints\File;
 class YamlFileType extends AbstractType
 {
     private Security $security;
+    private RepertoireRepository $repertoireRepository;
 
-    public function __construct(Security $security)
+    public function __construct(Security $security, RepertoireRepository $repertoireRepository)
     {
         $this->security = $security;
+        $this->repertoireRepository = $repertoireRepository;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        $user = $this->security->getUser();
 
         $builder
             ->add('yamlFile', FileType::class, [
@@ -55,20 +57,11 @@ class YamlFileType extends AbstractType
                 },
                 'label' => 'Répertoire de destination',
                 'required' => true,
-                'placeholder' => 'Sélectionnez un répertoire',
                 'attr' => [
                     'class' => 'form-select'
                 ],
-                'query_builder' => function ($repository) use ($user) {
-                    return $repository->createQueryBuilder('r')
-                        ->where('r.utilisateur_id = :user')
-                        ->setParameter('user', $user)
-                        ->orderBy('r.name', 'ASC');
-                },
-                // Sélectionner le répertoire racine par défaut
-                'preferred_choices' => function ($repertoire, $key, $value) {
-                    return $repertoire->isRoot();
-                },
+                'choices' => $this->repertoireRepository->recupererRepertoireUtilisateur($this->security->getUser()->getId()),
+
                 'help' => 'Choisissez le répertoire où sera enregistré votre fichier'
             ]);
     }

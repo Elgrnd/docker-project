@@ -88,12 +88,6 @@ class Repertoire
         return $this->utilisateur_id;
     }
 
-    public function setUtilisateurId(?Utilisateur $utilisateur_id): static
-    {
-        $this->utilisateur_id = $utilisateur_id;
-
-        return $this;
-    }
 
     // NOUVEAU : Getter/Setter pour YamlFiles
     /**

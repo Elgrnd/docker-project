@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\Repertoire;
 use App\Entity\Utilisateur;
+use App\Repository\RepertoireRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -14,10 +15,12 @@ use Symfony\Component\Security\Core\Security;
 class DirectoryType extends AbstractType
 {
     private Security $security;
+    private RepertoireRepository $repertoireRepository;
 
-    public function __construct(Security $security)
+    public function __construct(Security $security, RepertoireRepository $repertoireRepository)
     {
         $this->security = $security;
+        $this->repertoireRepository = $repertoireRepository;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
@@ -43,16 +46,9 @@ class DirectoryType extends AbstractType
                 'attr' => [
                     'class' => 'form-select'
                 ],
-                'query_builder' => function ($repository) use ($user) {
-                    return $repository->createQueryBuilder('r')
-                        ->where('r.utilisateur_id = :user')
-                        ->setParameter('user', $user)
-                        ->orderBy('r.name', 'ASC');
-                },
+                'choices' => $this->repertoireRepository->recupererRepertoireUtilisateur($user),
                 // Sélectionner le répertoire racine par défaut
-                'preferred_choices' => function ($repertoire, $key, $value) {
-                    return $repertoire->isRoot();
-                }
+
             ]);
     }
 

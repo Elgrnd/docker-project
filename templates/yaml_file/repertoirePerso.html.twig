@@ -77,7 +77,7 @@
             </div>
             <div class="card-body tree-container">
                 {% if repertoireRacine %}
-                    {{ _self.render_tree(repertoireRacine) }}
+                    {{ _self.render_tree(repertoireRacine, listUyr) }}
                 {% else %}
                     <p class="text-muted">Aucun répertoire trouvé.</p>
                 {% endif %}
@@ -86,48 +86,48 @@
     </div>
 
     {# Macro récursive pour afficher l'arborescence #}
-    {% macro render_tree(repertoire) %}
+    {% macro render_tree(repertoire, listUyr) %}
         <div class="tree-item">
             <div class="tree-folder" data-folder-id="{{ repertoire.id }}">
                 <span class="toggle-icon">▼</span>
                 <i class="bi bi-folder-fill folder-icon"></i>
                 <strong>{{ repertoire.name }}</strong>
                 <small class="text-muted">
-                    ({{ repertoire.yamlFiles|length }} fichier(s),
+{#                    ({{ listUyr.yamlFile|length }} fichier(s),#}
                     {{ repertoire.children|length }} sous-répertoire(s))
                 </small>
             </div>
 
             <div class="tree-children" data-children-of="{{ repertoire.id }}">
                 {# Afficher les fichiers YAML de ce répertoire #}
-                {% if repertoire.yamlFiles|length > 0 %}
-                    <div class="file-list">
-                        {% for file in repertoire.yamlFiles %}
-                            <div class="file-item">
-                                <div class="file-info">
-                                    <i class="bi bi-file-earmark-text file-icon"></i>
-                                    <span class="file-name">{{ file.nameFile }}</span>
-                                </div>
-                                <div class="file-actions">
-                                    <i class="bi bi-eye view-icon" title="Afficher"
-                                       onclick="afficherContenuYamlFile('{{ file.bodyFile|escape('js') }}')"></i>
-                                    <i class="bi bi-download download-icon" title="Télécharger"></i>
-                                    <a href="{{ path('modifierYamlFile', {"id": file.id}) }}">
-                                        <i class="bi bi-pencil edit-icon" title="Modifier"></i>
-                                    </a>
-                                    <button data-fichier-id="{{ file.id }}" class="supprimerFichier"
-                                            data-csrf-token="{{ csrf_token('delete' ~ file.id) }}">
-                                        <i class="bi bi-trash bin-icon" title="Supprimer"></i>
-                                    </button>
-                                </div>
+                {% for uyr in listUyr %}
+                <div class="file-list">
+                    {% if uyr.repertoire.id == repertoire.id %}
+                        <div class="file-item">
+                            <div class="file-info">
+                                <i class="bi bi-file-earmark-text file-icon"></i>
+                                <span class="file-name">{{ uyr.yamlFile.nameFile }}</span>
                             </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+                            <div class="file-actions">
+                                <i class="bi bi-eye view-icon" title="Afficher"
+                                   onclick="afficherContenuYamlFile('{{ uyr.yamlFile.bodyFile|escape('js') }}')"></i>
+                                <i class="bi bi-download download-icon" title="Télécharger"></i>
+                                <a href="{{ path('modifierYamlFile', {"id": uyr.yamlFile.id}) }}">
+                                    <i class="bi bi-pencil edit-icon" title="Modifier"></i>
+                                </a>
+                                <button data-fichier-id="{{ uyr.yamlFile.id }}" class="supprimerFichier"
+                                        data-csrf-token="{{ csrf_token('delete' ~ uyr.yamlFile.id) }}">
+                                    <i class="bi bi-trash bin-icon" title="Supprimer"></i>
+                                </button>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
 
                 {# Afficher récursivement les sous-répertoires #}
                 {% for child in repertoire.children %}
-                    {{ _self.render_tree(child) }}
+                    {{ _self.render_tree(child, listUyr) }}
                 {% endfor %}
             </div>
         </div>

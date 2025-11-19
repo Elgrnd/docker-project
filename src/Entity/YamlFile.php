@@ -82,10 +82,6 @@ class YamlFile
     }
 
     // NOUVEAU : Getter/Setter pour Repertoire
-    public function getRepertoire(): ?Repertoire
-    {
-        return $this->repertoire;
-    }
 
     public function setRepertoire(?Repertoire $repertoire): static
     {
@@ -93,17 +89,6 @@ class YamlFile
         return $this;
     }
 
-    public function getPartager(): ?Utilisateur
-    {
-        return $this->partager;
-    }
-
-    public function setPartager(?Utilisateur $partager): static
-    {
-        $this->partager = $partager;
-
-        return $this;
-    }
 
     public function getUtilisateurYamlfile(): ?Utilisateur
     {
@@ -116,4 +101,26 @@ class YamlFile
 
         return $this;
     }
+
+    public function getUtilisateursParRepertoire(): Collection
+    {
+        return $this->utilisateursParRepertoire;
+    }
+
+    public function setUtilisateursParRepertoire(Collection $utilisateursParRepertoire): void
+    {
+        $this->utilisateursParRepertoire = $utilisateursParRepertoire;
+    }
+
+    public function getGroupeParRepertoire(): Collection
+    {
+        return $this->groupeParRepertoire;
+    }
+
+    public function setGroupeParRepertoire(Collection $groupeParRepertoire): void
+    {
+        $this->groupeParRepertoire = $groupeParRepertoire;
+    }
+
+
 }

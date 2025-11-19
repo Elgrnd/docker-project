@@ -55,12 +55,13 @@ class YamlFileType extends AbstractType
                 'choice_label' => function (Repertoire $repertoire) {
                     return $repertoire->getFullPath();
                 },
+                'mapped' => false,
                 'label' => 'Répertoire de destination',
                 'required' => true,
                 'attr' => [
                     'class' => 'form-select'
                 ],
-                'choices' => $this->repertoireRepository->recupererRepertoireUtilisateur($this->security->getUser()->getId()),
+                'choices' => $this->repertoireRepository->recupererRepertoireUtilisateur($this->security->getUser()),
 
                 'help' => 'Choisissez le répertoire où sera enregistré votre fichier'
             ]);

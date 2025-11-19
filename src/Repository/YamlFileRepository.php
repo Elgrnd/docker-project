@@ -28,7 +28,7 @@ class YamlFileRepository extends ServiceEntityRepository
 
     public function findByUtilisateur(UserInterface $utilisateur) : array {
         return $this->findBy([
-            'utilisateur' => $utilisateur,
+            'utilisateur_yamlfile' => $utilisateur,
         ]);
     }
 

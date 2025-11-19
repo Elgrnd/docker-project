@@ -266,7 +266,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if (!$this->repertoires->contains($repertoire)) {
             $this->repertoires->add($repertoire);
-            $repertoire->setUtilisateurId($this);
+            $repertoire->setUtilisateurRepertoire($this);
         }
 
         return $this;
@@ -276,8 +276,8 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     {
         if ($this->repertoires->removeElement($repertoire)) {
             // set the owning side to null (unless already changed)
-            if ($repertoire->getUtilisateurId() === $this) {
-                $repertoire->setUtilisateurId(null);
+            if ($repertoire->getUtilisateurRepertoire()->getId() === $this) {
+                $repertoire->setUtilisateurRepertoire(null);
             }
         }
 

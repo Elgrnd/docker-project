@@ -16,6 +16,28 @@ class UtilisateurYamlFileRepertoireRepository extends ServiceEntityRepository
         parent::__construct($registry, UtilisateurYamlFileRepertoire::class);
     }
 
+    public function recuperertoutYamlfileUtilisateurParRepertoire($idUtilisateur)
+    {
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.utilisateur = :idUtilisateur')
+            ->setParameter('idUtilisateur', $idUtilisateur)
+            ->OrderBy('u.repertoire', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function recupererunYamlfileUtilisateurParRepertoire($idUtilisateur, $idYaml)
+    {
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.utilisateur = :idUtilisateur')
+            ->andWhere('u.yaml_file = :idYaml')
+            ->setParameter('idUtilisateur', $idUtilisateur)
+            ->setParameter('idYaml', $idYaml)
+            ->OrderBy('u.repertoire', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return UtilisateurYamlFileRepertoire[] Returns an array of UtilisateurYamlFileRepertoire objects
     //     */

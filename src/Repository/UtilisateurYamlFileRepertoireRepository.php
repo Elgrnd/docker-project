@@ -26,16 +26,27 @@ class UtilisateurYamlFileRepertoireRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function recupererunYamlfileUtilisateurParRepertoire($idUtilisateur, $idYaml)
+    public function recupererunYamlfileUtilisateurParRepertoire($idUtilisateur, $idYamlfile)
     {
         return $this->createQueryBuilder('u')
             ->andWhere('u.utilisateur = :idUtilisateur')
-            ->andWhere('u.yaml_file = :idYaml')
+            ->andWhere('u.yamlFile = :idYaml')
             ->setParameter('idUtilisateur', $idUtilisateur)
-            ->setParameter('idYaml', $idYaml)
+            ->setParameter('idYaml', $idYamlfile)
             ->OrderBy('u.repertoire', 'ASC')
             ->getQuery()
             ->getResult();
+    }
+
+    public function supprimerYamlfileUtilisateurParRepertoire($idYamlfile)
+    {
+        $qb = $this->createQueryBuilder('y')
+            ->delete()
+            ->where('y.yamlFile = :id')
+            ->setParameter('id', $idYamlfile)
+            ->getQuery();
+
+        return $qb->execute();
     }
 
     //    /**

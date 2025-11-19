@@ -31,7 +31,7 @@ class YamlFile
     #[ORM\JoinColumn(nullable: false)]
     private ?Utilisateur $utilisateur_yamlfile = null;
 
-    #[ORM\OneToMany(mappedBy: "yamlFile", targetEntity: UtilisateurYamlfileRepertoire::class)]
+    #[ORM\OneToMany(mappedBy: "yamlFile", targetEntity: UtilisateurYamlFileRepertoire::class)]
     private Collection $utilisateursParRepertoire;
 
     #[ORM\OneToMany(mappedBy: "yamlFile", targetEntity: GroupeYamlFileRepertoire::class)]

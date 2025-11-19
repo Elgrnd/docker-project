@@ -26,10 +26,11 @@ final class YamlFileController extends AbstractController
 {
     #[Route('/upload', name: 'yaml_upload', methods: ['GET', 'POST'])]
     public function upload(
-        Request $request,
-        EntityManagerInterface $entityManager,
+        Request                     $request,
+        EntityManagerInterface      $entityManager,
         FlashMessageHelperInterface $flashMessageHelperInterface,
-    ): Response {
+    ): Response
+    {
         $utilisateur = $this->getUser();
         $repertoireRepository = $entityManager->getRepository(Repertoire::class);
 
@@ -136,9 +137,10 @@ final class YamlFileController extends AbstractController
     #[IsGranted('ROLE_USER')]
     #[Route('/repertoire', name: 'repertoire', methods: ['GET', 'POST'])]
     public function afficherRepertoire(
-        Request $request,
+        Request                $request,
         EntityManagerInterface $entityManager,
-    ): Response {
+    ): Response
+    {
         $utilisateur = $this->getUser();
         assert($utilisateur instanceof Utilisateur);
 
@@ -147,7 +149,7 @@ final class YamlFileController extends AbstractController
         $form->handleRequest($request);
 
         $repertoireRepository = $entityManager->getRepository(Repertoire::class);
-        $uyrRepository =  $entityManager->getRepository(UtilisateurYamlFileRepertoire::class);
+        $uyrRepository = $entityManager->getRepository(UtilisateurYamlFileRepertoire::class);
 
         if ($form->isSubmitted() && $form->isValid()) {
             // Associer l'utilisateur au répertoire
@@ -184,15 +186,19 @@ final class YamlFileController extends AbstractController
 
     #[IsGranted('ROLE_USER')]
     #[Route('/yamlfile/supprimer/{id}', name: 'deleteYamlFile', options: ["expose" => true], methods: ['DELETE'])]
-    public function supprimerYamlFile(?YamlFile $yamlFile, Request $request, EntityManagerInterface $entityManager, FlashMessageHelperInterface $flashMessageHelperInterface): Response
+    public function supprimerYamlFile(?YamlFile                   $yamlFile,
+                                      Request                     $request,
+                                      EntityManagerInterface      $entityManager,
+                                      FlashMessageHelperInterface $flashMessageHelperInterface): Response
     {
         $utilisateur = $this->getUser();
+        $uyrRepository = $entityManager->getRepository(UtilisateurYamlFileRepertoire::class);
 
         if (!$yamlFile) {
             return new JsonResponse(null, Response::HTTP_NOT_FOUND);
         }
 
-        if ($yamlFile->getUtilisateur() !== $utilisateur) {
+        if ($yamlFile->getUtilisateurYamlfile() !== $utilisateur) {
             return new JsonResponse(null, Response::HTTP_FORBIDDEN);
         }
 
@@ -202,6 +208,7 @@ final class YamlFileController extends AbstractController
             return new JsonResponse(null, Response::HTTP_FORBIDDEN);
         }
 
+        $uyrRepository->supprimerYamlfileUtilisateurParRepertoire($yamlFile->getId());
         $entityManager->remove($yamlFile);
         $entityManager->flush();
 
@@ -210,7 +217,10 @@ final class YamlFileController extends AbstractController
 
     #[IsGranted('ROLE_USER')]
     #[Route('yamlfile/modifier/{id}', name: 'modifierYamlFile', methods: ['GET', 'POST'])]
-    public function modifierYamlFile(?YamlFile $yamlFile, Request $request, EntityManagerInterface $entityManager, FlashMessageHelperInterface $flashMessageHelperInterface): Response
+    public function modifierYamlFile(?YamlFile                   $yamlFile,
+                                     Request                     $request,
+                                     EntityManagerInterface      $entityManager,
+                                     FlashMessageHelperInterface $flashMessageHelperInterface): Response
     {
 
         $utilisateur = $this->getUser();
@@ -220,7 +230,7 @@ final class YamlFileController extends AbstractController
             return $this->redirectToRoute('repertoire');
         }
 
-        if ($yamlFile->getUtilisateur() !== $utilisateur) {
+        if ($yamlFile->getUtilisateurYamlfile() !== $utilisateur) {
             $this->addFlash('error', "Vous ne pouvez pas modifier ce fichier");
             return $this->redirectToRoute('repertoire');
         }

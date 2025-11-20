@@ -55,6 +55,7 @@ final class YamlFileController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
 
+            $repertoireId = $form->get('repertoire')->getData();
             $uploadedFile = $form->get('yamlFile')->getData();
 
             if (!$uploadedFile) {
@@ -73,8 +74,8 @@ final class YamlFileController extends AbstractController
 
             // Vérifier si un fichier avec le même nom existe déjà pour cet utilisateur
             $results = $entityManager
-                ->getRepository(YamlFile::class)
-                ->findByNomEtUtilisateur($nameFile, $utilisateur);
+                ->getRepository(UtilisateurYamlFileRepertoire::class)
+                ->verifierSiYamlFileExiste($utilisateur->getId(), $nameFile, $repertoireId);
 
             if (count($results) > 0) {
                 $this->addFlash('error', sprintf(
@@ -92,7 +93,6 @@ final class YamlFileController extends AbstractController
                     return $this->redirectToRoute('yaml_upload');
                 }
 
-                $repertoireId = $form->get('repertoire')->getData();
                 // Définir le répertoire par défaut (racine) si disponible
                 $repertoire = $repertoireRepository->find($repertoireId);
 

@@ -37,11 +37,31 @@ class YamlFileRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('y');
 
         if (!$isAdmin) {
-            $qb->where('y.utilisateur = :utilisateur')
+            $qb->where('y.utilisateur_yamlfile = :utilisateur')
                 ->setParameter('utilisateur', $utilisateur);
         }
 
         return $qb->orderBy('y.nameFile', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function recupererYamlFileSansUtilisateur()
+    {
+        return $this->createQueryBuilder('y')
+            ->andWhere('y.utilisateur_yamlfile IS NULL')
+            ->orderBy('y.nameFile', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function verifierSiYamlFileExisteBiblio($nameFile)
+    {
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.nameFile = :nameFile')
+            ->andWhere('u.utilisateur_yamlfile IS NULL')
+            ->setParameter('nameFile', $nameFile)
+            ->orderBy('u.nameFile', 'ASC')
             ->getQuery()
             ->getResult();
     }

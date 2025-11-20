@@ -49,6 +49,19 @@ class UtilisateurYamlFileRepertoireRepository extends ServiceEntityRepository
         return $qb->execute();
     }
 
+    public function verifierSiYamlFileExiste($idUtilisateur, $nameFile, $idRepertoire){
+        return $this->createQueryBuilder('u')
+            ->join('u.yamlFile', 'yf')
+            ->andWhere('u.utilisateur = :idUtilisateur')
+            ->andWhere('u.repertoire = :idRepertoire')
+            ->andWhere('yf.nameFile = :nameFile')
+            ->setParameter('idUtilisateur', $idUtilisateur)
+            ->setParameter('idRepertoire', $idRepertoire)
+            ->setParameter('nameFile', $nameFile)
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return UtilisateurYamlFileRepertoire[] Returns an array of UtilisateurYamlFileRepertoire objects
     //     */

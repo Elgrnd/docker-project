@@ -28,7 +28,7 @@ class YamlFile
     private ?string $bodyFile = null;
 
     #[ORM\ManyToOne(inversedBy: 'utilisateur_yamlfile')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)]
     private ?Utilisateur $utilisateur_yamlfile = null;
 
     #[ORM\OneToMany(mappedBy: "yamlFile", targetEntity: UtilisateurYamlFileRepertoire::class)]

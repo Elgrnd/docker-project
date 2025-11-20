@@ -2,6 +2,7 @@
 
 namespace App\Form;
 
+use App\Entity\YamlFile;
 use App\Entity\YamlFileBiblio;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
@@ -42,7 +43,7 @@ class YamlFileBiblioType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'data_class' => YamlFileBiblio::class,
+            'data_class' => YamlFile::class,
         ]);
     }
 }

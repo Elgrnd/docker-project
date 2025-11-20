@@ -13,10 +13,14 @@ use Symfony\Bundle\SecurityBundle\Security;
 class AjouterBiblioRepertoireType extends AbstractType
 {
     private Security $security;
+    private RepertoireRepository $repertoireRepository;
 
-    public function __construct(Security $security)
+
+    public function __construct(Security $security, RepertoireRepository $repertoireRepository)
     {
         $this->security = $security;
+        $this->repertoireRepository = $repertoireRepository;
+
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
@@ -35,15 +39,7 @@ class AjouterBiblioRepertoireType extends AbstractType
                 'attr' => [
                     'class' => 'form-select'
                 ],
-                'query_builder' => function (RepertoireRepository $repository) use ($user) {
-                    return $repository->createQueryBuilder('r')
-                        ->where('r.utilisateur_id = :user')
-                        ->setParameter('user', $user)
-                        ->orderBy('r.name', 'ASC');
-                },
-                'preferred_choices' => function (Repertoire $repertoire) {
-                    return $repertoire->isRoot();
-                },
+                'choices' => $this->repertoireRepository->recupererRepertoireUtilisateur($user),
                 'help' => 'Choisissez le répertoire où sera enregistré votre fichier'
             ]);
         // Pas de champ submit ici

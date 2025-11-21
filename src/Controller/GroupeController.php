@@ -179,8 +179,8 @@ final class GroupeController extends AbstractController
             return $this->redirectToRoute('voir_groupe', ['id' => $groupe->getId()]);
         }
 
-        if ($groupe->getUtilisateurs()->contains($utilisateur)) {
-            $groupe->removeUtilisateur($utilisateur);
+        if ($groupe->getUtilisateurGroupe()->contains($utilisateur)) {
+            $groupe->removeUtilisateurGroupe($utilisateur);
             $em->flush();
             $this->addFlash('success', 'Vous avez quitté le groupe.');
         }

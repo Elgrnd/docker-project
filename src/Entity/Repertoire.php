@@ -43,7 +43,6 @@ class Repertoire
     public function __construct()
     {
         $this->children = new ArrayCollection();
-        $this->yamlFiles = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -81,48 +80,6 @@ class Repertoire
     public function setChildren(Collection $children): void
     {
         $this->children = $children;
-    }
-
-    public function getUtilisateurId(): ?Utilisateur
-    {
-        return $this->utilisateur_id;
-    }
-
-
-    // NOUVEAU : Getter/Setter pour YamlFiles
-    /**
-     * @return Collection<int, YamlFile>
-     */
-    public function getYamlFiles(): Collection
-    {
-        return $this->yamlFiles;
-    }
-
-    public function addYamlFile(YamlFile $yamlFile): static
-    {
-        if (!$this->yamlFiles->contains($yamlFile)) {
-            $this->yamlFiles->add($yamlFile);
-            $yamlFile->setRepertoire($this);
-        }
-
-        return $this;
-    }
-
-    public function removeYamlFile(YamlFile $yamlFile): static
-    {
-        if ($this->yamlFiles->removeElement($yamlFile)) {
-            if ($yamlFile->getRepertoire() === $this) {
-                $yamlFile->setRepertoire(null);
-            }
-        }
-
-        return $this;
-    }
-
-    // NOUVEAU : Méthode pour vérifier si c'est le répertoire racine
-    public function isRoot(): bool
-    {
-        return $this->parent === null;
     }
 
     // NOUVEAU : Méthode pour obtenir le chemin complet

@@ -4,14 +4,9 @@ namespace App\Controller;
 
 use App\Entity\UtilisateurYamlFileRepertoire;
 use App\Entity\YamlFile;
-use App\Entity\YamlFileBiblio;
 use App\Form\AjouterBiblioRepertoireType;
 use App\Form\YamlFileBiblioType;
-use App\Form\YamlFileType;
-use App\Repository\YamlFileBiblioRepository;
-use App\Repository\YamlFileRepository;
 use App\Service\FlashMessageHelperInterface;
-use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;

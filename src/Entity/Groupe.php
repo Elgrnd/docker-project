@@ -63,29 +63,6 @@ class Groupe
         return $this;
     }
 
-    /**
-     * @return Collection<int, Utilisateur>
-     */
-    public function getUtilisateurs(): Collection
-    {
-        return $this->utilisateurs;
-    }
-
-    public function addUtilisateur(Utilisateur $utilisateur): static
-    {
-        if (!$this->utilisateurs->contains($utilisateur)) {
-            $this->utilisateurs->add($utilisateur);
-        }
-
-        return $this;
-    }
-
-    public function removeUtilisateur(Utilisateur $utilisateur): static
-    {
-        $this->utilisateurs->removeElement($utilisateur);
-
-        return $this;
-    }
 
     public function getNom(): ?string
     {
@@ -99,35 +76,6 @@ class Groupe
         return $this;
     }
 
-    /**
-     * @return Collection<int, YamlFileGroupe>
-     */
-    public function getYamlFiles(): Collection
-    {
-        return $this->yamlFiles;
-    }
-
-    public function addYamlFile(YamlFileGroupe $yamlFile): static
-    {
-        if (!$this->yamlFiles->contains($yamlFile)) {
-            $this->yamlFiles->add($yamlFile);
-            $yamlFile->setGroupe($this);
-        }
-
-        return $this;
-    }
-
-    public function removeYamlFile(YamlFileGroupe $yamlFile): static
-    {
-        if ($this->yamlFiles->removeElement($yamlFile)) {
-            // set the owning side to null (unless already changed)
-            if ($yamlFile->getGroupe() === $this) {
-                $yamlFile->setGroupe(null);
-            }
-        }
-
-        return $this;
-    }
 
     public function getEtreChef(): ?Utilisateur
     {

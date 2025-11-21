@@ -40,7 +40,7 @@ class EtrePartageType extends AbstractType
                 'class' => YamlFile::class,
                 'choices' => $this->yamlRepo->findForUser($utilisateur, $isAdmin),
                 'choice_label' => $isAdmin
-                    ? fn (YamlFile $file) => sprintf('%s (par %s)', $file->getNameFile(), $file->getUtilisateur()->getLogin())
+                    ? fn (YamlFile $file) => sprintf('%s (par %s)', $file->getNameFile(), $file->getUtilisateurYamlfile()->getLogin())
                     : 'nameFile',
                 'label' => 'Fichier YAML à partager',
                 'placeholder' => 'Sélectionner un fichier YAML',

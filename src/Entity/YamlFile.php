@@ -70,25 +70,6 @@ class YamlFile
         return $this;
     }
 
-    public function getUtilisateur(): ?Utilisateur
-    {
-        return $this->utilisateur;
-    }
-
-    public function setUtilisateur(?Utilisateur $utilisateur): static
-    {
-        $this->utilisateur = $utilisateur;
-        return $this;
-    }
-
-    // NOUVEAU : Getter/Setter pour Repertoire
-
-    public function setRepertoire(?Repertoire $repertoire): static
-    {
-        $this->repertoire = $repertoire;
-        return $this;
-    }
-
 
     public function getUtilisateurYamlfile(): ?Utilisateur
     {

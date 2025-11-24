@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\EtrePartage;
 use App\Form\EtrePartageType;
+use App\Repository\EtrePartageRepository;
 use App\Service\FlashMessageHelperInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -13,59 +14,52 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class EtrePartageController extends AbstractController
 {
-    #[Route('/partager', name: 'partagerYamlFileAdmin', methods: ['GET', 'POST'])]
-    public function index(Request $request, EntityManagerInterface $entityManager, FlashMessageHelperInterface $flashMessageHelperInterface): Response
-    {
+    #[Route('/partager_fichier', name: 'partager_yaml', methods: ['GET', 'POST'])]
+    public function partagerYaml(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        EtrePartageRepository $etrePartageRepo
+    ): Response {
         $utilisateur = $this->getUser();
-
-        if ($utilisateur === null) {
-            $this->addFlash('error', 'Vous devez être connecté pour partager un fichier');
+        if (!$utilisateur) {
+            $this->addFlash('error', 'Veuillez vous connecter.');
             return $this->redirectToRoute('connexion');
         }
 
-        if (!$this->isGranted('ROLE_ADMIN')) {
-            $this->addFlash('error', 'Vous devez être administrateur pour partager ces fichiers');
-            return $this->redirectToRoute('index');
-        }
-
-        $etrePartage = new EtrePartage();
-
-        $form = $this->createForm(EtrePartageType::class, $etrePartage, [
-            'method' => 'POST',
-            'action' => $this->generateUrl('partagerYamlFileAdmin'),
+        $form = $this->createForm(EtrePartageType::class, null, [
+            'is_admin' => $this->isGranted('ROLE_ADMIN'),
+            'utilisateur' => $utilisateur
         ]);
-
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $partage = $form->getData();
+            $utilisateurCourant = $this->getUser();
+            $cible = $partage->getUtilisateur();
+            $fichier = $partage->getYamlFile();
 
-            $yamlFile = $etrePartage->getYamlFile();
-            $cible = $etrePartage->getUtilisateur();
-
-            if ($cible === $utilisateur) {
-                $this->addFlash('error', 'Vous ne pouvez pas vous partager un fichier à vous-même.');
-                return $this->redirectToRoute('partagerYamlFileAdmin');
+            if ($partage->getUtilisateur() === $utilisateurCourant) {
+                $this->addFlash('error', 'Vous ne pouvez pas partager un fichier avec vous-même.');
+                return $this->redirectToRoute('partager_yaml');
             }
 
-            $repository = $entityManager->getRepository(EtrePartage::class);
-            if ($repository->existeDeja($cible, $yamlFile)) {
+            if ($etrePartageRepo->existsPartage($cible, $fichier)) {
                 $this->addFlash('error', 'Ce fichier a déjà été partagé avec cet utilisateur.');
-                return $this->redirectToRoute('partagerYamlFileAdmin');
+                return $this->redirectToRoute('partager_yaml');
             }
 
-            $etrePartage->setDatePartage(new \DateTimeImmutable());
+            $partage->setDatePartage(new \DateTimeImmutable());
 
-            $entityManager->persist($etrePartage);
+            $entityManager->persist($partage);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Le fichier a été partagé avec succès !');
-            return $this->redirectToRoute('partagerYamlFileAdmin');
+            $this->addFlash('success', 'Fichier partagé avec succès.');
+            return $this->redirectToRoute('partager_yaml');
         }
 
-        $flashMessageHelperInterface->addFormErrorsAsFlash($form);
 
-        return $this->render('etre_partage/partagerYamlFileAdmin.html.twig', [
-            'formulairePartage' => $form,
+        return $this->render('etre_partage/partager_yaml.html.twig', [
+            'formulairePartage' => $form->createView(),
         ]);
     }
 }

@@ -5,7 +5,7 @@
 {% block page_content %}
     <div class="container mt-5">
         <div class="upload-container">
-            <h1 class="text-center mb-4">📤 Importer un fichier YAML</h1>
+            <h1 class="text-center mb-4">📤 Importer un fichier YAML dans la bibliothèque</h1>
 
             <div class="card shadow-sm">
                 <div class="card-body p-4">
@@ -38,28 +38,13 @@
                         </small>
                     </div>
 
-                    {# Sélection du répertoire #}
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">
-                            <i class="bi bi-folder"></i>
-                            {{ form_label(formulaireYaml.repertoire) }}
-                        </label>
-                        {{ form_widget(formulaireYaml.repertoire) }}
-                        {{ form_errors(formulaireYaml.repertoire) }}
-                        {% if form_help(formulaireYaml.repertoire) %}
-                            <small class="form-text text-muted d-block mt-2">
-                                {{ form_help(formulaireYaml.repertoire) }}
-                            </small>
-                        {% endif %}
-                    </div>
-
                     {# Boutons d'action #}
                     <div class="d-grid gap-2">
                         <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>
                             <i class="bi bi-upload"></i> Importer le fichier
                         </button>
-                        <a href="{{ path('repertoire') }}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left"></i> Retour aux répertoires
+                        <a href="{{ path('bibliotheque') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Retour à la bibliothèque
                         </a>
                     </div>
 
@@ -86,7 +71,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const fileInput = document.getElementById('yaml_file_yamlFile');
+            const fileInput = document.getElementById('yaml_file_biblio_yamlFile');
             const fileUploadArea = document.getElementById('fileUploadArea');
             const fileInfo = document.getElementById('fileInfo');
             const fileName = document.getElementById('fileName');

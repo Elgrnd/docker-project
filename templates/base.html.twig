@@ -48,15 +48,18 @@
                         <a class="nav-link text-white fw-medium" href="{{ path('repertoire') }}">Répertoire personnel</a>
                     </li>
                     <li class="nav-item mx-2">
+                        <a class="nav-link text-white fw-medium" href="{{ path('partager_yaml') }}">Partager un fichier .yaml</a>
+                    </li>
+                    <li class="nav-item mx-2">
                         <a class="nav-link text-white fw-medium" href="{{ path('mes_groupes') }}">Groupes</a>
                     </li>
                     <li class="nav-item mx-2">
                         <a class="nav-link text-white fw-medium" href="{{ path('yaml_upload') }}">Importer un fichier .yaml</a>
                     </li>
+                    <li class="nav-item mx-2">
+                        <a class="nav-link text-white fw-medium" href="{{ path('bibliotheque') }}">Bibliothèque de stacks</a>
+                    </li>
                     {% if is_granted('ROLE_ADMIN') %}
-                        <li class="nav-item mx-2">
-                            <a class="nav-link text-white fw-medium" href="{{ path('partagerYamlFileAdmin') }}">Partager un fichier .yaml</a>
-                        </li>
                         <li class="nav-item mx-2">
                             <a class="nav-link text-white fw-medium" href="{{ path('panneauAdmin') }}">Panneau de bord</a>
                         </li>

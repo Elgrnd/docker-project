@@ -48,8 +48,11 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\Email(message: "Cette adresse email n'est pas valide !")]
     private ?string $adresseMail = null;
 
-    #[ORM\OneToMany(mappedBy: 'utilisateur', targetEntity: YamlFile::class, orphanRemoval: true)]
-    private Collection $yamlFiles;
+    /**
+     * @var Collection<int, Groupe>
+     */
+    #[ORM\OneToMany(targetEntity: Groupe::class, mappedBy: 'etreChef', orphanRemoval: true)]
+    private Collection $etrechef;
 
     #[ORM\Column(nullable: true)]
     private ?int $proxmoxVmid = null;
@@ -57,20 +60,24 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @var Collection<int, Groupe>
      */
-    #[ORM\OneToMany(targetEntity: Groupe::class, mappedBy: 'utilisateurChef', orphanRemoval: true)]
-    private Collection $groupes;
+    #[ORM\ManyToMany(targetEntity: Groupe::class, inversedBy: 'utilisateur_groupe')]
+    #[ORM\JoinTable(name: "utilisateur_groupe")]
+    private Collection $utilisateur_groupe;
 
     /**
-     * @var Collection<int, Groupe>
+     * @var Collection<int, YamlFile>
      */
-    #[ORM\ManyToMany(targetEntity: Groupe::class, mappedBy: 'utilisateurs')]
-    private Collection $groupesMembre;
+    #[ORM\OneToMany(targetEntity: YamlFile::class, mappedBy: 'utilisateur_yamlfile', orphanRemoval: true)]
+    private Collection $utilisateur_yamlfile;
 
     /**
      * @var Collection<int, Repertoire>
      */
-    #[ORM\OneToMany(targetEntity: Repertoire::class, mappedBy: 'utilisateur_id', orphanRemoval: true)]
-    private Collection $repertoires;
+    #[ORM\OneToMany(targetEntity: Repertoire::class, mappedBy: 'utilisateur_repertoire', orphanRemoval: true)]
+    private Collection $utilisateur_repertoire;
+
+    #[ORM\OneToMany(mappedBy: "utilisateur", targetEntity: UtilisateurYamlFileRepertoire::class)]
+    private Collection $yamlfilesParRepertoire;
 
     public function __construct()
     {
@@ -78,6 +85,11 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         $this->groupes = new ArrayCollection();
         $this->groupesMembre = new ArrayCollection();
         $this->repertoires = new ArrayCollection();
+        $this->etrechef = new ArrayCollection();
+        $this->utilisateur_groupe = new ArrayCollection();
+        $this->utilisateur_yamlfile = new ArrayCollection();
+        $this->utilisateur_repertoire = new ArrayCollection();
+
     }
 
     public function getId(): ?int
@@ -162,56 +174,30 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getYamlFiles(): Collection
-    {
-        return $this->yamlFiles;
-    }
-
-    public function addYamlFile(YamlFile $yamlFile): static
-    {
-        if (!$this->yamlFiles->contains($yamlFile)) {
-            $this->yamlFiles->add($yamlFile);
-            $yamlFile->setUtilisateur($this);
-        }
-
-        return $this;
-    }
-
-    public function removeYamlFile(YamlFile $yamlFile): static
-    {
-        if ($this->yamlFiles->removeElement($yamlFile)) {
-            if ($yamlFile->getUtilisateur() === $this) {
-                $yamlFile->setUtilisateur(null);
-            }
-        }
-
-        return $this;
-    }
-
     /**
      * @return Collection<int, Groupe>
      */
-    public function getGroupes(): Collection
+    public function getEtrechef(): Collection
     {
-        return $this->groupes;
+        return $this->etrechef;
     }
 
-    public function addGroupe(Groupe $groupe): static
+    public function addEtrechef(Groupe $etrechef): static
     {
-        if (!$this->groupes->contains($groupe)) {
-            $this->groupes->add($groupe);
-            $groupe->setUtilisateurChef($this);
+        if (!$this->etrechef->contains($etrechef)) {
+            $this->etrechef->add($etrechef);
+            $etrechef->setEtreChef($this);
         }
 
         return $this;
     }
 
-    public function removeGroupe(Groupe $groupe): static
+    public function removeEtrechef(Groupe $etrechef): static
     {
-        if ($this->groupes->removeElement($groupe)) {
+        if ($this->etrechef->removeElement($etrechef)) {
             // set the owning side to null (unless already changed)
-            if ($groupe->getUtilisateurChef() === $this) {
-                $groupe->setUtilisateurChef(null);
+            if ($etrechef->getEtreChef() === $this) {
+                $etrechef->setEtreChef(null);
             }
         }
 
@@ -221,25 +207,52 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @return Collection<int, Groupe>
      */
-    public function getGroupesMembre(): Collection
+    public function getUtilisateurGroupe(): Collection
     {
-        return $this->groupesMembre;
+        return $this->utilisateur_groupe;
     }
 
-    public function addGroupesMembre(Groupe $groupesMembre): static
+    public function addUtilisateurGroupe(Groupe $utilisateurGroupe): static
     {
-        if (!$this->groupesMembre->contains($groupesMembre)) {
-            $this->groupesMembre->add($groupesMembre);
-            $groupesMembre->addUtilisateur($this);
+        if (!$this->utilisateur_groupe->contains($utilisateurGroupe)) {
+            $this->utilisateur_groupe->add($utilisateurGroupe);
         }
 
         return $this;
     }
 
-    public function removeGroupesMembre(Groupe $groupesMembre): static
+    public function removeUtilisateurGroupe(Groupe $utilisateurGroupe): static
     {
-        if ($this->groupesMembre->removeElement($groupesMembre)) {
-            $groupesMembre->removeUtilisateur($this);
+        $this->utilisateur_groupe->removeElement($utilisateurGroupe);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, YamlFile>
+     */
+    public function getUtilisateurYamlfile(): Collection
+    {
+        return $this->utilisateur_yamlfile;
+    }
+
+    public function addUtilisateurYamlfile(YamlFile $utilisateurYamlfile): static
+    {
+        if (!$this->utilisateur_yamlfile->contains($utilisateurYamlfile)) {
+            $this->utilisateur_yamlfile->add($utilisateurYamlfile);
+            $utilisateurYamlfile->setUtilisateurYamlfile($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUtilisateurYamlfile(YamlFile $utilisateurYamlfile): static
+    {
+        if ($this->utilisateur_yamlfile->removeElement($utilisateurYamlfile)) {
+            // set the owning side to null (unless already changed)
+            if ($utilisateurYamlfile->getUtilisateurYamlfile() === $this) {
+                $utilisateurYamlfile->setUtilisateurYamlfile(null);
+            }
         }
 
         return $this;
@@ -248,27 +261,27 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     /**
      * @return Collection<int, Repertoire>
      */
-    public function getRepertoires(): Collection
+    public function getUtilisateurRepertoire(): Collection
     {
-        return $this->repertoires;
+        return $this->utilisateur_repertoire;
     }
 
-    public function addRepertoire(Repertoire $repertoire): static
+    public function addUtilisateurRepertoire(Repertoire $utilisateurRepertoire): static
     {
-        if (!$this->repertoires->contains($repertoire)) {
-            $this->repertoires->add($repertoire);
-            $repertoire->setUtilisateurId($this);
+        if (!$this->utilisateur_repertoire->contains($utilisateurRepertoire)) {
+            $this->utilisateur_repertoire->add($utilisateurRepertoire);
+            $utilisateurRepertoire->setUtilisateurRepertoire($this);
         }
 
         return $this;
     }
 
-    public function removeRepertoire(Repertoire $repertoire): static
+    public function removeUtilisateurRepertoire(Repertoire $utilisateurRepertoire): static
     {
-        if ($this->repertoires->removeElement($repertoire)) {
+        if ($this->utilisateur_repertoire->removeElement($utilisateurRepertoire)) {
             // set the owning side to null (unless already changed)
-            if ($repertoire->getUtilisateurId() === $this) {
-                $repertoire->setUtilisateurId(null);
+            if ($utilisateurRepertoire->getUtilisateurRepertoire() === $this) {
+                $utilisateurRepertoire->setUtilisateurRepertoire(null);
             }
         }
 

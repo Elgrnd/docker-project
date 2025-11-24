@@ -8,12 +8,15 @@
 
         <h3>Membres du groupe</h3>
         <ul>
-            {% for membre in groupe.utilisateurs %}
+            {% for membre in groupe.utilisateurGroupe %}
                 <li>
                     {{ membre.login }}
-                    {% if isChef and membre != app.user %}
-                        <form method="post" action="{{ path('supprimer_membre_groupe', {id: groupe.id, login: membre.login}) }}" style="display:inline">
-                            <button type="submit" class="btn btn-danger">Supprimer</button>
+                    {% if (groupe.etreChef == app.user or is_granted('ROLE_ADMIN')) and membre != groupe.etreChef %}
+                        <form method="post"
+                              action="{{ path('supprimer_membre_groupe', {id: groupe.id, login: membre.login}) }}"
+                              style="display:inline-block;"
+                              onsubmit="return confirm('Supprimer {{ membre.login }} du groupe ?');">
+                            <button type="submit" class="btn btn-warning btn-sm">Retirer</button>
                         </form>
                     {% endif %}
                 </li>
@@ -22,8 +25,8 @@
             {% endfor %}
         </ul>
 
+        {% if groupe.etreChef == app.user or is_granted('ROLE_ADMIN') %}
 
-        {% if isChef %}
             <fieldset>
                 <legend>Ajouter un membre</legend>
                 {{ form_start(formAjouterMembre) }}
@@ -37,5 +40,8 @@
             </form>
         {% endif %}
 
+        <div style="margin-top: 20px;">
+            <a href="{{ path('mes_groupes') }}" class="btn btn-secondary">← Retour à mes groupes</a>
+        </div>
     </main>
 {% endblock %}

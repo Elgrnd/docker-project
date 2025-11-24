@@ -27,22 +27,18 @@ class YamlFile
     #[ORM\Column(type: Types::TEXT)]
     private ?string $bodyFile = null;
 
-    #[ORM\ManyToOne(targetEntity: Utilisateur::class, inversedBy: 'yamlFiles')]
-    #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
-    private ?Utilisateur $utilisateur = null;
+    #[ORM\ManyToOne(inversedBy: 'utilisateur_yamlfile')]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Utilisateur $utilisateur_yamlfile = null;
 
-    /**
-     * @var Collection<int, EtrePartageGroupe>
-     */
-    #[ORM\ManyToMany(targetEntity: EtrePartageGroupe::class, mappedBy: 'yamlFile')]
-    private Collection $etrePartageGroupes;
+    #[ORM\OneToMany(mappedBy: "yamlFile", targetEntity: UtilisateurYamlFileRepertoire::class)]
+    private Collection $utilisateursParRepertoire;
 
-    #[ORM\ManyToOne(targetEntity: Repertoire::class, inversedBy: 'yamlFiles')]
-    #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
-    private ?Repertoire $repertoire = null;
+    #[ORM\OneToMany(mappedBy: "yamlFile", targetEntity: GroupeYamlFileRepertoire::class)]
+    private Collection $groupeParRepertoire;
+
     public function __construct()
     {
-        $this->etrePartageGroupes = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -74,26 +70,38 @@ class YamlFile
         return $this;
     }
 
-    public function getUtilisateur(): ?Utilisateur
+
+    public function getUtilisateurYamlfile(): ?Utilisateur
     {
-        return $this->utilisateur;
+        return $this->utilisateur_yamlfile;
     }
 
-    public function setUtilisateur(?Utilisateur $utilisateur): static
+    public function setUtilisateurYamlfile(?Utilisateur $utilisateur_yamlfile): static
     {
-        $this->utilisateur = $utilisateur;
+        $this->utilisateur_yamlfile = $utilisateur_yamlfile;
+
         return $this;
     }
 
-    // NOUVEAU : Getter/Setter pour Repertoire
-    public function getRepertoire(): ?Repertoire
+    public function getUtilisateursParRepertoire(): Collection
     {
-        return $this->repertoire;
+        return $this->utilisateursParRepertoire;
     }
 
-    public function setRepertoire(?Repertoire $repertoire): static
+    public function setUtilisateursParRepertoire(Collection $utilisateursParRepertoire): void
     {
-        $this->repertoire = $repertoire;
-        return $this;
+        $this->utilisateursParRepertoire = $utilisateursParRepertoire;
     }
+
+    public function getGroupeParRepertoire(): Collection
+    {
+        return $this->groupeParRepertoire;
+    }
+
+    public function setGroupeParRepertoire(Collection $groupeParRepertoire): void
+    {
+        $this->groupeParRepertoire = $groupeParRepertoire;
+    }
+
+
 }

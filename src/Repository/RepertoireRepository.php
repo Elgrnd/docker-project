@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Repertoire;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @extends ServiceEntityRepository<Repertoire>
@@ -14,6 +15,34 @@ class RepertoireRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Repertoire::class);
+    }
+
+    public function recupererRepertoireUtilisateur(UserInterface $utilisateur)
+    {
+        return $this->findBy([
+            'utilisateur_repertoire' => $utilisateur
+        ]);
+
+    }
+
+    public function recupererRepertoireGroupe($idGroupe)
+    {
+        return $this->createQueryBuilder('r')
+            ->andWhere('r.utilisateur_repertoire = :idgroupe')
+            ->setParameter('idgroupe', $idGroupe)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function recupererRepertoireRacineUtilisateur($idUtilisateur)
+    {
+        return $this->createQueryBuilder('r')
+            ->andWhere('r.utilisateur_repertoire = :idutilisateur')
+            ->andWhere('r.parent IS NULL')
+            ->setParameter('idutilisateur', $idUtilisateur)
+            ->getQuery()
+            ->getOneOrNullResult();
+
     }
 
 //    /**

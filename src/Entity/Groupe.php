@@ -15,29 +15,35 @@ class Groupe
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(inversedBy: 'groupes')]
+    #[ORM\Column(length: 255)]
+    private ?string $nom = null;
+
+    #[ORM\ManyToOne(inversedBy: 'etrechef')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Utilisateur $utilisateurChef = null;
+    private ?Utilisateur $etreChef = null;
+
+    /**
+     * @var Collection<int, Repertoire>
+     */
+    #[ORM\OneToMany(targetEntity: Repertoire::class, mappedBy: 'groupe_repertoire', orphanRemoval: true)]
+    private Collection $groupe_repertoire;
 
     /**
      * @var Collection<int, Utilisateur>
      */
-    #[ORM\ManyToMany(targetEntity: Utilisateur::class, inversedBy: 'groupesMembre')]
-    private Collection $utilisateurs;
+    #[ORM\ManyToMany(targetEntity: Utilisateur::class, mappedBy: 'utilisateur_groupe')]
+    private Collection $utilisateur_groupe;
 
-    #[ORM\Column(length: 255)]
-    private ?string $nom = null;
+    #[ORM\OneToMany(mappedBy: "utilisateur", targetEntity: GroupeYamlFileRepertoire::class)]
+    private Collection $yamlfilesParRepertoire;
 
-    /**
-     * @var Collection<int, EtrePartageGroupe>
-     */
-    #[ORM\OneToMany(targetEntity: EtrePartageGroupe::class, mappedBy: 'groupe', orphanRemoval: true)]
-    private Collection $yamlFiles;
 
     public function __construct()
     {
         $this->utilisateurs = new ArrayCollection();
         $this->yamlFiles = new ArrayCollection();
+        $this->groupe_repertoire = new ArrayCollection();
+        $this->utilisateur_groupe = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -57,29 +63,6 @@ class Groupe
         return $this;
     }
 
-    /**
-     * @return Collection<int, Utilisateur>
-     */
-    public function getUtilisateurs(): Collection
-    {
-        return $this->utilisateurs;
-    }
-
-    public function addUtilisateur(Utilisateur $utilisateur): static
-    {
-        if (!$this->utilisateurs->contains($utilisateur)) {
-            $this->utilisateurs->add($utilisateur);
-        }
-
-        return $this;
-    }
-
-    public function removeUtilisateur(Utilisateur $utilisateur): static
-    {
-        $this->utilisateurs->removeElement($utilisateur);
-
-        return $this;
-    }
 
     public function getNom(): ?string
     {
@@ -93,31 +76,72 @@ class Groupe
         return $this;
     }
 
-    /**
-     * @return Collection<int, EtrePartageGroupe>
-     */
-    public function getYamlFiles(): Collection
+
+    public function getEtreChef(): ?Utilisateur
     {
-        return $this->yamlFiles;
+        return $this->etreChef;
     }
 
-    public function addYamlFile(EtrePartageGroupe $yamlFile): static
+    public function setEtreChef(?Utilisateur $etreChef): static
     {
-        if (!$this->yamlFiles->contains($yamlFile)) {
-            $this->yamlFiles->add($yamlFile);
-            $yamlFile->setGroupe($this);
+        $this->etreChef = $etreChef;
+
+        return $this;
+    }
+
+
+    /**
+     * @return Collection<int, Repertoire>
+     */
+    public function getGroupeRepertoire(): Collection
+    {
+        return $this->groupe_repertoire;
+    }
+
+    public function addGroupeRepertoire(Repertoire $groupeRepertoire): static
+    {
+        if (!$this->groupe_repertoire->contains($groupeRepertoire)) {
+            $this->groupe_repertoire->add($groupeRepertoire);
+            $groupeRepertoire->setGroupeRepertoire($this);
         }
 
         return $this;
     }
 
-    public function removeYamlFile(EtrePartageGroupe $yamlFile): static
+    public function removeGroupeRepertoire(Repertoire $groupeRepertoire): static
     {
-        if ($this->yamlFiles->removeElement($yamlFile)) {
+        if ($this->groupe_repertoire->removeElement($groupeRepertoire)) {
             // set the owning side to null (unless already changed)
-            if ($yamlFile->getGroupe() === $this) {
-                $yamlFile->setGroupe(null);
+            if ($groupeRepertoire->getGroupeRepertoire() === $this) {
+                $groupeRepertoire->setGroupeRepertoire(null);
             }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Utilisateur>
+     */
+    public function getUtilisateurGroupe(): Collection
+    {
+        return $this->utilisateur_groupe;
+    }
+
+    public function addUtilisateurGroupe(Utilisateur $utilisateurGroupe): static
+    {
+        if (!$this->utilisateur_groupe->contains($utilisateurGroupe)) {
+            $this->utilisateur_groupe->add($utilisateurGroupe);
+            $utilisateurGroupe->addUtilisateurGroupe($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUtilisateurGroupe(Utilisateur $utilisateurGroupe): static
+    {
+        if ($this->utilisateur_groupe->removeElement($utilisateurGroupe)) {
+            $utilisateurGroupe->removeUtilisateurGroupe($this);
         }
 
         return $this;

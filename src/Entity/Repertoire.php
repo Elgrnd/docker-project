@@ -24,18 +24,25 @@ class Repertoire
     #[ORM\OneToMany(mappedBy: 'parent', targetEntity: self::class, cascade: ['persist', 'remove'])]
     private Collection $children;
 
-    #[ORM\ManyToOne(inversedBy: 'repertoires')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?Utilisateur $utilisateur_id = null;
 
-    // NOUVEAU : Relation avec YamlFile
-    #[ORM\OneToMany(mappedBy: 'repertoire', targetEntity: YamlFile::class, cascade: ['persist'])]
-    private Collection $yamlFiles;
+    #[ORM\ManyToOne(inversedBy: 'groupe_repertoire')]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Groupe $groupe_repertoire = null;
+
+    #[ORM\ManyToOne(inversedBy: 'utilisateur_repertoire')]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Utilisateur $utilisateur_repertoire = null;
+
+    #[ORM\OneToMany(mappedBy: "repertoire", targetEntity: UtilisateurYamlfileRepertoire::class)]
+    private Collection $accesYamlFilesUtilisateur;
+
+    #[ORM\OneToMany(mappedBy: "repertoire", targetEntity: GroupeYamlFileRepertoire::class)]
+    private Collection $accesYamlFilesGroupe;
+
 
     public function __construct()
     {
         $this->children = new ArrayCollection();
-        $this->yamlFiles = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -75,54 +82,6 @@ class Repertoire
         $this->children = $children;
     }
 
-    public function getUtilisateurId(): ?Utilisateur
-    {
-        return $this->utilisateur_id;
-    }
-
-    public function setUtilisateurId(?Utilisateur $utilisateur_id): static
-    {
-        $this->utilisateur_id = $utilisateur_id;
-
-        return $this;
-    }
-
-    // NOUVEAU : Getter/Setter pour YamlFiles
-    /**
-     * @return Collection<int, YamlFile>
-     */
-    public function getYamlFiles(): Collection
-    {
-        return $this->yamlFiles;
-    }
-
-    public function addYamlFile(YamlFile $yamlFile): static
-    {
-        if (!$this->yamlFiles->contains($yamlFile)) {
-            $this->yamlFiles->add($yamlFile);
-            $yamlFile->setRepertoire($this);
-        }
-
-        return $this;
-    }
-
-    public function removeYamlFile(YamlFile $yamlFile): static
-    {
-        if ($this->yamlFiles->removeElement($yamlFile)) {
-            if ($yamlFile->getRepertoire() === $this) {
-                $yamlFile->setRepertoire(null);
-            }
-        }
-
-        return $this;
-    }
-
-    // NOUVEAU : Méthode pour vérifier si c'est le répertoire racine
-    public function isRoot(): bool
-    {
-        return $this->parent === null;
-    }
-
     // NOUVEAU : Méthode pour obtenir le chemin complet
     public function getFullPath(): string
     {
@@ -130,5 +89,29 @@ class Repertoire
             return $this->name;
         }
         return $this->parent->getFullPath() . ' / ' . $this->name;
+    }
+
+    public function getGroupeRepertoire(): ?Groupe
+    {
+        return $this->groupe_repertoire;
+    }
+
+    public function setGroupeRepertoire(?Groupe $groupe_repertoire): static
+    {
+        $this->groupe_repertoire = $groupe_repertoire;
+
+        return $this;
+    }
+
+    public function getUtilisateurRepertoire(): ?Utilisateur
+    {
+        return $this->utilisateur_repertoire;
+    }
+
+    public function setUtilisateurRepertoire(?Utilisateur $utilisateur_repertoire): static
+    {
+        $this->utilisateur_repertoire = $utilisateur_repertoire;
+
+        return $this;
     }
 }

@@ -58,7 +58,7 @@ final class UtilisateurController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $utilisateurManager->processNewUtilisateur($utilisateur, $form["plainPassword"]->getData());
             $repertoire = new Repertoire();
-            $repertoire->setUtilisateurId($utilisateur);
+            $repertoire->setUtilisateurRepertoire($utilisateur);
             $repertoire->setName('Répertoire personnel');
 
             $entityManager->persist($repertoire);

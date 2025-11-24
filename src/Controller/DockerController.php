@@ -27,6 +27,10 @@ final class DockerController extends AbstractController
                          ProxmoxService $proxmoxService,
                          UtilisateurManagerInterface $utilisateurManager): Response
     {
+        if ($this->getUser()->getVmStatus() !== "ready") {
+            $this->addFlash("error", "Votre VM n'est pas encore prête !");
+            return $this->redirectToRoute('index');
+        }
         $user = $this->getUser();
         $containers = [];
         if(in_array('ROLE_ADMIN', $user->getRoles())) {

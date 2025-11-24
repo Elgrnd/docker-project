@@ -34,7 +34,7 @@ final class UtilisateurController extends AbstractController
     #[Route('/', name: 'index', methods: ['GET'])]
     public function index(): Response
     {
-        return $this->render('base.html.twig');
+        return $this->render('accueil.html.twig');
     }
 
     #[Route('/inscription', name: 'inscription', methods: ['GET', 'POST'])]

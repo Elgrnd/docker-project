@@ -22,9 +22,9 @@ class AuthentificationSubscriber
     public function loginSuccess(LoginSuccessEvent $event) {
         if($event->getAuthenticator()) {
             if($event->getUser()->getProxmoxVmid() === null) {
-                $vmId = $this->proxmoxService->cloneUserVM($event->getUser()->getLogin());
-                $event->getUser()->setProxmoxVmid($vmId);
+                $event->getUser()->setVmStatus('creating');
                 $this->entityManager->flush();
+                $this->proxmoxService->cloneUserVmAsynchrone($event->getUser()->getLogin());
             }
 
             $flashBag = $this->requestStack->getSession()->getFlashBag();
@@ -43,11 +43,12 @@ class AuthentificationSubscriber
     #[AsEventListener]
     public function logout(LogoutEvent $event) {
         if($event->getResponse()) {
-//            if($event->getToken()->getUser()->getProxmoxVmid() !== null) {
-//                $this->proxmoxService->deleteVM($event->getToken()->getUser()->getProxmoxVmid());
-//                $event->getToken()->getUser()->setProxmoxVmid(null);
-//                $this->entityManager->flush();
-//            }
+            if($event->getToken()->getUser()->getProxmoxVmid() !== null) {
+                $this->proxmoxService->deleteVM($event->getToken()->getUser()->getProxmoxVmid());
+                $event->getToken()->getUser()->setProxmoxVmid(null);
+                $event->getToken()->getUser()->setVmStatus('none');
+                $this->entityManager->flush();
+            }
 
             $flashBag = $this->requestStack->getSession()->getFlashBag();
             $flashBag->add("success", "Déconnexion réussie !");

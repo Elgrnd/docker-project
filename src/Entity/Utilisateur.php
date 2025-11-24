@@ -76,8 +76,11 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Repertoire::class, mappedBy: 'utilisateur_repertoire', orphanRemoval: true)]
     private Collection $utilisateur_repertoire;
 
-    #[ORM\OneToMany(mappedBy: "utilisateur", targetEntity: UtilisateurYamlFileRepertoire::class)]
+    #[ORM\OneToMany(targetEntity: UtilisateurYamlFileRepertoire::class, mappedBy: "utilisateur")]
     private Collection $yamlfilesParRepertoire;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $vmStatus = null;
 
     public function __construct()
     {
@@ -296,6 +299,18 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     public function setProxmoxVmid(?int $proxmoxVmid): static
     {
         $this->proxmoxVmid = $proxmoxVmid;
+
+        return $this;
+    }
+
+    public function getVmStatus(): ?string
+    {
+        return $this->vmStatus;
+    }
+
+    public function setVmStatus(?string $vmStatus): static
+    {
+        $this->vmStatus = $vmStatus;
 
         return $this;
     }

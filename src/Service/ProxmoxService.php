@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
@@ -16,13 +17,27 @@ class ProxmoxService
     private string $tokenId;
     private string $secret;
 
-    public function __construct(HttpClientInterface $client)
+    public function __construct(HttpClientInterface $client, KernelInterface $kernel)
     {
         $this->client = $client;
+        $this->projectDir = $kernel->getProjectDir();
         $this->apiUrl = $_ENV['PROXMOX_API_URL'];
         $this->tokenId = $_ENV['PROXMOX_TOKEN_ID'];
         $this->secret = $_ENV['PROXMOX_TOKEN_SECRET'];
     }
+
+    public function cloneUserVmAsynchrone(string $login)
+    {
+        $command = sprintf(
+            'php %s/bin/console app:create-vm %s > /dev/null 2>&1 &',
+            $this->projectDir,
+            $login
+        );
+
+        exec($command);
+    }
+
+
 
     /**
      * @throws TransportExceptionInterface
@@ -86,6 +101,7 @@ class ProxmoxService
                 'verify_host' => false,
             ]
         );
+
         return in_array($response->getStatusCode(), [200, 204]);
     }
 

@@ -31,13 +31,13 @@
                                 <i class="bi bi-eye view-icon" title="Afficher"
                                    onclick="afficherContenuYamlFile('{{ fichier.yamlFile.bodyFile|escape('js') }}')"></i>
 
-                                {% if fichier.droit == 'edition' or groupe.etreChef == app.user or is_granted('ROLE_ADMIN') %}
+                                {% if is_granted('GROUPE_FILE_EDIT', fichier) %}
                                     <a href="{{ path('modifier_yaml_file_groupe', {'id': groupe.id, 'yamlId': fichier.yamlFile.id}) }}">
                                         <i class="bi bi-pencil edit-icon" title="Modifier"></i>
                                     </a>
                                 {% endif %}
 
-                                {% if groupe.etreChef == app.user or is_granted('ROLE_ADMIN') %}
+                                {% if is_granted('GROUPE_FILE_DELETE', fichier) %}
                                     <form method="post" action="{{ path('supprimer_yaml_groupe', {'id': groupe.id, 'yamlId': fichier.yamlFile.id}) }}" style="display:inline-block;">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ fichier.yamlFile.id) }}">
                                         <button type="submit" class="btn btn-link p-0 m-0 supprimerFichier">
@@ -66,26 +66,14 @@
 
             <fieldset>
                 <legend>🔁 Ajouter un fichier personnel à ce groupe</legend>
-                <form method="post" action="{{ path('ajouter_yaml_existant_groupe', {'id': groupe.id}) }}">
-                    <div class="mb-3">
-                        <label for="yamlExistant" class="form-label">Sélectionnez un de vos fichiers</label>
-                        <select name="yamlId" id="yamlExistant" class="form-select" required>
-                            <option value="">-- Choisir un fichier --</option>
-                            {% for file in yamlFilesUtilisateur %}
-                                <option value="{{ file.id }}">{{ file.nameFile }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="droit" class="form-label">Droit d'accès</label>
-                        <select name="droit" id="droit" class="form-select">
-                            <option value="lecture">Lecture seule</option>
-                            <option value="edition">Éditeur</option>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-secondary">Partager dans le groupe</button>
-                </form>
+
+                {{ form_start(formExistant) }}
+                {{ form_row(formExistant.yamlId) }}
+                {{ form_row(formExistant.droit) }}
+                <button type="submit" class="btn btn-secondary">Partager dans le groupe</button>
+                {{ form_end(formExistant) }}
             </fieldset>
+
         </div>
 
         <div style="margin-top: 20px;">

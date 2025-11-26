@@ -55,16 +55,17 @@ class YamlFileRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function verifierSiYamlFileExisteBiblio($nameFile)
+    public function existeDansBiblio(string $nameFile): bool
     {
-        return $this->createQueryBuilder('u')
+        return (bool) $this->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
             ->andWhere('u.nameFile = :nameFile')
             ->andWhere('u.utilisateur_yamlfile IS NULL')
             ->setParameter('nameFile', $nameFile)
-            ->orderBy('u.nameFile', 'ASC')
             ->getQuery()
-            ->getResult();
+            ->getSingleScalarResult();
     }
+
 
 
     //    /**

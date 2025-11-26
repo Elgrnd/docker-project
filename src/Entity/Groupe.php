@@ -146,4 +146,9 @@ class Groupe
 
         return $this;
     }
+
+    public function contientMembre(Utilisateur $u): bool
+    {
+        return $this->utilisateur_groupe->contains($u);
+    }
 }

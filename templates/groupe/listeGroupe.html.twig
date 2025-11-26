@@ -4,17 +4,23 @@
 
 {% block page_content %}
     <main class="center">
-        <h2>Mes Groupes</h2>
+        <h2>{% if not is_granted('ROLE_ADMIN') %}
+                Mes
+            {% endif %} Groupes</h2>
         <ul>
             {% for g in groupesMembre %}
                 <li>
-                    <strong>{{ g.nom }}</strong>
+                    <strong>{{ g.nom }}
+                    {% if is_granted('ROLE_ADMIN') %}
+                        ({{ g.getEtreChef().getLogin() }})
+                    {% endif %}
+                    </strong>
 
                     <div style="display: inline-flex; gap: 8px;">
                         <a href="{{ path('voir_groupe', {id: g.id}) }}" class="btn btn-secondary">Membres</a>
                         <a href="{{ path('fichiers_groupe', {id: g.id}) }}" class="btn btn-primary">Fichiers YAML</a>
 
-                        {% if app.user and (g.etreChef == app.user or is_granted('ROLE_ADMIN')) %}
+                        {% if is_granted('GROUPE_EDIT', g) %}
                             <form method="post"
                                   action="{{ path('supprimer_groupe', {id: g.id}) }}"
                                   style="display:inline;"

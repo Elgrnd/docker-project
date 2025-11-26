@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use DomainException;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -103,5 +104,15 @@ class YamlFile
         $this->groupeParRepertoire = $groupeParRepertoire;
     }
 
+    public function assertValidExtension(string $extension): void {
+        if (!in_array($extension, ['yaml','yml'])) {
+            throw new DomainException("Extension du fichier invalide (seulement .yml ou .yaml).");
+        }
+    }
 
+    public function assertNotEmpty(string $content): void {
+        if (trim($content) === '') {
+            throw new DomainException("Le fichier YAML ne peut pas être vide.");
+        }
+    }
 }

@@ -11,7 +11,7 @@
             {% for membre in groupe.utilisateurGroupe %}
                 <li>
                     {{ membre.login }}
-                    {% if (groupe.etreChef == app.user or is_granted('ROLE_ADMIN')) and membre != groupe.etreChef %}
+                    {% if is_granted('GROUPE_EDIT', groupe) and membre != groupe.etreChef %}
                         <form method="post"
                               action="{{ path('supprimer_membre_groupe', {id: groupe.id, login: membre.login}) }}"
                               style="display:inline-block;"
@@ -25,7 +25,7 @@
             {% endfor %}
         </ul>
 
-        {% if groupe.etreChef == app.user or is_granted('ROLE_ADMIN') %}
+        {% if is_granted('GROUPE_EDIT', groupe) %}
 
             <fieldset>
                 <legend>Ajouter un membre</legend>
@@ -34,7 +34,8 @@
                 <button type="submit" class="btn">Ajouter</button>
                 {{ form_end(formAjouterMembre) }}
             </fieldset>
-        {% else %}
+        {% endif %}
+        {% if is_granted('GROUPE_LEAVE', groupe) %}
             <form method="post" action="{{ path('quitter_groupe', {id: groupe.id}) }}" onsubmit="return confirm('Voulez-vous vraiment quitter ce groupe ?')">
                 <button type="submit" class="btn btn-warning mt-3">Quitter le groupe</button>
             </form>

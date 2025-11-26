@@ -7,25 +7,24 @@ use phpDocumentor\Reflection\Types\This;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 final class DockerController extends AbstractController
 {
+    #[IsGranted("ROLE_ADMIN")]
     #[Route('/containers', name: 'listContainers')]
     public function list(DockerService $dockerService): Response
     {
-        $isAdmin = $this->isGranted('ROLE_ADMIN');
         $containers = $dockerService->listContainers();
 
-        if(!$isAdmin) {
-            $newContainer = [];
-            foreach ($containers as $container)
-            {
-                if(str_contains($container['name'], 'user_' . $this->getUser()->getUserIdentifier())) {
-                    $newContainer[] = $container;
-                }
+        $newContainer = [];
+        foreach ($containers as $container)
+        {
+            if(str_contains($container['name'], 'user_' . $this->getUser()->getUserIdentifier())) {
+                $newContainer[] = $container;
             }
-            $containers = $newContainer;
         }
+        $containers = $newContainer;
 
         return $this->render('docker/listContainers.html.twig', [
             'containers' => $containers,

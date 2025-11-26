@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\EtrePartageRepository;
 use Doctrine\ORM\Mapping as ORM;
+use DomainException;
 
 #[ORM\Entity(repositoryClass: EtrePartageRepository::class)]
 class EtrePartage
@@ -61,4 +62,20 @@ class EtrePartage
         $this->datePartage = $datePartage;
         return $this;
     }
+
+    public function assertNotSelfShare(Utilisateur $courant): void
+    {
+        if ($this->utilisateur === $courant) {
+            throw new DomainException("Impossible de partager avec soi-même.");
+        }
+    }
+
+    public function assertNotDuplicate(bool $exists): void
+    {
+        if ($exists) {
+            throw new DomainException("Ce fichier est déjà partagé avec cet utilisateur.");
+        }
+    }
+
+
 }

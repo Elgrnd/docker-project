@@ -14,17 +14,15 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 final class GroupeController extends AbstractController
 {
+    #[IsGranted("ROLE_USER")]
     #[Route('/mes_groupes', name: 'mes_groupes', methods: ['GET', 'POST'])]
     public function mesGroupes(Request $request, EntityManagerInterface $em): Response
     {
         $utilisateur = $this->getUser();
-        if (!$utilisateur) {
-            $this->addFlash('error', 'Veuillez vous connecter pour voir vos groupes.');
-            return $this->redirectToRoute('connexion');
-        }
 
         if ($this->isGranted('ROLE_ADMIN')) {
             $groupesMembre = $em->getRepository(Groupe::class)->findAll();
@@ -63,24 +61,16 @@ final class GroupeController extends AbstractController
         Request $request,
         EntityManagerInterface $em
     ): Response {
-        $utilisateur = $this->getUser();
-        if (!$utilisateur) {
-            $this->addFlash('error', 'Veuillez vous connecter.');
-            return $this->redirectToRoute('connexion');
-        }
-
-        $isChef = $groupe->getEtreChef() === $utilisateur || $this->isGranted('ROLE_ADMIN');
-
-
-
-        $formAjouterMembre = $this->createForm(AjouterMembreGroupeType::class);
+        $formAjouterMembre = $this->createForm(AjouterMembreGroupeType::class, null, [
+            'groupe' =>  $groupe,
+        ]);
         $formAjouterMembre->handleRequest($request);
 
-        if ($isChef && $formAjouterMembre->isSubmitted() && $formAjouterMembre->isValid()) {
+        if ($this->isGranted('GROUPE_EDIT', $groupe) && $formAjouterMembre->isSubmitted() && $formAjouterMembre->isValid()) {
             $data = $formAjouterMembre->getData();
             $nouveauMembre = $data['utilisateur'];
 
-            if ($groupe->getUtilisateurGroupe()->contains($nouveauMembre)) {
+            if ($groupe->contientMembre($nouveauMembre)) {
                 $this->addFlash('error', 'Cet utilisateur est déjà dans le groupe.');
             } else {
                 $groupe->addUtilisateurGroupe($nouveauMembre);
@@ -94,25 +84,15 @@ final class GroupeController extends AbstractController
 
         return $this->render('groupe/listeUtilisateurGroupe.html.twig', [
             'groupe' => $groupe,
-            'isChef' => $isChef,
             'formAjouterMembre' => $formAjouterMembre,
         ]);
     }
 
+    #[IsGranted(attribute: 'GROUPE_EDIT', subject: 'groupe')]
     #[Route('/groupe/{id}/supprimer', name: 'supprimer_groupe', methods: ['POST'])]
     public function supprimerGroupe(Groupe $groupe, EntityManagerInterface $em): Response
     {
         $utilisateur = $this->getUser();
-
-        if (!$utilisateur) {
-            $this->addFlash('error', 'Veuillez vous connecter.');
-            return $this->redirectToRoute('connexion');
-        }
-
-        if ($groupe->getEtreChef() !== $utilisateur && !$this->isGranted('ROLE_ADMIN')) {
-            $this->addFlash('error', 'Vous n’êtes pas autorisé à supprimer ce groupe.');
-            return $this->redirectToRoute('mes_groupes');
-        }
 
         $em->remove($groupe);
         $em->flush();
@@ -121,28 +101,14 @@ final class GroupeController extends AbstractController
         return $this->redirectToRoute('mes_groupes');
     }
 
-
+    #[IsGranted(attribute: 'GROUPE_EDIT', subject: 'groupe')]
     #[Route('/groupe/{id}/supprimer_membre/{login}', name: 'supprimer_membre_groupe', methods: ['POST'])]
     public function supprimerMembre(
         Groupe $groupe,
         string $login,
         EntityManagerInterface $em,
     ): Response {
-        $utilisateurConnecte = $this->getUser();
         $utilisateurRepository = $em->getRepository(Utilisateur::class);
-
-        if (!$utilisateurConnecte) {
-            $this->addFlash('error', 'Veuillez vous connecter.');
-            return $this->redirectToRoute('connexion');
-        }
-
-        $isChef = $groupe->getEtreChef() === $utilisateurConnecte;
-        $isAdmin = $this->isGranted('ROLE_ADMIN');
-
-        if (!$isChef && !$isAdmin) {
-            $this->addFlash('error', 'Vous n’êtes pas autorisé à supprimer des membres de ce groupe.');
-            return $this->redirectToRoute('voir_groupe', ['id' => $groupe->getId()]);
-        }
 
         $membre = $utilisateurRepository->findOneBy(['login' => $login]);
         if (!$membre) {
@@ -150,7 +116,7 @@ final class GroupeController extends AbstractController
             return $this->redirectToRoute('voir_groupe', ['id' => $groupe->getId()]);
         }
 
-        if (!$groupe->getUtilisateurGroupe()->contains($membre)) {
+        if (!$groupe->contientMembre($membre)) {
             $this->addFlash('error', 'Cet utilisateur ne fait pas partie de ce groupe.');
             return $this->redirectToRoute('voir_groupe', ['id' => $groupe->getId()]);
         }
@@ -163,23 +129,13 @@ final class GroupeController extends AbstractController
     }
 
 
+    #[IsGranted(attribute: 'GROUPE_LEAVE', subject: 'groupe')]
     #[Route('/groupe/{id}/quitter', name: 'quitter_groupe', methods: ['POST'])]
     public function quitterGroupe(Groupe $groupe, EntityManagerInterface $em): Response
     {
         $utilisateur = $this->getUser();
 
-        if (!$utilisateur) {
-            $this->addFlash('error', 'Veuillez vous connecter.');
-            return $this->redirectToRoute('connexion');
-        }
-
-        // Le chef ne peut pas "quitter" son propre groupe
-        if ($groupe->getEtreChef() === $utilisateur) {
-            $this->addFlash('error', 'Le chef ne peut pas quitter le groupe. Supprimez-le à la place.');
-            return $this->redirectToRoute('voir_groupe', ['id' => $groupe->getId()]);
-        }
-
-        if ($groupe->getUtilisateurGroupe()->contains($utilisateur)) {
+        if ($groupe->contientMembre($utilisateur)) {
             $groupe->removeUtilisateurGroupe($utilisateur);
             $em->flush();
             $this->addFlash('success', 'Vous avez quitté le groupe.');

@@ -5,21 +5,27 @@ namespace App\Controller;
 use App\Entity\Groupe;
 use App\Entity\GroupeYamlFileRepertoire;
 use App\Entity\Utilisateur;
+use App\Entity\UtilisateurYamlFileRepertoire;
 use App\Entity\YamlFile;
 use App\Form\GroupeYamlFileRepertoireType;
+use App\Form\PartagerYamlFileGroupeType;
 use App\Repository\YamlFileRepository;
 use App\Service\FlashMessageHelperInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use DomainException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Finder\Exception\AccessDeniedException;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
 
 final class GroupeYamlFileRepertoireController extends AbstractController
 {
+    #[IsGranted(attribute: 'GROUPE_VIEW', subject: 'groupe')]
     #[Route('/groupe/{id}/fichiers', name: 'fichiers_groupe', methods: ['GET', 'POST'])]
     public function fichiersGroupe(
         Groupe $groupe,
@@ -28,43 +34,34 @@ final class GroupeYamlFileRepertoireController extends AbstractController
         FlashMessageHelperInterface $flashMessageHelper
     ): Response {
         $utilisateur = $this->getUser();
-        if (!$utilisateur) {
-            $this->addFlash('error', 'Veuillez vous connecter.');
-            return $this->redirectToRoute('connexion');
-        }
 
-        $form = $this->createForm(GroupeYamlFileRepertoireType::class);
-        $form->handleRequest($request);
+        $formImport = $this->createForm(GroupeYamlFileRepertoireType::class);
+        $formImport->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $uploadedFile = $form->get('yamlFile')->getData();
-            $droit = $form->get('droit')->getData();
+        if ($formImport->isSubmitted() && $formImport->isValid()) {
+            $uploadedFile = $formImport->get('yamlFile')->getData();
+            $droit = $formImport->get('droit')->getData();
 
             if (!$uploadedFile) {
                 $this->addFlash('error', 'Aucun fichier reçu.');
                 return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
             }
 
-            $extension = strtolower($uploadedFile->getClientOriginalExtension());
-            if (!in_array($extension, ['yaml', 'yml'])) {
-                $this->addFlash('error', 'Seuls les fichiers .yaml ou .yml sont autorisés.');
-                return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
-            }
-
             try {
-                $content = file_get_contents($uploadedFile->getRealPath());
-                if (trim($content) === '') {
-                    $this->addFlash('error', 'Le fichier YAML ne peut pas être vide.');
-                    return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
-                }
-
-                // Création du YamlFileGroupe directement
-                $gyr = new GroupeYamlFileRepertoire();
                 $yamlFile = new YamlFile();
+
+                $extension = strtolower($uploadedFile->getClientOriginalExtension());
+                $yamlFile->assertValidExtension($extension);
+
+                $content = file_get_contents($uploadedFile->getRealPath());
+                $yamlFile->assertNotEmpty($content);
 
                 $yamlFile->setNameFile($uploadedFile->getClientOriginalName());
                 $yamlFile->setBodyFile($content);
                 $yamlFile->setUtilisateurYamlfile($utilisateur);
+
+                // Création du YamlFileGroupe directement
+                $gyr = new GroupeYamlFileRepertoire();
 
                 $gyr->setDroit($droit);
                 $gyr->setGroupe($groupe);
@@ -82,23 +79,92 @@ final class GroupeYamlFileRepertoireController extends AbstractController
                 ));
 
                 return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
+            } catch (DomainException $e) {
+                $this->addFlash('error', $e->getMessage());
+                return $this->redirectToRoute('yaml_upload');
             } catch (FileException $e) {
                 $this->addFlash('error', 'Erreur lors de la lecture du fichier YAML.');
             }
         }
 
-        $flashMessageHelper->addFormErrorsAsFlash($form);
-        $yamlFilesUtilisateur = $entityManager->getRepository(YamlFile::class)->findByUtilisateur($utilisateur);
+        $flashMessageHelper->addFormErrorsAsFlash($formImport);
+
+        $yamlFilesUtilisateur = $entityManager
+            ->getRepository(UtilisateurYamlFileRepertoire::class)
+            ->findYamlFilesForUser($utilisateur);
+
+        $yamlChoices = [];
+
+        foreach ($yamlFilesUtilisateur as $uyfr) {
+
+            $file = $uyfr->getYamlFile();
+
+            $existant = $entityManager->getRepository(GroupeYamlFileRepertoire::class)
+                ->findOneBy(['yamlFile' => $file, 'groupe' => $groupe]);
+
+            if (!$existant) {
+                $repertoire = $uyfr->getRepertoire();
+
+                $displayName = sprintf(
+                    "%s — %s",
+                    $file->getNameFile(),
+                    $repertoire->getFullPath()
+                );
+
+                $yamlChoices[$displayName] = $file->getId();
+            }
+        }
+
+        $formExistant = $this->createForm(PartagerYamlFileGroupeType::class, null, [
+            'yaml_choices' => $yamlChoices,
+        ]);
+
+        $formExistant->handleRequest($request);
+
+        if ($formExistant->isSubmitted() && $formExistant->isValid()) {
+
+            $data = $formExistant->getData();
+            $yamlId = $data['yamlId'];
+            $droit = $data['droit'];
+
+            $yamlFile = $entityManager->getRepository(YamlFile::class)->find($yamlId);
+
+            if (!$yamlFile) {
+                $this->addFlash('error', "Fichier introuvable.");
+                return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
+            }
+
+            $existant = $entityManager->getRepository(GroupeYamlFileRepertoire::class)
+                ->findOneBy(['yamlFile' => $yamlFile, 'groupe' => $groupe]);
+
+            if ($existant) {
+                $this->addFlash('error', 'Ce fichier est déjà dans le groupe.');
+                return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
+            }
+
+
+            $gyr = new GroupeYamlFileRepertoire();
+            $gyr->setYamlFile($yamlFile);
+            $gyr->setGroupe($groupe);
+            $gyr->setDroit($droit);
+
+            $entityManager->persist($gyr);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Fichier partagé au groupe.');
+            return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
+        }
+
 
         $fichiersGroupe = $entityManager
             ->getRepository(GroupeYamlFileRepertoire::class)
             ->findBy(['groupe' => $groupe]);
 
-        return $this->render('yaml_file_groupe/PartagerYamlFileGroupe.html.twig', [
+        return $this->render('yaml_file/listeYamlFileGroupe.html.twig', [
             'groupe' => $groupe,
             'fichiersGroupe' => $fichiersGroupe,
-            'formImport' => $form,
-            'yamlFilesUtilisateur' => $yamlFilesUtilisateur,
+            'formImport' => $formImport,
+            'formExistant' => $formExistant,
         ]);
     }
 
@@ -108,27 +174,11 @@ final class GroupeYamlFileRepertoireController extends AbstractController
         int $yamlId,
         EntityManagerInterface $entityManager
     ): Response {
-        $utilisateur = $this->getUser();
-        if (!$utilisateur) {
-            $this->addFlash('error', 'Veuillez vous connecter.');
-            return $this->redirectToRoute('connexion');
-        }
 
-        $gyr = $entityManager->getRepository(GroupeYamlFileRepertoire::class)->recupererYamlFileDepuisGroupe($yamlId);
+        $gyr = $entityManager->getRepository(GroupeYamlFileRepertoire::class)->findByYamlFileAndGroupe($yamlId, $groupe->getId());
 
-        if (!$gyr || $gyr->getGroupe() !== $groupe) {
-            $this->addFlash('error', 'Fichier introuvable.');
-            return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
-        }
-
-        // Droits : seuls chef ou admin peuvent tout supprimer
-        if (
-            !$this->isGranted('ROLE_ADMIN') &&
-            $groupe->getEtreChef() !== $utilisateur
-        ) {
-            $this->addFlash('error', 'Vous n’êtes pas autorisé à supprimer ce fichier.');
-            return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
-        }
+        //Gestion droit avec un voter, pas avec IsGranted car GroupeYamlfileRepertoire possède plusieurs clés primaires, et symphony ne peut traiter ce cas avec IsGranted.
+        $this->denyAccessUnlessGranted('GROUPE_FILE_DELETE', $gyr);
 
         $entityManager->remove($gyr);
         $entityManager->flush();
@@ -144,25 +194,13 @@ final class GroupeYamlFileRepertoireController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager
     ): Response {
-        $utilisateur = $this->getUser();
 
-        $gyr = $entityManager->getRepository(GroupeYamlFileRepertoire::class)->recupererYamlFileDepuisGroupe($yamlId);
+        $gyr = $entityManager->getRepository(GroupeYamlFileRepertoire::class)->findByYamlFileAndGroupe($yamlId, $groupe->getId());
+
+        //Gestion droit avec un voter, pas avec IsGranted car GroupeYamlfileRepertoire possède plusieurs clés primaires, et symphony ne peut traiter ce cas avec IsGranted.
+        $this->denyAccessUnlessGranted('GROUPE_FILE_EDIT', $gyr);
 
         $yamlFile = $gyr->getYamlFile();
-        if (!$gyr || $gyr->getGroupe() !== $groupe) {
-            $this->addFlash('error', 'Fichier introuvable dans ce groupe.');
-            return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
-        }
-
-        // Droits
-        if (
-            !$this->isGranted('ROLE_ADMIN') &&
-            $groupe->getEtreChef() !== $utilisateur &&
-            $gyr->getDroit() !== 'edition'
-        ) {
-            $this->addFlash('error', "Vous n’avez pas les droits pour modifier ce fichier.");
-            return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
-        }
 
         if ($request->isMethod('POST')) {
             $submittedToken = $request->request->get('_token');
@@ -185,12 +223,13 @@ final class GroupeYamlFileRepertoireController extends AbstractController
             }
         }
 
-        return $this->render('yaml_file_groupe/edityamlfilegroupe.html.twig', [
+        return $this->render('yaml_file/edityamlfilegroupe.html.twig', [
             'yamlfile' => $yamlFile,
             'groupe' => $groupe,
         ]);
     }
 
+    #[IsGranted(attribute: 'GROUPE_VIEW', subject: 'groupe')]
     #[Route('/groupe/{id}/ajouter-yaml', name: 'ajouter_yaml_existant_groupe', methods: ['POST'])]
     public function ajouterYamlExistant(
         Request $request,

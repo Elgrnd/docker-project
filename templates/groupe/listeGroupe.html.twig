@@ -19,8 +19,8 @@
                     <div style="display: inline-flex; gap: 8px;">
                         <a href="{{ path('voir_groupe', {id: g.id}) }}" class="btn btn-secondary">Membres</a>
                         <a href="{{ path('fichiers_groupe', {id: g.id}) }}" class="btn btn-primary">Fichiers YAML</a>
-                        <a href="{{ path('upload_yaml_groupe', {id: g.id}) }}" class="btn btn-import">Importer un Fichiers YAML</a>
-                        <a href="{{ path('partager_yaml_groupe', {id: g.id}) }}" class="btn btn-shared">Partager un Fichiers YAML</a>
+                        <a href="{{ path('upload_yaml_groupe', {id: g.id}) }}" class="btn btn-import">Importer un Fichier YAML</a>
+                        <a href="{{ path('partager_yaml_groupe', {id: g.id}) }}" class="btn btn-shared">Partager un Fichier YAML</a>
 
                         {% if is_granted('GROUPE_EDIT', g) %}
                             <form method="post"
@@ -56,7 +56,7 @@
         }
 
         .btn-import:hover {
-            background-color: #7ed957;
+            background-color: #418722;
             color: white;
         }
 
@@ -67,8 +67,8 @@
             transition: all 0.2s ease;
         }
 
-        .btn-import:hover {
-            background-color: #6dc1e0;
+        .btn-shared:hover {
+            background-color: #459eb8;
             color: white;
         }
 

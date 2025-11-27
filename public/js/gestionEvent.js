@@ -83,5 +83,16 @@ Array.from(buttons).forEach(function (button) {
     button.addEventListener("click", deleteYamlFile);
 });
 
+function downloadYamlFile(content, filename) {
+    const blob = new Blob([content], { type: 'text/yaml' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    window.URL.revokeObjectURL(url); // libère la mémoire
+}
+
+
 
 

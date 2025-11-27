@@ -1,0 +1,132 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    <title>Ajouter un fichier YAML existant au groupe {{ groupe.nom }}</title>
+{% endblock %}
+
+{% block page_content %}
+    <div class="container mt-5">
+        <div class="upload-container">
+
+            <h1 class="text-center mb-4">🔁 Ajouter un fichier YAML existant au groupe {{ groupe.nom }}</h1>
+
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    {{ form_start(formExistant, {'attr': {'id': 'shareExistingForm'}}) }}
+
+                    {# Sélection du fichier existant #}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-file-earmark-text"></i>
+                            {{ form_label(formExistant.yamlId) }}
+                        </label>
+                        {{ form_widget(formExistant.yamlId) }}
+                        {{ form_errors(formExistant.yamlId) }}
+                    </div>
+
+                    {# Sélection du répertoire destination #}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-folder"></i>
+                            {{ form_label(formExistant.repertoire) }}
+                        </label>
+                        {{ form_widget(formExistant.repertoire) }}
+                        {{ form_errors(formExistant.repertoire) }}
+
+                        {% if form_help(formExistant.repertoire) %}
+                            <small class="form-text text-muted d-block mt-2">
+                                {{ form_help(formExistant.repertoire) }}
+                            </small>
+                        {% endif %}
+                    </div>
+
+                    {# Choix des droits #}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-shield-lock"></i> Droits sur le fichier
+                        </label>
+
+                        <div class="droit-choice-container">
+                            {{ form_widget(formExistant.droit) }}
+                        </div>
+
+                        {{ form_errors(formExistant.droit) }}
+                    </div>
+
+                    {# Boutons d'action #}
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-share"></i> Partager dans le groupe
+                        </button>
+
+                        <a href="{{ path('mes_groupes') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Retour à mes groupes
+                        </a>
+                    </div>
+
+                    {{ form_end(formExistant) }}
+                </div>
+            </div>
+
+            {# Informations supplémentaires #}
+            <div class="card mt-4 border-info">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-lightbulb text-warning"></i> Conseils
+                    </h6>
+                    <ul class="mb-0 small">
+                        <li>Vous ne pouvez partager que vos propres fichiers YAML</li>
+                        <li>Choisissez un répertoire cohérent pour l’organisation du groupe</li>
+                        <li>Les droits déterminent si les autres membres pourront modifier le fichier</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <style>
+        .upload-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .droit-choice-container {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 1px solid #e1e1e1;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        .droit-choice-container label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 15px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            background: white;
+            border: 1px solid #ddd;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .droit-choice-container label:hover {
+            background: #eef4ff;
+            border-color: #0d6efd;
+            transform: scale(1.01);
+        }
+
+        .droit-choice-container input[type="radio"] {
+            transform: scale(1.3);
+            margin-right: 8px;
+        }
+
+        .droit-choice-container input[type="radio"]:checked + label {
+            background: #dce8ff;
+            border-color: #0d6efd;
+        }
+    </style>
+{% endblock %}

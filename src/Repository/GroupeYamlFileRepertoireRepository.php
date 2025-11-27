@@ -29,6 +29,42 @@ class GroupeYamlFileRepertoireRepository extends ServiceEntityRepository
             ->getOneOrNullResult();
     }
 
+    public function existsYamlFileGroupe($idGroupe, $nameFile, $idRepertoire): bool
+    {
+        return (bool) $this->createQueryBuilder('u')
+            ->select('COUNT(yf)')
+            ->join('u.yamlFile', 'yf')
+            ->andWhere('u.groupe = :idGroupe')
+            ->andWhere('u.repertoire = :idRepertoire')
+            ->andWhere('yf.nameFile = :nameFile')
+            ->setParameter('idGroupe', $idGroupe)
+            ->setParameter('idRepertoire', $idRepertoire)
+            ->setParameter('nameFile', $nameFile)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function recuperertoutYamlfileGroupeParRepertoire($idGroupe)
+    {
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.groupe = :idGroupe')
+            ->setParameter('idGroupe', $idGroupe)
+            ->OrderBy('u.repertoire', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function supprimerYamlfileGroupeParRepertoire($idYamlfile)
+    {
+        $qb = $this->createQueryBuilder('y')
+            ->delete()
+            ->where('y.yamlFile = :id')
+            ->setParameter('id', $idYamlfile)
+            ->getQuery();
+
+        return $qb->execute();
+    }
+
 
     //    /**
     //     * @return GroupeYamlFileRepertoire[] Returns an array of GroupeYamlFileRepertoire objects

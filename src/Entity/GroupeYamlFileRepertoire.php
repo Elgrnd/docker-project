@@ -8,11 +8,10 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: GroupeYamlFileRepertoireRepository::class)]
 class GroupeYamlFileRepertoire
 {
-    // Decommenter + enlever le null
-//    #[ORM\Id]
+    #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: Repertoire::class)]
-    #[ORM\JoinColumn(nullable: true)]
-    private ?Repertoire $repertoire = null;
+    #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
+    private ?Repertoire $repertoire;
 
     #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: YamlFile::class)]

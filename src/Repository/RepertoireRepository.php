@@ -28,7 +28,7 @@ class RepertoireRepository extends ServiceEntityRepository
     public function recupererRepertoireGroupe($idGroupe)
     {
         return $this->createQueryBuilder('r')
-            ->andWhere('r.utilisateur_repertoire = :idgroupe')
+            ->andWhere('r.groupe_repertoire = :idgroupe')
             ->setParameter('idgroupe', $idGroupe)
             ->getQuery()
             ->getResult();
@@ -40,6 +40,17 @@ class RepertoireRepository extends ServiceEntityRepository
             ->andWhere('r.utilisateur_repertoire = :idutilisateur')
             ->andWhere('r.parent IS NULL')
             ->setParameter('idutilisateur', $idUtilisateur)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+    }
+
+    public function recupererRepertoireRacineGroupe($idGroupe)
+    {
+        return $this->createQueryBuilder('r')
+            ->andWhere('r.groupe_repertoire = :idgroupe')
+            ->andWhere('r.parent IS NULL')
+            ->setParameter('idgroupe', $idGroupe)
             ->getQuery()
             ->getOneOrNullResult();
 

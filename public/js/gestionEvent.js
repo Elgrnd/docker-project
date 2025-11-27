@@ -13,18 +13,13 @@ function cacherBlur() {
     document.getElementById("modalContent").style.display = "none";
 }
 
-
-async function deleteYamlFile(event) {
-    const fichierId = event.currentTarget.dataset.fichierId;
-    const csrfToken = event.currentTarget.dataset.csrfToken;
-
-    let url = Routing.generate("deleteYamlFile",  {"id": fichierId});
-
+async function responseDelete(url, csrfToken, event) {
     const response = await fetch(url, {
         method: 'DELETE',
         body: JSON.stringify({
             '_token': csrfToken
-        })});
+        })
+    });
     if (response.status === 204) {
         const button = event.target;
         const fichier = button.closest(".file-item");
@@ -37,6 +32,25 @@ async function deleteYamlFile(event) {
             fileListContainer.innerHTML = '<p class="empty-msg">Aucun fichier dans le répertoire</p>';
         }
     }
+}
+
+async function deleteYamlFile(event) {
+    const fichierId = event.currentTarget.dataset.fichierId;
+    const csrfToken = event.currentTarget.dataset.csrfToken;
+
+    let url = Routing.generate("deleteYamlFile",  {"id": fichierId});
+
+    await responseDelete(url, csrfToken, event);
+}
+
+async function deleteYamlFileGroupe(event) {
+    const fichierId = event.currentTarget.dataset.fichierId;
+    const groupeId = event.currentTarget.dataset.groupeId;
+    const csrfToken = event.currentTarget.dataset.csrfToken;
+
+    let url = Routing.generate("deleteYamlFileGroupe",  {"id": groupeId, "yamlId": fichierId});
+
+    await responseDelete(url, csrfToken, event);
 }
 
 // Toggle du formulaire
@@ -78,9 +92,14 @@ document.querySelectorAll('.tree-folder').forEach(folder => {
     });
 });
 
-const buttons = document.getElementsByClassName("supprimerFichier");
-Array.from(buttons).forEach(function (button) {
+const buttonDeleteU = document.getElementsByClassName("supprimerFichier");
+Array.from(buttonDeleteU).forEach(function (button) {
     button.addEventListener("click", deleteYamlFile);
+});
+
+const buttonDeleteG = document.getElementsByClassName("supprimerFichierGroupe");
+Array.from(buttonDeleteG).forEach(function (button) {
+    button.addEventListener("click", deleteYamlFileGroupe);
 });
 
 function downloadYamlFile(content, filename) {

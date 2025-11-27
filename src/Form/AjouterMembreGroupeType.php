@@ -2,6 +2,7 @@
 
 namespace App\Form;
 
+use App\Entity\Groupe;
 use App\Entity\Utilisateur;
 use App\Repository\GroupeRepository;
 use App\Repository\UtilisateurRepository;
@@ -35,7 +36,7 @@ class AjouterMembreGroupeType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => null, // Pas d'entité directement liée
-            'groupe' => null,
+            'groupe' => Groupe::class,
         ]);
     }
 }

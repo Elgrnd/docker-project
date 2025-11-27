@@ -54,43 +54,50 @@ async function deleteYamlFileGroupe(event) {
 }
 
 // Toggle du formulaire
-document.getElementById('toggleFormBtn').addEventListener('click', function(e) {
-    e.preventDefault();
-    const formContainer = document.getElementById('formContainer');
+if (document.getElementById('toggleFormBtn')) {
+    document.getElementById('toggleFormBtn').addEventListener('click', function (e) {
+        e.preventDefault();
+        const formContainer = document.getElementById('formContainer');
 
-    if (formContainer.style.display === 'none') {
-        formContainer.style.display = 'block';
-        this.style.display = 'none';
-    }
-});
-
-// Bouton annuler
-document.getElementById('cancelBtn').addEventListener('click', function() {
-    const formContainer = document.getElementById('formContainer');
-    const toggleBtn = document.getElementById('toggleFormBtn');
-
-    formContainer.style.display = 'none';
-    toggleBtn.style.display = 'inline-block';
-
-    document.querySelector('form').reset();
-});
-
-// Toggle des dossiers dans l'arborescence
-document.querySelectorAll('.tree-folder').forEach(folder => {
-    folder.addEventListener('click', function() {
-        const folderId = this.getAttribute('data-folder-id');
-        const children = document.querySelector(`[data-children-of="${folderId}"]`);
-        const toggle = this.querySelector('.toggle-icon');
-
-        if (children.style.display === 'none') {
-            children.style.display = 'block';
-            toggle.classList.remove('collapsed');
-        } else {
-            children.style.display = 'none';
-            toggle.classList.add('collapsed');
+        if (formContainer.style.display === 'none') {
+            formContainer.style.display = 'block';
+            this.style.display = 'none';
         }
     });
-});
+}
+
+// Bouton annuler
+if (document.getElementById('cancelBtn')) {
+    document.getElementById('cancelBtn').addEventListener('click', function () {
+        const formContainer = document.getElementById('formContainer');
+        const toggleBtn = document.getElementById('toggleFormBtn');
+
+        formContainer.style.display = 'none';
+        toggleBtn.style.display = 'inline-block';
+
+        document.querySelector('form').reset();
+    });
+}
+
+
+// Toggle des dossiers dans l'arborescence
+if (document.querySelectorAll('.tree-folder')) {
+    document.querySelectorAll('.tree-folder').forEach(folder => {
+        folder.addEventListener('click', function () {
+            const folderId = this.getAttribute('data-folder-id');
+            const children = document.querySelector(`[data-children-of="${folderId}"]`);
+            const toggle = this.querySelector('.toggle-icon');
+
+            if (children.style.display === 'none') {
+                children.style.display = 'block';
+                toggle.classList.remove('collapsed');
+            } else {
+                children.style.display = 'none';
+                toggle.classList.add('collapsed');
+            }
+        });
+    });
+}
 
 const buttonDeleteU = document.getElementsByClassName("supprimerFichier");
 Array.from(buttonDeleteU).forEach(function (button) {

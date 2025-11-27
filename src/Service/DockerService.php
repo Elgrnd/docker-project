@@ -7,7 +7,7 @@ class DockerService
 
     private string $dockerPath = '/usr/bin/docker';
     private string $sshUser = 'root';
-    private string $sshPrivateKey = '/var/www/.ssh/id_rsa';
+    private string $sshPrivateKey = '/var/www/.ssh/projet_vm_id_rsa';
     private string $hoteProxMoxIp;
 
     public function __construct()
@@ -16,15 +16,23 @@ class DockerService
     }
 
     public function runInVm(string $cmd, string $vmIp): string {
-        $sshCommand = 'ssh -i ' . escapeshellarg($this->sshPrivateKey) .
-            ' -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no ' .
-            '-J ' . escapeshellarg($this->sshUser) . '@' . escapeshellarg($this->hoteProxMoxIp) . ' ' .
-            escapeshellarg($this->sshUser) . '@' . escapeshellarg($vmIp) .
-            ' ' . escapeshellarg($cmd);
+        $proxyCmd = sprintf(
+            'ssh -i %s -W %%h:%%p %s@%s',
+            escapeshellarg($this->sshPrivateKey),
+            escapeshellarg($this->sshUser),
+            escapeshellarg($this->hoteProxMoxIp)
+        );
 
+        $sshCommand = 'ssh -i ' . escapeshellarg($this->sshPrivateKey)
+            . ' -o UserKnownHostsFile=/dev/null'
+            . ' -o StrictHostKeyChecking=no'
+            . ' -o ProxyCommand=' . escapeshellarg($proxyCmd)
+            . ' ' . escapeshellarg($this->sshUser . '@' . $vmIp)
+            . ' ' . escapeshellarg($cmd);
 
         return trim(shell_exec($sshCommand));
     }
+
 
 
     public function listContainers(string $vmIp): array

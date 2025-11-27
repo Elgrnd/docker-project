@@ -105,6 +105,10 @@
                                 <i class="bi bi-eye view-icon" title="Afficher"
                                    onclick="afficherContenuYamlFile('{{ uyr.yamlFile.bodyFile|escape('js') }}')"></i>
                                 <i class="bi bi-download download-icon" title="Télécharger"></i>
+                                <a href="{{ path('yamlfile_deplacer', {'id': uyr.yamlFile.id}) }}">
+                                    <i class="bi bi-arrows-move" title="Déplacer"></i>
+                                </a>
+
                                 <a href="{{ path('modifierYamlFile', {"id": uyr.yamlFile.id}) }}">
                                     <i class="bi bi-pencil edit-icon" title="Modifier"></i>
                                 </a>

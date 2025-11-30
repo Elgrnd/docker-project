@@ -393,9 +393,12 @@ final class YamlFileController extends AbstractController
             return $this->redirectToRoute('bibliotheque');
         }
 
+        $routeAnnuler = 'bibliotheque';
+
         return $this->render('yaml_file/ajouterAuRepertoire.html.twig', [
             'formulaire' => $form->createView(),
-            'yamlFileBiblio' => $yamlFile
+            'yamlFileBiblio' => $yamlFile,
+            'routeAnnuler' => $routeAnnuler
         ]);
     }
 }

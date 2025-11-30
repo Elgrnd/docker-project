@@ -76,12 +76,11 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(mappedBy: "utilisateur", targetEntity: UtilisateurYamlFileRepertoire::class)]
     private Collection $yamlfilesParRepertoire;
 
+    #[ORM\Column(length: 500, nullable: true)]
+    private ?string $gitlabUrl = null;
+
     public function __construct()
     {
-        $this->yamlFiles = new ArrayCollection();
-        $this->groupes = new ArrayCollection();
-        $this->groupesMembre = new ArrayCollection();
-        $this->repertoires = new ArrayCollection();
         $this->etrechef = new ArrayCollection();
         $this->utilisateur_groupe = new ArrayCollection();
         $this->utilisateur_yamlfile = new ArrayCollection();
@@ -282,6 +281,17 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
             }
         }
 
+        return $this;
+    }
+
+    public function getGitlabUrl(): ?string
+    {
+        return $this->gitlabUrl;
+    }
+
+    public function setGitlabUrl(?string $gitlabUrl): self
+    {
+        $this->gitlabUrl = $gitlabUrl;
         return $this;
     }
 }

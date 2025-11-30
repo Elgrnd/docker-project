@@ -1,0 +1,213 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}<title>Arborescence du Dépôt</title>{% endblock %}
+
+{% block scriptJs %}
+    <script defer type="text/javascript" src="{{ asset('js/gestionEvent.js') }}"></script>
+{% endblock %}
+
+{% block page_content %}
+
+    <div id="overlayBlur" class="overlay-blur" onclick="cacherBlur()"></div>
+
+    <div id="modalContent" class="modal-yaml">
+        <div class="modal-header">
+            <span class="close-modal" onclick="cacherBlur()">&times;</span>
+        </div>
+        <div id="contentDisplay" class="modal-body-yaml"></div>
+    </div>
+
+    <div class="container mt-4">
+
+        <h1 class="mb-4">Répertoires du dépôt Gitlab "{{ project }}"</h1>
+
+        <!-- 🟦 Boutons d’actions GitLab -->
+        <div class="mb-4 d-flex gap-3">
+            <a href="{{ path('gitlab_url') }}" class="btn btn-primary">
+                <i class="bi bi-pencil-square me-1"></i> Modifier l’URL GitLab
+            </a>
+
+            <a href="{{ path('gitlab_supprimer_url') }}"
+               class="btn btn-danger"
+               onclick="return confirm('Voulez-vous vraiment supprimer votre URL GitLab ?')">
+                <i class="bi bi-trash me-1"></i> Supprimer l’URL GitLab
+            </a>
+        </div>
+
+
+        {# --- BLOC CONSEILS --- #}
+        <div class="card mt-3 border-info">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-lightbulb text-warning"></i> Conseils
+                </h6>
+                <ul class="mb-0 small">
+                    <li>Seuls les répertoires contenant au moins un fichier YAML valide sont affichés.</li>
+                    <li>Seuls les fichiers <strong>.yml</strong> et <strong>.yaml</strong> sont pris en compte.</li>
+                    <li>Les fichiers vides ou sans nom sont ignorés automatiquement.</li>
+                    <li>Cliquez sur une icône <i class="bi bi-eye"></i> pour afficher le contenu du fichier.</li>
+                    <li>Utilisez <i class="bi bi-download"></i> pour télécharger le fichier.</li>
+                    <li>
+                        Cliquez sur <i class="bi bi-plus-circle text-success"></i> pour
+                        <strong>ajouter le fichier à votre espace personnel</strong> dans l’application.
+                        Il sera alors accessible dans votre liste privée de fichiers YAML.
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-light">
+                <h5 class="mb-0">📂 Arborescence du dépôt</h5>
+            </div>
+
+            <div class="card-body tree-container">
+
+                <ul class="tree-root">
+                    {% macro render_tree(nodes) %}
+                        {% for name, item in nodes %}
+                            <li class="tree-item">
+
+                                {% if item.type == 'tree' %}
+                                    <div class="tree-folder">
+                                        <span class="toggle-icon">▼</span>
+                                        <i class="bi bi-folder-fill folder-icon"></i>
+                                        <strong>{{ name }}</strong>
+                                    </div>
+                                    {% if item.children is defined %}
+                                        <ul class="tree-children">
+                                            {{ _self.render_tree(item.children) }}
+                                        </ul>
+                                    {% endif %}
+
+                                {% else %}
+                                    <div class="tree-file">
+                                        <i class="bi bi-file-earmark-text file-icon"></i>
+                                        {{ name }}
+
+                                        <div class="file-actions">
+                                            <i class="bi bi-eye view-icon" title="Afficher"
+                                               onclick="afficherContenuYamlFileGitlab('{{ path('gitlab_fichier', { path: item.path }) }}')"></i>
+                                            <i class="bi bi-download download-icon" title="Télécharger"
+                                               onclick="downloadYamlFileGitlab('{{ path('gitlab_fichier', { path: item.path }) }}', '{{ name }}')"></i>
+                                            <a href="{{ path('ajouterAuRepertoireGitlab', { path: item.path }) }}"
+                                               class="text-success ms-2 icon-action">
+                                                <i class="bi bi-plus-circle"></i>
+                                            </a>
+
+                                        </div>
+
+                                    </div>
+                                {% endif %}
+
+                            </li>
+                        {% endfor %}
+                    {% endmacro %}
+
+                    {{ _self.render_tree(tree) }}
+                </ul>
+
+            </div>
+        </div>
+    </div>
+
+    <style>
+
+        .tree-container { font-family: monospace; }
+
+        .tree-item { padding: 6px 0; }
+
+        .tree-folder {
+            cursor: pointer;
+            user-select: none;
+            padding: 4px;
+        }
+        .tree-folder:hover { background-color: #f8f9fa; border-radius: 4px; }
+
+        .tree-children {
+            margin-left: 25px;
+            padding-left: 10px;
+            border-left: 1px dashed #dee2e6;
+        }
+
+        .folder-icon { color: #ffc107; margin-right: 6px; }
+        .file-icon { color: #17a2b8; margin-right: 6px; }
+
+        .toggle-icon {
+            display: inline-block;
+            width: 20px;
+            transition: transform .2s;
+        }
+        .toggle-icon.collapsed { transform: rotate(-90deg); }
+
+        .tree-file {
+            display: flex;
+            align-items: center;
+            padding: 3px 0;
+            cursor: default;
+        }
+
+        .file-actions {
+            display: inline-flex;
+            gap: 10px;
+            margin-left: 10px;
+        }
+
+        .file-actions i {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .overlay-blur {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+        }
+
+        .modal-yaml {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%;
+            max-height: 80%;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+            z-index: 1001;
+            overflow: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: flex-end;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .close-modal {
+            cursor: pointer;
+            font-size: 24px;
+            color: #666;
+            transition: color 0.2s;
+        }
+
+        .close-modal:hover { color: #000; }
+
+        .modal-body-yaml {
+            padding: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            background: #f9f9f9;
+            border-radius: 10px;
+        }
+
+    </style>
+{% endblock %}

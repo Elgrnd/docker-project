@@ -8,6 +8,44 @@ function afficherContenuYamlFile(contenu) {
     modal.style.display = "block";
 }
 
+function afficherContenuYamlFileGitlab(url) {
+    const overlay = document.getElementById("overlayBlur");
+    const modal = document.getElementById("modalContent");
+    const contentDisplay = document.getElementById("contentDisplay");
+
+    // Appel AJAX pour récupérer le YAML
+    fetch(url)
+        .then(response => response.text())
+        .then(data => {
+            contentDisplay.textContent = data; // Affiche contenu YAML
+            overlay.style.display = "block";
+            modal.style.display = "block";
+        })
+        .catch(err => {
+            contentDisplay.textContent = "Erreur lors du chargement du fichier.";
+            overlay.style.display = "block";
+            modal.style.display = "block";
+        });
+}
+
+function downloadYamlFileGitlab(url, filename) {
+    fetch(url)
+        .then(response => response.text())
+        .then(content => {
+            const blob = new Blob([content], { type: 'text/yaml' });
+            const fileUrl = window.URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = fileUrl;
+            a.download = filename;
+            a.click();
+
+            window.URL.revokeObjectURL(fileUrl);
+        })
+        .catch(() => alert("Erreur lors du téléchargement du fichier."));
+}
+
+
 function cacherBlur() {
     document.getElementById("overlayBlur").style.display = "none";
     document.getElementById("modalContent").style.display = "none";
@@ -81,8 +119,9 @@ if (document.getElementById('cancelBtn')) {
 
 
 // Toggle des dossiers dans l'arborescence
-if (document.querySelectorAll('.tree-folder')) {
-    document.querySelectorAll('.tree-folder').forEach(folder => {
+const foldersWithData = document.querySelectorAll('.tree-folder[data-folder-id]');
+if (foldersWithData) {
+    foldersWithData.forEach(folder => {
         folder.addEventListener('click', function () {
             const folderId = this.getAttribute('data-folder-id');
             const children = document.querySelector(`[data-children-of="${folderId}"]`);
@@ -99,13 +138,11 @@ if (document.querySelectorAll('.tree-folder')) {
     });
 }
 
-const buttonDeleteU = document.getElementsByClassName("supprimerFichier");
-Array.from(buttonDeleteU).forEach(function (button) {
+Array.from(document.getElementsByClassName("supprimerFichier")).forEach(function (button) {
     button.addEventListener("click", deleteYamlFile);
 });
 
-const buttonDeleteG = document.getElementsByClassName("supprimerFichierGroupe");
-Array.from(buttonDeleteG).forEach(function (button) {
+Array.from(document.getElementsByClassName("supprimerFichierGroupe")).forEach(function (button) {
     button.addEventListener("click", deleteYamlFileGroupe);
 });
 
@@ -119,6 +156,24 @@ function downloadYamlFile(content, filename) {
     window.URL.revokeObjectURL(url); // libère la mémoire
 }
 
+// Toggle des dossiers dans l'arborescence
+document.querySelectorAll('.tree-folder').forEach(folder => {
+    folder.addEventListener('click', function () {
+        const children = this.nextElementSibling; // <ul class="tree-children">
+        const toggle = this.querySelector('.toggle-icon');
+
+        if (!children) return;
+
+        // Toggle affichage
+        if (children.style.display === 'none') {
+            children.style.display = 'block';
+            toggle.classList.remove('collapsed');
+        } else {
+            children.style.display = 'none';
+            toggle.classList.add('collapsed');
+        }
+    });
+});
 
 
 

@@ -13,9 +13,12 @@ use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
 
 final class DockerController extends AbstractController
 {
+
     /**
      * @throws TransportExceptionInterface
      * @throws ServerExceptionInterface
@@ -23,30 +26,36 @@ final class DockerController extends AbstractController
      * @throws ClientExceptionInterface
      */
     #[Route('/containers', name: 'listContainers')]
-    public function list(DockerService $dockerService,
-                         ProxmoxService $proxmoxService,
-                         UtilisateurManagerInterface $utilisateurManager): Response
+    public function list(
+        DockerService               $dockerService,
+        ProxmoxService              $proxmoxService,
+        UtilisateurManagerInterface $utilisateurManager
+    ): Response
     {
         if ($this->getUser()->getVmStatus() !== "ready") {
             $this->addFlash("error", "Votre VM n'est pas encore prête !");
             return $this->redirectToRoute('index');
         }
+
         $user = $this->getUser();
         $containers = [];
-        if(in_array('ROLE_ADMIN', $user->getRoles())) {
+        $vms = []; // 👈 nouveau tableau pour le monitoring admin
+
+        // ---- CONTENEURS (inchangé) ----
+        if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
             $users = $utilisateurManager->getUtilisateursAvecVm();
-            foreach ($users as $user) {
+            foreach ($users as $userWithVm) {
                 try {
-                    $vmIp = $proxmoxService->getVMIp($user->getProxmoxVmid());
+                    $vmIp = $proxmoxService->getVMIp($userWithVm->getProxmoxVmid());
                 } catch (\Exception $e) {
                     $this->addFlash('error', "le QGA n'est pas encore prêt pour la VM");
                     return $this->redirectToRoute("index");
                 }
-                if($vmIp) {
+                if ($vmIp) {
                     $userContainers = $dockerService->listContainers($vmIp);
                     foreach ($userContainers as &$userContainer) {
-                        $userContainer['user'] = $user->getLogin();
-                        $userContainer['vmid'] = $user->getProxmoxVmid();
+                        $userContainer['user'] = $userWithVm->getLogin();
+                        $userContainer['vmid'] = $userWithVm->getProxmoxVmid();
                     }
                     $containers = array_merge($containers, $userContainers);
                 }
@@ -65,16 +74,27 @@ final class DockerController extends AbstractController
                         $container['user'] = $user->getLogin();
                         $container['vmid'] = $user->getProxmoxVmid();
                     }
-
                 }
+            }
+        }
+
+        // ---- VM MONITORING ADMIN ----
+        if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+            try {
+                $vms = $proxmoxService->getAdminVmOverview();
+            } catch (\Throwable $e) {
+                $this->addFlash('error', 'Impossible de récupérer les informations des VM : ' . $e->getMessage());
+                $vms = [];
             }
         }
 
         return $this->render('docker/listContainers.html.twig', [
             'containers' => $containers,
+            'vms' => $vms,               // 👈 on envoie à Twig
             'controller_name' => 'DockerController',
         ]);
     }
+
 
     /**
      * @throws TransportExceptionInterface
@@ -140,6 +160,59 @@ final class DockerController extends AbstractController
         return $this->redirectToRoute('listContainers');
     }
 
+    #[Route('/admin/vm/{vmid}/start', name: 'admin_vm_start')]
+    #[IsGranted('ROLE_ADMIN')]
+    public function adminStartVm(string $vmid, ProxmoxService $proxmoxService): Response
+    {
+        try {
+            $ok = $proxmoxService->startVM($vmid);
+            if ($ok) {
+                $this->addFlash('success', "VM $vmid démarrée avec succès.");
+            } else {
+                $this->addFlash('error', "Impossible de démarrer la VM $vmid.");
+            }
+        } catch (\Throwable $e) {
+            $this->addFlash('error', "Erreur lors du démarrage de la VM $vmid : " . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('listContainers');
+    }
+
+    #[Route('/admin/vm/{vmid}/stop', name: 'admin_vm_stop')]
+    #[IsGranted('ROLE_ADMIN')]
+    public function adminStopVm(string $vmid, ProxmoxService $proxmoxService): Response
+    {
+        try {
+            $ok = $proxmoxService->stopVM($vmid);
+            if ($ok) {
+                $this->addFlash('success', "VM $vmid arrêtée avec succès.");
+            } else {
+                $this->addFlash('error', "Impossible d'arrêter la VM $vmid.");
+            }
+        } catch (\Throwable $e) {
+            $this->addFlash('error', "Erreur lors de l'arrêt de la VM $vmid : " . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('listContainers');
+    }
+
+    #[Route('/admin/vm/{vmid}/delete', name: 'admin_vm_delete')]
+    #[IsGranted('ROLE_ADMIN')]
+    public function adminDeleteVm(string $vmid, ProxmoxService $proxmoxService): Response
+    {
+        try {
+            $ok = $proxmoxService->deleteVM($vmid);
+            if ($ok) {
+                $this->addFlash('success', "VM $vmid supprimée avec succès.");
+            } else {
+                $this->addFlash('error', "Impossible de supprimer la VM $vmid.");
+            }
+        } catch (\Throwable $e) {
+            $this->addFlash('error', "Erreur lors de la suppression de la VM $vmid : " . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('listContainers');
+    }
 
 
 }

@@ -43,4 +43,87 @@
         </tbody>
     </table>
 </main>
+    <hr class="my-5">
+
+    <h2 class="mb-4">Monitoring des machines virtuelles Proxmox</h2>
+
+    {% if vms is empty %}
+        <p class="text-center text-muted">Aucune VM détectée.</p>
+    {% else %}
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+            <tr>
+                <th>VMID</th>
+                <th>Nom</th>
+                <th>Statut</th>
+                <th>CPU (%)</th>
+                <th>RAM (Mo)</th>
+                <th>Disque (Mo)</th>
+                <th>Uptime</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            {% for vm in vms %}
+                <tr>
+                    <td>{{ vm.vmid }}</td>
+                    <td>{{ vm.name }}</td>
+
+                    <td>
+                        {% if vm.status == 'running' %}
+                            <span class="badge bg-success">Running</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ vm.status }}</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if vm.cpu is not null %}
+                            {{ (vm.cpu * 100)|number_format(1, '.', '') }} %
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if vm.mem and vm.maxmem %}
+                            {{ (vm.mem / 1024 / 1024)|number_format(0) }}
+                            /
+                            {{ (vm.maxmem / 1024 / 1024)|number_format(0) }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if vm.disk and vm.maxdisk %}
+                            {{ (vm.disk / 1024 / 1024)|number_format(0) }}
+                            /
+                            {{ (vm.maxdisk / 1024 / 1024)|number_format(0) }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if vm.uptime %}
+                            {{ (vm.uptime / 3600)|number_format(1) }} h
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        <a href="{{ path('admin_vm_start', {'vmid': vm.vmid}) }}" class="btn btn-success btn-sm">Start</a>
+                        <a href="{{ path('admin_vm_stop', {'vmid': vm.vmid}) }}" class="btn btn-warning btn-sm">Stop</a>
+                        <a href="{{ path('admin_vm_delete', {'vmid': vm.vmid}) }}" class="btn btn-danger btn-sm"
+                           onclick="return confirm('Supprimer cette VM ?')">Delete</a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
 {% endblock %}

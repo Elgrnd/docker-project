@@ -28,8 +28,9 @@ class DockerService
             . ' -o StrictHostKeyChecking=no'
             . ' -o ProxyCommand=' . escapeshellarg($proxyCmd)
             . ' ' . escapeshellarg($this->sshUser . '@' . $vmIp)
-            . ' ' . escapeshellarg($cmd);
+            . ' ' . escapeshellarg($cmd) . ' 2>&1';
 
+        var_dump(trim(shell_exec($sshCommand)));
         return trim(shell_exec($sshCommand));
     }
 

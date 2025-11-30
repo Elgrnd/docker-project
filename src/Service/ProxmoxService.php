@@ -38,7 +38,6 @@ class ProxmoxService
     }
 
 
-
     /**
      * @throws TransportExceptionInterface
      * @throws ServerExceptionInterface
@@ -87,7 +86,8 @@ class ProxmoxService
     /**
      * @throws TransportExceptionInterface
      */
-    public function deleteVM(string $vmid): bool {
+    public function deleteVM(string $vmid): bool
+    {
         $this->stopVM($vmid);
 
         $response = $this->client->request(
@@ -111,7 +111,8 @@ class ProxmoxService
      * @throws RedirectionExceptionInterface
      * @throws ClientExceptionInterface
      */
-    public function getVMIp(string $vmid): ?string {
+    public function getVMIp(string $vmid): ?string
+    {
         $response = $this->client->request(
             'GET',
             "{$this->apiUrl}/nodes/proxmox/qemu/{$vmid}/agent/network-get-interfaces",
@@ -189,6 +190,8 @@ class ProxmoxService
         return in_array($response->getStatusCode(), [200, 202]);
     }
 
+
+
     /**
      * @throws TransportExceptionInterface
      * @throws ServerExceptionInterface
@@ -213,4 +216,127 @@ class ProxmoxService
         $data = $response->toArray();
         return $data['data'] ?? [];
     }
+
+    /**
+     * Liste toutes les VM du node Proxmox.
+     *
+     * @return array<int, array<string, mixed>>
+     *
+     * @throws TransportExceptionInterface
+     * @throws ClientExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws DecodingExceptionInterface
+     */
+    public function listVMs(): array
+    {
+        $response = $this->client->request(
+            'GET',
+            "{$this->apiUrl}/nodes/proxmox/qemu",
+            [
+                'headers' => [
+                    'Authorization' => "PVEAPIToken={$this->tokenId}={$this->secret}",
+                ],
+                'verify_peer' => false,
+                'verify_host' => false,
+            ]
+        );
+
+        $data = $response->toArray();
+
+        return $data['data'] ?? [];
+    }
+
+    /**
+     * Récupère l’état courant d’une VM (CPU, RAM, disque, uptime, statut…).
+     *
+     * @return array<string, mixed>
+     *
+     * @throws TransportExceptionInterface
+     * @throws ClientExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws DecodingExceptionInterface
+     */
+    public function getVMRuntimeStatus(int $vmid): array
+    {
+        $response = $this->client->request(
+            'GET',
+            "{$this->apiUrl}/nodes/proxmox/qemu/{$vmid}/status/current",
+            [
+                'headers' => [
+                    'Authorization' => "PVEAPIToken={$this->tokenId}={$this->secret}",
+                ],
+                'verify_peer' => false,
+                'verify_host' => false,
+            ]
+        );
+
+        $data = $response->toArray();
+
+        return $data['data'] ?? [];
+    }
+
+    /**
+     * Vue d’ensemble pour le panneau admin :
+     * - vmid, name
+     * - status (running/stopped/...)
+     * - cpu, mem/maxmem, disk/maxdisk, uptime
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function getAdminVmOverview(): array
+    {
+        try {
+            $vms = $this->listVMs();
+        } catch (\Throwable $e) {
+            return [];
+        }
+
+        $result = [];
+
+        foreach ($vms as $vm) {
+            $vmid = (int)($vm['vmid'] ?? 0);
+            if ($vmid <= 0) {
+                continue;
+            }
+
+            $name = $vm['name'] ?? ('vm-' . $vmid);
+
+            try {
+                $runtime = $this->getVMRuntimeStatus($vmid);
+            } catch (\Throwable $e) {
+                $result[] = [
+                    'vmid' => $vmid,
+                    'name' => $name,
+                    'status' => 'unknown',
+                    'cpu' => null,
+                    'maxcpu' => null,
+                    'mem' => null,
+                    'maxmem' => null,
+                    'disk' => null,
+                    'maxdisk' => null,
+                    'uptime' => null,
+                    'error' => $e->getMessage(),
+                ];
+                continue;
+            }
+
+            $result[] = [
+                'vmid' => $vmid,
+                'name' => $name,
+                'status' => $runtime['status'] ?? 'unknown',
+                'cpu' => $runtime['cpu'] ?? null,
+                'maxcpu' => $runtime['maxcpu'] ?? null,
+                'mem' => $runtime['mem'] ?? null,
+                'maxmem' => $runtime['maxmem'] ?? null,
+                'disk' => $runtime['disk'] ?? null,
+                'maxdisk' => $runtime['maxdisk'] ?? null,
+                'uptime' => $runtime['uptime'] ?? null,
+            ];
+        }
+
+        return $result;
+    }
+
 }

@@ -39,7 +39,7 @@ final class GroupeYamlFileRepertoireVoter extends Voter
                 if ($this->security->isGranted('ROLE_ADMIN')) {
                     return true;
                 }
-                else if ($subject->getYamlFile()->getUtilisateurYamlfile() === $user) {
+                else if ($this->security->isGranted('FILE_OWNER', $subject->getYamlFile())) {
                     return true;
                 }
                 else if ($subject->getGroupe()->contientMembre($user) && $subject->getDroit() === 'edition') {
@@ -56,7 +56,7 @@ final class GroupeYamlFileRepertoireVoter extends Voter
                 else if ($subject->getGroupe()->getEtreChef() === $user) {
                     return true;
                 }
-                else if ($subject->getYamlFile()->getUtilisateurYamlfile() === $user) {
+                else if ($this->security->isGranted('FILE_OWNER', $subject->getYamlFile())) {
                     return true;
                 }
                 else if ($subject->getGroupe()->contientMembre($user) && $subject->getDroit() === 'edition') {
@@ -65,7 +65,6 @@ final class GroupeYamlFileRepertoireVoter extends Voter
                 else {
                     return false;
                 }
-                break;
         }
 
         return false;

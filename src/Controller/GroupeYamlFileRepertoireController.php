@@ -44,7 +44,7 @@ final class GroupeYamlFileRepertoireController extends AbstractController
         ]);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
+        if ($this->isGranted('GROUPE_EDIT', $groupe) && $form->isSubmitted() && $form->isValid()) {
             // Associer l'utilisateur au répertoire
             $repertoire->setGroupeRepertoire($groupe);
 

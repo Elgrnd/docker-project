@@ -20,7 +20,7 @@
     <div class="container mt-4">
         <h1>📂 Fichiers YAML du groupe {{ groupe.nom }}</h1>
 
-        {% if is_granted('GROUPE_VIEW', groupe) %}
+        {% if is_granted('GROUPE_EDIT', groupe) %}
             {# Bouton pour afficher le formulaire #}
             <div class="mb-4">
                 <a href="#" id="toggleFormBtn" class="btn btn-success">

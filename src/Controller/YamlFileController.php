@@ -171,7 +171,7 @@ final class YamlFileController extends AbstractController
         ]);
     }
 
-    #[IsGranted('ROLE_USER')]
+    #[IsGranted('FILE_OWNER', subject: 'yamlFile')]
     #[Route('/yamlfile/supprimer/{id}', name: 'deleteYamlFile', options: ["expose" => true], methods: ['DELETE'])]
     public function supprimerYamlFile(?YamlFile                   $yamlFile,
                                       Request                     $request,
@@ -182,10 +182,6 @@ final class YamlFileController extends AbstractController
 
         if (!$yamlFile) {
             return new JsonResponse(null, Response::HTTP_NOT_FOUND);
-        }
-
-        if ($yamlFile->getUtilisateurYamlfile() !== $utilisateur) {
-            return new JsonResponse(null, Response::HTTP_FORBIDDEN);
         }
 
         $submittedToken = $request->getPayload()->get('_token');
@@ -201,7 +197,7 @@ final class YamlFileController extends AbstractController
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
-    #[IsGranted('ROLE_USER')]
+    #[IsGranted('FILE_OWNER', subject: 'yamlFile')]
     #[Route('yamlfile/modifier/{id}', name: 'modifierYamlFile', methods: ['GET', 'POST'])]
     public function modifierYamlFile(?YamlFile                   $yamlFile,
                                      Request                     $request,
@@ -212,11 +208,6 @@ final class YamlFileController extends AbstractController
 
         if (!$yamlFile) {
             $this->addFlash('error', "Ce fichier n'existe pas");
-            return $this->redirectToRoute('repertoire');
-        }
-
-        if ($yamlFile->getUtilisateurYamlfile() !== $utilisateur) {
-            $this->addFlash('error', "Vous ne pouvez pas modifier ce fichier");
             return $this->redirectToRoute('repertoire');
         }
 
@@ -338,7 +329,7 @@ final class YamlFileController extends AbstractController
         ]);
     }
 
-    #[IsGranted("ROLE_USER")]
+    #[IsGranted("FILE_BIBLIO", subject: 'yamlFile')]
     #[Route("/bibliotheque/ajouterAuRepertoire/{id}", name: 'ajouterAuRepertoire', methods: ['GET', 'POST'])]
     public function ajouterAuRepertoire(?YamlFile $yamlFile, Request $request, EntityManagerInterface $entityManager): Response
     {

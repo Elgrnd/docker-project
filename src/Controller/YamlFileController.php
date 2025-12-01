@@ -151,6 +151,12 @@ final class YamlFileController extends AbstractController
                 }
             }
 
+            if($repertoireRepository->verifierNomDejaExistant($repertoire->getName(), $repertoire->getParent(), $utilisateur->getId()) != null){
+                $this->addFlash('error', 'Un répertoire avec ce nom existe déjà à cet emplacement');
+                return $this->redirectToRoute('repertoire');
+            }
+
+
             $entityManager->persist($repertoire);
             $entityManager->flush();
 

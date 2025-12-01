@@ -57,6 +57,11 @@ final class GroupeYamlFileRepertoireController extends AbstractController
                 }
             }
 
+            if($repertoireRepository->verifierNomDejaExistantGroupe($repertoire->getName(), $repertoire->getParent(), $groupe->getId()) != null){
+                $this->addFlash('error', 'Un répertoire avec ce nom existe déjà à cet emplacement');
+                return $this->redirectToRoute('fichiers_groupe');
+            }
+
             $entityManager->persist($repertoire);
             $entityManager->flush();
 

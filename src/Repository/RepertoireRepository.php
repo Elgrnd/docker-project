@@ -56,6 +56,54 @@ class RepertoireRepository extends ServiceEntityRepository
 
     }
 
+    public function verifierNomDejaExistantUtilsateur($name, $parent, $idUtilisateur)
+    {
+        if ($parent == null) {
+            return $this->createQueryBuilder('r')
+                ->andWhere('r.parent IS NULL')
+                ->andWhere('r.name = :nom')
+                ->andWhere('r.utilisateur_repertoire = :idutilisateur')
+                ->setParameter('nom', $name)
+                ->setParameter('idutilisateur', $idUtilisateur)
+                ->setParameter('parent', $parent)
+                ->getQuery()
+                ->getOneOrNullResult();
+        }
+        return $this->createQueryBuilder('r')
+            ->andWhere('r.parent = :parent')
+            ->andWhere('r.name = :nom')
+            ->andWhere('r.utilisateur_repertoire = :idutilisateur')
+            ->setParameter('nom', $name)
+            ->setParameter('idutilisateur', $idUtilisateur)
+            ->setParameter('parent', $parent)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function verifierNomDejaExistantGroupe($name, $parent, $idgroupe)
+    {
+        if ($parent == null) {
+            return $this->createQueryBuilder('r')
+                ->andWhere('r.parent IS NULL')
+                ->andWhere('r.name = :nom')
+                ->andWhere('r.groupe_repertoire = :idgroupe')
+                ->setParameter('nom', $name)
+                ->setParameter('idgroupe', $idgroupe)
+                ->setParameter('parent', $parent)
+                ->getQuery()
+                ->getOneOrNullResult();
+        }
+        return $this->createQueryBuilder('r')
+            ->andWhere('r.parent = :parent')
+            ->andWhere('r.name = :nom')
+            ->andWhere('r.groupe_repertoire = :idgroupe')
+            ->setParameter('nom', $name)
+            ->setParameter('idgroupe', $idgroupe)
+            ->setParameter('parent', $parent)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
 //    /**
 //     * @return Repertoire[] Returns an array of Repertoire objects
 //     */

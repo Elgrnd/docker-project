@@ -6,6 +6,7 @@
 
 {% block scriptJs %}
     <script defer type="text/javascript" src="{{ asset('js/gestionEvent.js') }}"></script>
+    <script defer type="text/javascript" src="{{ asset('js/gestionRepertoire.js') }}"></script>
 {% endblock %}
 
 {% block page_content %}
@@ -89,6 +90,10 @@
                 <span class="toggle-icon">▼</span>
                 <i class="bi bi-folder-fill folder-icon"></i>
                 <strong>{{ repertoire.name }}</strong>
+                <i class="bi bi-pencil-square rename-icon ms-2"
+                   title="Renommer"
+                   style="cursor: pointer; color: #6c757d;"
+                   onclick="renameRepertoire({{ repertoire.id }})"></i>
                 <small class="text-muted">
                     {#                    ({{ listGyr.yamlFile|length }} fichier(s),#}
                     {{ repertoire.children|length }} sous-répertoire(s))

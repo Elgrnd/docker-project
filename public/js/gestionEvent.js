@@ -157,7 +157,7 @@ function downloadYamlFile(content, filename) {
 }
 
 // Toggle des dossiers dans l'arborescence
-document.querySelectorAll('.tree-folder').forEach(folder => {
+document.querySelectorAll('.repertoire-gitlab').forEach(folder => {
     folder.addEventListener('click', function () {
         const children = this.nextElementSibling; // <ul class="tree-children">
         const toggle = this.querySelector('.toggle-icon');

@@ -69,7 +69,7 @@
                             <li class="tree-item">
 
                                 {% if item.type == 'tree' %}
-                                    <div class="tree-folder">
+                                    <div class="repertoire-gitlab">
                                         <span class="toggle-icon">▼</span>
                                         <i class="bi bi-folder-fill folder-icon"></i>
                                         <strong>{{ name }}</strong>
@@ -117,12 +117,12 @@
 
         .tree-item { padding: 6px 0; }
 
-        .tree-folder {
+        .repertoire-gitlab {
             cursor: pointer;
             user-select: none;
             padding: 4px;
         }
-        .tree-folder:hover { background-color: #f8f9fa; border-radius: 4px; }
+        .repertoire-gitlab:hover { background-color: #f8f9fa; border-radius: 4px; }
 
         .tree-children {
             margin-left: 25px;

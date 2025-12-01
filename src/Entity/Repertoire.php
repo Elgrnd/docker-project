@@ -33,10 +33,10 @@ class Repertoire
     #[ORM\JoinColumn(nullable: true)]
     private ?Utilisateur $utilisateur_repertoire = null;
 
-    #[ORM\OneToMany(mappedBy: "repertoire", targetEntity: UtilisateurYamlfileRepertoire::class)]
+    #[ORM\OneToMany(targetEntity: UtilisateurYamlFileRepertoire::class, mappedBy: "repertoire")]
     private Collection $accesYamlFilesUtilisateur;
 
-    #[ORM\OneToMany(mappedBy: "repertoire", targetEntity: GroupeYamlFileRepertoire::class)]
+    #[ORM\OneToMany(targetEntity: GroupeYamlFileRepertoire::class, mappedBy: "repertoire")]
     private Collection $accesYamlFilesGroupe;
 
 
@@ -113,5 +113,15 @@ class Repertoire
         $this->utilisateur_repertoire = $utilisateur_repertoire;
 
         return $this;
+    }
+
+    public function getAccesYamlFilesUtilisateur(): Collection
+    {
+        return $this->accesYamlFilesUtilisateur;
+    }
+
+    public function setAccesYamlFilesUtilisateur(Collection $accesYamlFilesUtilisateur): void
+    {
+        $this->accesYamlFilesUtilisateur = $accesYamlFilesUtilisateur;
     }
 }

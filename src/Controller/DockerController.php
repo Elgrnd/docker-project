@@ -30,8 +30,7 @@ final class DockerController extends AbstractController
         DockerService               $dockerService,
         ProxmoxService              $proxmoxService,
         UtilisateurManagerInterface $utilisateurManager
-    ): Response
-    {
+    ): Response {
         if ($this->getUser()->getVmStatus() !== "ready") {
             $this->addFlash("error", "Votre VM n'est pas encore prête !");
             return $this->redirectToRoute('index');
@@ -39,9 +38,8 @@ final class DockerController extends AbstractController
 
         $user = $this->getUser();
         $containers = [];
-        $vms = []; // 👈 nouveau tableau pour le monitoring admin
+        $vms = [];
 
-        // ---- CONTENEURS (inchangé) ----
         if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
             $users = $utilisateurManager->getUtilisateursAvecVm();
             foreach ($users as $userWithVm) {
@@ -78,22 +76,45 @@ final class DockerController extends AbstractController
             }
         }
 
-        // ---- VM MONITORING ADMIN ----
-        if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
-            try {
+        // ---- MONITORING DES VM (TOUS LES UTILISATEURS) ----
+        try {
+            if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+                // Admin : vue globale de toutes les VM
                 $vms = $proxmoxService->getAdminVmOverview();
-            } catch (\Throwable $e) {
-                $this->addFlash('error', 'Impossible de récupérer les informations des VM : ' . $e->getMessage());
-                $vms = [];
+            } else {
+                // Utilisateur normal : seulement sa VM
+                $vmid = $user->getProxmoxVmid();
+                if ($vmid) {
+                    $runtime = $proxmoxService->getVMRuntimeStatus((int) $vmid);
+
+                    $vms = [[
+                        'vmid'    => $vmid,
+                        'name'    => 'VM ' . $user->getLogin(),
+                        'status'  => $runtime['status']  ?? 'unknown',
+                        'cpu'     => $runtime['cpu']     ?? null,
+                        'maxcpu'  => $runtime['maxcpu']  ?? null,
+                        'mem'     => $runtime['mem']     ?? null,
+                        'maxmem'  => $runtime['maxmem']  ?? null,
+                        'disk'    => $runtime['disk']    ?? null,
+                        'maxdisk' => $runtime['maxdisk'] ?? null,
+                        'uptime'  => $runtime['uptime']  ?? null,
+                    ]];
+                } else {
+                    $vms = [];
+                }
             }
+        } catch (\Throwable $e) {
+            $this->addFlash('error', 'Impossible de récupérer les informations de la VM : ' . $e->getMessage());
+            $vms = [];
         }
 
         return $this->render('docker/listContainers.html.twig', [
-            'containers' => $containers,
-            'vms' => $vms,               // 👈 on envoie à Twig
-            'controller_name' => 'DockerController',
+            'containers'       => $containers,
+            'vms'              => $vms,
+            'controller_name'  => 'DockerController',
         ]);
     }
+
 
 
     /**

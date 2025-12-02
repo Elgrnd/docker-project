@@ -17,20 +17,19 @@ class DockerService
 
     public function runInVm(string $cmd, string $vmIp): string {
         $proxyCmd = sprintf(
-            'ssh -i %s -W %%h:%%p %s@%s',
+            'ssh -i %s -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -W %%h:%%p %s@%s',
             escapeshellarg($this->sshPrivateKey),
-            escapeshellarg($this->sshUser),
-            escapeshellarg($this->hoteProxMoxIp)
+            $this->sshUser,
+            $this->hoteProxMoxIp
         );
 
         $sshCommand = 'ssh -i ' . escapeshellarg($this->sshPrivateKey)
             . ' -o UserKnownHostsFile=/dev/null'
             . ' -o StrictHostKeyChecking=no'
-            . ' -o ProxyCommand=' . escapeshellarg($proxyCmd)
+            . ' -o ProxyCommand="' . $proxyCmd . '"'
             . ' ' . escapeshellarg($this->sshUser . '@' . $vmIp)
-            . ' ' . escapeshellarg($cmd) . ' 2>&1';
+            . ' ' . escapeshellarg($cmd);
 
-        var_dump(trim(shell_exec($sshCommand)));
         return trim(shell_exec($sshCommand));
     }
 

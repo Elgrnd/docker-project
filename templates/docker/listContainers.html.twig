@@ -1,48 +1,52 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}<title>Liste des conteneurs</title> {% endblock %}
-{% block scriptJs %}<script src="{{ asset('js/searchContainers.js') }}"></script>{% endblock %}
+{% block scriptJs %}
+    <script src="{{ asset('js/searchContainers.js') }}"></script>{% endblock %}
 
 {% block page_content %}
-<main>
-    <h2 class="mb-4">Conteneurs Docker en cours d’exécution</h2>
+    <main>
+        <h2 class="mb-4">Conteneurs Docker en cours d’exécution</h2>
 
-    <div class="mb-3">
-        <input type="text" id="searchInput" class="form-control" placeholder="Rechercher par nom ou ID...">
-    </div>
+        <div class="mb-3">
+            <input type="text" id="searchInput" class="form-control" placeholder="Rechercher par nom ou ID...">
+        </div>
 
-    <table class="table table-striped" id="containersTable">
-        <thead>
-        <tr>
-            <th>Utilisateur</th>
-            <th>Nom</th>
-            <th>ID</th>
-            <th>Statut</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        {% for c in containers %}
+        <table class="table table-striped" id="containersTable">
+            <thead>
             <tr>
-                <td>{{ c.user }}</td>
-                <td>{{ c.name }}</td>
-                <td>{{ c.id }}</td>
-                <td>{{ c.status }}</td>
-                <td>
-                    <a href="{{ path('container_start', {'vmid': c.vmid, 'id': c.id}) }}" class="btn btn-success btn-sm">Run</a>
-                    <a href="{{ path('container_stop', {'vmid': c.vmid, 'id': c.id}) }}" class="btn btn-warning btn-sm">Down</a>
-                    <a href="{{ path('container_remove', {'vmid': c.vmid, 'id': c.id}) }}" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ce conteneur ?')">Delete</a>
-                </td>
+                <th>Utilisateur</th>
+                <th>Nom</th>
+                <th>ID</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for c in containers %}
+                <tr>
+                    <td>{{ c.user }}</td>
+                    <td>{{ c.name }}</td>
+                    <td>{{ c.id }}</td>
+                    <td>{{ c.status }}</td>
+                    <td>
+                        <a href="{{ path('container_start', {'vmid': c.vmid, 'id': c.id}) }}"
+                           class="btn btn-success btn-sm">Run</a>
+                        <a href="{{ path('container_stop', {'vmid': c.vmid, 'id': c.id}) }}"
+                           class="btn btn-warning btn-sm">Down</a>
+                        <a href="{{ path('container_remove', {'vmid': c.vmid, 'id': c.id}) }}"
+                           class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ce conteneur ?')">Delete</a>
+                    </td>
 
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="5" class="text-center">Aucun conteneur trouvé.</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</main>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="5" class="text-center">Aucun conteneur trouvé.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </main>
     <hr class="my-5">
 
     <h2 class="mb-4">Monitoring des machines virtuelles Proxmox</h2>
@@ -60,7 +64,9 @@
                 <th>RAM (Mo)</th>
                 <th>Disque (Mo)</th>
                 <th>Uptime</th>
-                <th>Actions</th>
+                {% if is_granted('ROLE_ADMIN') %}
+                    <th>Actions</th>
+                {% endif %}
             </tr>
             </thead>
 
@@ -113,13 +119,16 @@
                             -
                         {% endif %}
                     </td>
-
-                    <td>
-                        <a href="{{ path('admin_vm_start', {'vmid': vm.vmid}) }}" class="btn btn-success btn-sm">Start</a>
-                        <a href="{{ path('admin_vm_stop', {'vmid': vm.vmid}) }}" class="btn btn-warning btn-sm">Stop</a>
-                        <a href="{{ path('admin_vm_delete', {'vmid': vm.vmid}) }}" class="btn btn-danger btn-sm"
-                           onclick="return confirm('Supprimer cette VM ?')">Delete</a>
-                    </td>
+                    {% if is_granted('ROLE_ADMIN') %}
+                        <td>
+                            <a href="{{ path('admin_vm_start', {'vmid': vm.vmid}) }}"
+                               class="btn btn-success btn-sm">Start</a>
+                            <a href="{{ path('admin_vm_stop', {'vmid': vm.vmid}) }}"
+                               class="btn btn-warning btn-sm">Stop</a>
+                            <a href="{{ path('admin_vm_delete', {'vmid': vm.vmid}) }}" class="btn btn-danger btn-sm"
+                               onclick="return confirm('Supprimer cette VM ?')">Delete</a>
+                        </td>
+                    {% endif %}
                 </tr>
             {% endfor %}
             </tbody>

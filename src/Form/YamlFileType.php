@@ -61,7 +61,7 @@ class YamlFileType extends AbstractType
                 'attr' => [
                     'class' => 'form-select'
                 ],
-                'choices' => $this->repertoireRepository->recupererRepertoireUtilisateur($this->security->getUser()),
+                'choices' => $this->repertoireRepository->recupererRepertoireUtilisateurActifs($this->security->getUser()),
 
                 'help' => 'Choisissez le répertoire où sera enregistré votre fichier'
             ]);

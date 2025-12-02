@@ -93,6 +93,16 @@
                 <small class="text-muted">
                     {{ repertoire.children|length }} sous-répertoire(s))
                 </small>
+                <div class="file-actions">
+                    <button
+                            class="supprimerRepertoire"
+                            data-repertoire-id="{{ repertoire.id }}"
+                            data-csrf-token="{{ csrf_token('delete_repertoire' ~ repertoire.id) }}"
+                    >
+                        <i class="bi bi-trash bin-icon" title="Supprimer le répertoire"></i>
+                    </button>
+                </div>
+
             </div>
 
             <div class="tree-children" data-children-of="{{ repertoire.id }}">
@@ -124,12 +134,23 @@
                 {% endfor %}
 
                 {# Afficher récursivement les sous-répertoires #}
-                {% for child in repertoire.children %}
+                {% for child in repertoire.childrenActifs %}
                     {{ _self.render_tree(child, listUyr) }}
                 {% endfor %}
             </div>
         </div>
     {% endmacro %}
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">🗑️ Corbeille</h5>
+        </div>
+        <div class="card-body">
+            <a href="{{ path('repertoire_corbeille') }}" class="btn btn-outline-danger">
+                Voir les éléments supprimés
+            </a>
+        </div>
+    </div>
+
 
 
 
@@ -211,6 +232,14 @@
             padding: 0;
             cursor: pointer;
         }
+
+        .supprimerRepertoire {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+        }
+
 
         /* L’arrière-plan flou */
         .overlay-blur {

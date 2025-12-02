@@ -17,6 +17,17 @@ class RepertoireRepository extends ServiceEntityRepository
         parent::__construct($registry, Repertoire::class);
     }
 
+    public function recupererRepertoireUtilisateurActifs(UserInterface $utilisateur)
+    {
+        return $this->createQueryBuilder('r')
+            ->andWhere('r.utilisateur_repertoire = :user')
+            ->andWhere('r.deletedAt IS NULL')
+            ->setParameter('user', $utilisateur)
+            ->getQuery()
+            ->getResult();
+    }
+
+
     public function recupererRepertoireUtilisateur(UserInterface $utilisateur)
     {
         return $this->findBy([
@@ -29,6 +40,7 @@ class RepertoireRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('r')
             ->andWhere('r.groupe_repertoire = :idgroupe')
+            ->andWhere('r.deletedAt IS NULL')
             ->setParameter('idgroupe', $idGroupe)
             ->getQuery()
             ->getResult();
@@ -103,6 +115,17 @@ class RepertoireRepository extends ServiceEntityRepository
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    public function findDeletedByUser(?UserInterface $user)
+    {
+        return $this->createQueryBuilder('r')
+            ->andWhere('r.utilisateur_repertoire = :idutilisateur')
+            ->andWhere('r.deletedAt IS NOT NULL')
+            ->setParameter('idutilisateur', $user->getId())
+            ->getQuery()
+            ->getResult();
+    }
+
 
 //    /**
 //     * @return Repertoire[] Returns an array of Repertoire objects

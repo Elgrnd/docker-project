@@ -7,7 +7,7 @@ class DockerService
 
     private string $dockerPath = '/usr/bin/docker';
 
-    public function listContainers(): array
+    public function listContainers(): ?array
     {
 
         $cmd = "$this->dockerPath ps -a --format \"{{.ID}}|{{.Names}}|{{.Status}}\" 2>&1";
@@ -15,18 +15,23 @@ class DockerService
 
         $containers = [];
 
+
         $lines = array_filter(array_map('trim', explode("\n", $output)));
 
         foreach ($lines as $line) {
-            $parts = explode('|', $line);
-            [$id, $name, $status] = $parts;
-            $containers[] = [
-                'id' => $id,
-                'name' => $name,
-                'status' => $status,
-            ];
+            {
+
+                $parts = explode('|', $line);
+                [$id, $name, $status] = $parts;
+                $containers[] = [
+                    'id' => $id,
+                    'name' => $name,
+                    'status' => $status,
+                ];
+            }
+            return $containers;
         }
-        return $containers;
+        return null;
     }
 
     public function startContainer(string $id): array

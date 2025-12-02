@@ -33,16 +33,23 @@ class Repertoire
     #[ORM\JoinColumn(nullable: true)]
     private ?Utilisateur $utilisateur_repertoire = null;
 
-    #[ORM\OneToMany(mappedBy: "repertoire", targetEntity: UtilisateurYamlfileRepertoire::class)]
+    #[ORM\OneToMany(targetEntity: UtilisateurYamlFileRepertoire::class, mappedBy: "repertoire", cascade: ['persist', 'remove'])]
     private Collection $accesYamlFilesUtilisateur;
 
-    #[ORM\OneToMany(mappedBy: "repertoire", targetEntity: GroupeYamlFileRepertoire::class)]
+    #[ORM\OneToMany(targetEntity: GroupeYamlFileRepertoire::class, mappedBy: "repertoire")]
     private Collection $accesYamlFilesGroupe;
+
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $deletedAt = null;
+
 
 
     public function __construct()
     {
         $this->children = new ArrayCollection();
+        $this->accesYamlFilesUtilisateur = new ArrayCollection();
+        $this->accesYamlFilesGroupe = new ArrayCollection();
+
     }
 
     public function getId(): ?int
@@ -113,5 +120,63 @@ class Repertoire
         $this->utilisateur_repertoire = $utilisateur_repertoire;
 
         return $this;
+    }
+
+    public function getChildrenActifs(): array
+    {
+        return array_filter($this->children->toArray(), function (Repertoire $r) {
+            return $r->getDeletedAt() === null;
+        });
+    }
+
+    public function getDeletedAt(): ?\DateTimeInterface
+    {
+        return $this->deletedAt;
+    }
+
+    public function setDeletedAt(?\DateTimeInterface $deletedAt): void
+    {
+        $this->deletedAt = $deletedAt;
+    }
+
+    public function softDelete(): void
+    {
+        $this->deletedAt = new \DateTime();
+
+        foreach ($this->children as $child) {
+            $child->softDelete();
+        }
+    }
+
+    public function canRestore(): bool
+    {
+        if ($this->parent !== null && $this->parent->isDeleted()) {
+            return false;
+        }
+        return true;
+    }
+
+    public function restore(): void
+    {
+        $this->deletedAt = null;
+
+        foreach ($this->children as $child) {
+            $child->restore();
+        }
+    }
+
+    public function isDeleted(): bool
+    {
+        return $this->deletedAt !== null;
+    }
+
+    public function getAccesYamlFilesUtilisateur(): Collection
+    {
+        return $this->accesYamlFilesUtilisateur;
+    }
+
+    public function setAccesYamlFilesUtilisateur(Collection $accesYamlFilesUtilisateur): void
+    {
+        $this->accesYamlFilesUtilisateur = $accesYamlFilesUtilisateur;
     }
 }

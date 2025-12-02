@@ -1,0 +1,67 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    <title>Corbeille des répertoires</title>
+{% endblock %}
+
+{% block page_content %}
+    <div class="container mt-4">
+
+        <h2 class="mb-4">Corbeille des répertoires</h2>
+
+        {% if repertoires is empty %}
+            <div class="alert alert-info">
+                Aucun répertoire supprimé pour le moment.
+            </div>
+        {% else %}
+
+            <div class="mb-3 text-end">
+                <a
+                        href="{{ path('delete_repertoire_permanent_all') }}"
+                        class="btn btn-danger"
+                        onclick="return confirm('Supprimer définitivement tous les répertoires ?')"
+                >
+                    Supprimer tout
+                </a>
+            </div>
+
+            <div class="list-group">
+
+                {% for r in repertoires %}
+    <div class="list-group-item d-flex justify-content-between align-items-center">
+
+        <div>
+            <strong>{{ r.getFullPath }}</strong><br>
+            <small class="text-muted">
+                Supprimé le : {{ r.deletedAt|date('d/m/Y H:i') }}
+            </small>
+        </div>
+
+        <div class="d-flex gap-2">
+
+            {% if r.canRestore() %}
+                <a href="{{ path('restore_repertoire', {id: r.id}) }}" class="btn btn-success btn-sm">
+                    Restaurer
+                </a>
+            {% else %}
+                <button class="btn btn-secondary btn-sm" disabled>
+                    Parent supprimé
+                </button>
+            {% endif %}
+
+
+            <a href="{{ path('delete_repertoire_permanent', {id: r.id}) }}"
+               class="btn btn-danger btn-sm"
+               onclick="return confirm('Supprimer définitivement ce répertoire ?')">
+                Supprimer
+            </a>
+
+        </div>
+    </div>
+{% endfor %}
+
+</div>
+{% endif %}
+
+</div>
+{% endblock %}

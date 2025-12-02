@@ -72,6 +72,27 @@ async function responseDelete(url, csrfToken, event) {
     }
 }
 
+async function deleteRepertoire(event) {
+    const repertoireId = event.currentTarget.dataset.repertoireId;
+    const csrfToken = event.currentTarget.dataset.csrfToken;
+
+    let url = Routing.generate("deleteRepertoire", { "id": repertoireId });
+
+    const response = await fetch(url, {
+        method: 'DELETE',
+        body: JSON.stringify({
+            '_token': csrfToken
+        })
+    });
+
+    if (response.status === 204) {
+        const button = event.target;
+        const repertoireElement = button.closest(".tree-item");
+        repertoireElement.remove();
+    }
+}
+
+
 async function deleteYamlFile(event) {
     const fichierId = event.currentTarget.dataset.fichierId;
     const csrfToken = event.currentTarget.dataset.csrfToken;
@@ -177,3 +198,7 @@ document.querySelectorAll('.repertoire-gitlab').forEach(folder => {
 
 
 
+const buttonsRepertoires = document.getElementsByClassName("supprimerRepertoire")
+Array.from(buttonsRepertoires).forEach(function (button) {
+    button.addEventListener("click", deleteRepertoire);
+});

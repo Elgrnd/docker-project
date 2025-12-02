@@ -80,6 +80,8 @@ final class YamlFileController extends AbstractController
                 $content = file_get_contents($uploadedFile->getRealPath());
                 $yamlFile->assertNotEmpty($content);
 
+                Yaml::parse($content);
+
                 // Définir le répertoire par défaut (racine) si disponible
                 $repertoire = $repertoireRepository->find($repertoireId);
 
@@ -112,6 +114,8 @@ final class YamlFileController extends AbstractController
                 return $this->redirectToRoute('yaml_upload');
             } catch (FileException $e) {
                 $this->addFlash('error', 'Erreur lors de la lecture du fichier: ' . $e->getMessage());
+            } catch(ParseException $e) {
+                $this->addFlash('error', "La syntaxe du fichier n'est pas bonne " . $e->getMessage());
             } catch (\Exception $e) {
                 $this->addFlash('error', 'Une erreur est survenue: ' . $e->getMessage());
             }

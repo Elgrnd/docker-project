@@ -134,6 +134,8 @@ final class GroupeYamlFileRepertoireController extends AbstractController
                 $content = file_get_contents($uploadedFile->getRealPath());
                 $yamlFile->assertNotEmpty($content);
 
+                Yaml::parse($content);
+
                 $repertoire = $repertoireRepository->find($repertoireId);
 
                 $yamlFile->setNameFile($uploadedFile->getClientOriginalName());
@@ -163,6 +165,10 @@ final class GroupeYamlFileRepertoireController extends AbstractController
                 $this->addFlash('error', $e->getMessage());
             } catch (FileException $e) {
                 $this->addFlash('error', 'Erreur lors de la lecture du fichier YAML.');
+            } catch(ParseException $e) {
+                $this->addFlash('error', "La syntaxe du fichier n'est pas bonne " . $e->getMessage());
+            } catch (\Exception $e) {
+                $this->addFlash('error', 'Une erreur est survenue: ' . $e->getMessage());
             }
         }
 

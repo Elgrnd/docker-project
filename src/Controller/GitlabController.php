@@ -13,6 +13,8 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Yaml\Exception\ParseException;
+use Symfony\Component\Yaml\Yaml;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
 
 class GitlabController extends AbstractController
@@ -39,7 +41,7 @@ class GitlabController extends AbstractController
                 return $this->redirectToRoute('gitlab_url');
             }
             else if ($url !== null && !$gitlab->isReachableGitlabProjectUrl($url)) {
-                $this->addFlash('error', "Aucuns dépôts Gitlab connus à cette adresse.");
+                $this->addFlash('error', "Aucun dépôt Gitlab connu à cette adresse.");
                 return $this->redirectToRoute('gitlab_url');
             }
 
@@ -122,7 +124,15 @@ class GitlabController extends AbstractController
                 return false;
             }
 
-            return trim($content) !== '';
+            if (trim($content) === '') return false;
+
+            try {
+                Yaml::parse($content);
+            } catch (ParseException $e) {
+                return false;
+            }
+
+            return true;
         });
 
         $tree = $gitlab->buildTree($files);

@@ -129,6 +129,10 @@
                                 <a href="{{ path('modifierYamlFile', {"id": uyr.yamlFile.id}) }}">
                                     <i class="bi bi-pencil edit-icon" title="Modifier"></i>
                                 </a>
+                                <a href="{{ path('yamlfile_deplacer', {'id': uyr.yamlFile.id}) }}">
+                                    <i class="bi bi-arrows-move" title="Déplacer"></i>
+                                </a>
+
                                 <button data-fichier-id="{{ uyr.yamlFile.id }}" class="supprimerFichier"
                                         data-csrf-token="{{ csrf_token('delete' ~ uyr.yamlFile.id) }}">
                                     <i class="bi bi-trash bin-icon" title="Supprimer"></i>

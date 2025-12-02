@@ -7,6 +7,7 @@ use App\Entity\Utilisateur;
 use App\Entity\UtilisateurYamlFileRepertoire;
 use App\Entity\YamlFile;
 use App\Form\AjouterBiblioRepertoireType;
+use App\Form\DeplacerYamlFileType;
 use App\Form\DirectoryType;
 use App\Form\YamlFileBiblioType;
 use App\Form\YamlFileType;
@@ -452,6 +453,42 @@ final class YamlFileController extends AbstractController
             $this->addRepertoireToZip($child, $zip, $currentPath);
         }
     }
+
+    #[Route('/yamlfile/deplacer/{id}', name: 'yamlfile_deplacer', methods: ['GET', 'POST'])]
+    public function deplacer(
+        YamlFile $yamlFile,
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $utilisateur = $this->getUser();
+
+        if ($yamlFile->getUtilisateurYamlfile() !== $utilisateur) {
+            $this->addFlash('error', "Vous n'avez pas accès à ce fichier.");
+            return $this->redirectToRoute('repertoire');
+        }
+
+        $form = $this->createForm(DeplacerYamlFileType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $repertoire = $form->get('repertoire')->getData();
+
+            $uyr = $entityManager->getRepository(UtilisateurYamlFileRepertoire::class)
+                ->findOneBy(['yamlFile' => $yamlFile, 'utilisateur' => $utilisateur]);
+
+            $uyr->setRepertoire($repertoire);
+            $entityManager->flush();
+
+            $this->addFlash('success', "Fichier déplacé avec succès !");
+            return $this->redirectToRoute('repertoire');
+        }
+
+        return $this->render('yaml_file/deplacer.html.twig', [
+            'form' => $form->createView(),
+            'yamlFile' => $yamlFile,
+        ]);
+    }
+
 
 
 

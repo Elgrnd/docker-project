@@ -113,7 +113,8 @@
                                 <div class="file-actions">
                                     <i class="bi bi-eye view-icon" title="Afficher"
                                        onclick="afficherContenuYamlFile('{{ gyr.yamlFile.bodyFile|escape('js') }}')"></i>
-                                    <i class="bi bi-download download-icon" title="Télécharger"></i>
+                                    <i class="bi bi-download download-icon" title="Télécharger"
+                                       onclick="downloadYamlFile('{{ gyr.yamlFile.bodyFile|escape('js') }}', '{{ gyr.yamlFile.nameFile|escape('js') }}')"></i>
                                     {% if is_granted('GROUPE_FILE_EDIT', gyr) %}
                                         <a href="{{ path('modifier_yaml_file_groupe', {"id":gyr.groupe.id,"yamlId": gyr.yamlFile.id}) }}">
                                             <i class="bi bi-pencil edit-icon" title="Modifier"></i>

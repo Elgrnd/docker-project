@@ -33,7 +33,8 @@
                 <div class="file-actions">
                     <i class="bi bi-eye view-icon" title="Afficher"
                        onclick="afficherContenuYamlFile('{{ file.bodyFile|escape('js') }}')"></i>
-                    <i class="bi bi-download download-icon" title="Télécharger"></i>
+                    <i class="bi bi-download download-icon" title="Télécharger"
+                       onclick="downloadYamlFile('{{ file.bodyFile|escape('js') }}', '{{ file.nameFile|escape('js') }}')"></i>
                     <a href="{{ path("ajouterAuRepertoire", {"id": file.id}) }}">
                         <i class="bi bi-box-arrow-up-right" title="Ajouter au répertoire"></i>
                     </a>

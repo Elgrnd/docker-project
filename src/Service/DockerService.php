@@ -17,21 +17,46 @@ class DockerService
 
     public function runInVm(string $cmd, string $vmIp): string {
         $proxyCmd = sprintf(
-            'ssh -i %s -W %%h:%%p %s@%s',
+            'ssh -i %s -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -W %%h:%%p %s@%s',
             escapeshellarg($this->sshPrivateKey),
-            escapeshellarg($this->sshUser),
-            escapeshellarg($this->hoteProxMoxIp)
+            $this->sshUser,
+            $this->hoteProxMoxIp
         );
 
         $sshCommand = 'ssh -i ' . escapeshellarg($this->sshPrivateKey)
             . ' -o UserKnownHostsFile=/dev/null'
             . ' -o StrictHostKeyChecking=no'
-            . ' -o ProxyCommand=' . escapeshellarg($proxyCmd)
+            . ' -o ProxyCommand="' . $proxyCmd . '"'
             . ' ' . escapeshellarg($this->sshUser . '@' . $vmIp)
-            . ' ' . escapeshellarg($cmd) . ' 2>&1';
+            . ' ' . escapeshellarg($cmd);
 
-        var_dump(trim(shell_exec($sshCommand)));
         return trim(shell_exec($sshCommand));
+    }
+
+    public function sendFileToVm(string $content, string $remotePath, string $vmIp): string
+    {
+        $tmpFile = tempnam(sys_get_temp_dir(), 'yaml_');
+        file_put_contents($tmpFile, $content);
+
+        $proxyCmd = sprintf(
+            'ssh -i %s -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -W %%h:%%p %s@%s',
+            escapeshellarg($this->sshPrivateKey),
+            $this->sshUser,
+            $this->hoteProxMoxIp
+        );
+
+        $scpCommand =
+            'scp -i ' . escapeshellarg($this->sshPrivateKey)
+            . ' -o UserKnownHostsFile=/dev/null'
+            . ' -o StrictHostKeyChecking=no'
+            . ' -o ProxyCommand="' . $proxyCmd . '"'
+            . ' ' . escapeshellarg($tmpFile)
+            . ' ' . escapeshellarg($this->sshUser . '@' . $vmIp . ':' . $remotePath);
+
+        $output = shell_exec($scpCommand . ' 2>&1');
+        unlink($tmpFile);
+
+        return trim($output ?? '');
     }
 
 

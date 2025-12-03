@@ -2,10 +2,11 @@
 
 namespace App\Controller;
 
+use App\Entity\YamlFile;
 use App\Service\DockerService;
 use App\Service\ProxmoxService;
 use App\Service\UtilisateurManagerInterface;
-use Psr\Log\LoggerInterface;
+use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -47,7 +48,7 @@ final class DockerController extends AbstractController
             foreach ($users as $userWithVm) {
                 try {
                     $vmIp = $proxmoxService->getVMIp($userWithVm->getProxmoxVmid());
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $this->addFlash('error', "le QGA n'est pas encore prêt pour la VM");
                     return $this->redirectToRoute("index");
                 }
@@ -64,7 +65,7 @@ final class DockerController extends AbstractController
             if ($user->getProxmoxVmid()) {
                 try {
                     $vmIp = $proxmoxService->getVMIp($user->getProxmoxVmid());
-                } catch (\Exception $e) {
+                } catch (Exception $e) {
                     $this->addFlash('error', "le QGA n'est pas encore prêt pour la VM");
                     return $this->redirectToRoute("index");
                 }
@@ -214,5 +215,60 @@ final class DockerController extends AbstractController
         return $this->redirectToRoute('listContainers');
     }
 
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
+     */
+    #[Route('/yaml/deploy/{id}', name: 'deploy_yaml_file', methods: ['GET'])]
+    public function deployYamlInVm(
+        YamlFile $yaml,
+        DockerService $dockerService,
+        ProxmoxService $proxmoxService
+    ): Response {
+        try {
+            $content = $yaml->getBodyFile();
+            $baseName = $yaml->getNameFile() ?? 'compose.yaml';
+
+            $projectName = preg_replace('/[^a-z0-9_]/', '_', strtolower(pathinfo($baseName, PATHINFO_FILENAME)));
+            $remotePath = $projectName . '_' . uniqid() . '.yaml';
+
+            $vmId = $this->getUser()->getProxmoxVmid();
+            if (!$vmId) {
+                throw new Exception("L'utilisateur n'a pas de VMID Proxmox.");
+            }
+
+            $vmIp = $proxmoxService->getVMIp($vmId);
+            if (!$vmIp) {
+                throw new Exception("Impossible de récupérer l'IP de la VM.");
+            }
+
+            $uploadError = $dockerService->sendFileToVm($content, $remotePath, $vmIp);
+            if (str_contains($uploadError, 'Permanently added')) {
+                $uploadError = '';
+            }
+
+            if (!empty($uploadError)) {
+                throw new Exception("Erreur SCP vers la VM: " . $uploadError);
+            }
+
+            $cmd = sprintf('/usr/bin/docker compose -p %s -f %s up -d 2>&1', escapeshellarg($projectName), escapeshellarg($remotePath));
+            $output = $dockerService->runInVm($cmd, $vmIp);
+
+            $lines = explode("\n", $output);
+            $important = array_filter($lines, fn($line) => str_contains(strtolower($line), 'error') || str_contains(strtolower($line), 'warning'));
+            if (!empty($important)) {
+                $this->addFlash('danger', implode("\n", $important));
+            } else {
+                $this->addFlash('success', "Déploiement OK : " . $baseName);
+            }
+
+        } catch (\Throwable $e) {
+            $this->addFlash('danger', "ERREUR : " . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('repertoire');
+    }
 
 }

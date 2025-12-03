@@ -15,28 +15,17 @@
         <table class="table table-striped" id="containersTable">
             <thead>
             <tr>
-                <th>Utilisateur</th>
-                <th>Nom</th>
-                <th>ID</th>
-                <th>Statut</th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for c in containers %}
-                <tr>
-                    <td>{{ c.user }}</td>
-                    <td>{{ c.name }}</td>
-                    <td>{{ c.id }}</td>
-                    <td>{{ c.status }}</td>
-                    <td>
-                        <a href="{{ path('container_start', {'vmid': c.vmid, 'id': c.id}) }}"
-                           class="btn btn-success btn-sm">Run</a>
-                        <a href="{{ path('container_stop', {'vmid': c.vmid, 'id': c.id}) }}"
-                           class="btn btn-warning btn-sm">Down</a>
-                        <a href="{{ path('container_remove', {'vmid': c.vmid, 'id': c.id}) }}"
-                           class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ce conteneur ?')">Delete</a>
-                    </td>
+                <td>{{ c.user }}</td>
+                <td>{{ c.name }}</td>
+                <td>{{ c.id }}</td>
+                <td>{{ c.status }}</td>
+                <td>
+                    <a href="{{ path('container_start', {'vmid': c.vmid, 'id': c.id}) }}" class="btn btn-success btn-sm">Run</a>
+                    <a href="{{ path('container_stop', {'vmid': c.vmid, 'id': c.id}) }}" class="btn btn-warning btn-sm">Down</a>
+                    {% if 'Exited' in c.status %}
+                    <a href="{{ path('container_remove', {'vmid': c.vmid, 'id': c.id}) }}" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ce conteneur ?')">Delete</a>
+                    {% endif %}
+                </td>
 
                 </tr>
             {% else %}

@@ -33,6 +33,32 @@ class DockerService
         return trim(shell_exec($sshCommand));
     }
 
+    public function sendFileToVm(string $content, string $remotePath, string $vmIp): string
+    {
+        $tmpFile = tempnam(sys_get_temp_dir(), 'yaml_');
+        file_put_contents($tmpFile, $content);
+
+        $proxyCmd = sprintf(
+            'ssh -i %s -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -W %%h:%%p %s@%s',
+            escapeshellarg($this->sshPrivateKey),
+            $this->sshUser,
+            $this->hoteProxMoxIp
+        );
+
+        $scpCommand =
+            'scp -i ' . escapeshellarg($this->sshPrivateKey)
+            . ' -o UserKnownHostsFile=/dev/null'
+            . ' -o StrictHostKeyChecking=no'
+            . ' -o ProxyCommand="' . $proxyCmd . '"'
+            . ' ' . escapeshellarg($tmpFile)
+            . ' ' . escapeshellarg($this->sshUser . '@' . $vmIp . ':' . $remotePath);
+
+        $output = shell_exec($scpCommand . ' 2>&1');
+        unlink($tmpFile);
+
+        return trim($output ?? '');
+    }
+
 
 
     public function listContainers(string $vmIp): array

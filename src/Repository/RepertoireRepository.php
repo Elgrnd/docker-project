@@ -57,6 +57,19 @@ class RepertoireRepository extends ServiceEntityRepository
 
     }
 
+    public function verifierNomDejaExistant(string $nomRepertoire, Repertoire $repertoireParent, int $idUtilisateur)
+    {
+        return $this->createQueryBuilder('r')
+            ->andWhere('r.name = :nomRepertoire')
+            ->andWhere('r.parent = :repertoireParent')
+            ->andWhere('r.utilisateur_repertoire = :idUtilisateur')
+            ->setParameter('nomRepertoire', $nomRepertoire)
+            ->setParameter('repertoireParent', $repertoireParent)
+            ->setParameter('idUtilisateur', $idUtilisateur)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
     public function recupererRepertoireRacineGroupe($idGroupe)
     {
         return $this->createQueryBuilder('r')

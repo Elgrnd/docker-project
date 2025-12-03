@@ -101,12 +101,23 @@
                             -
                         {% endif %}
                     </td>
-
                     <td>
-                        {% if vm.disk and vm.maxdisk %}
-                            {{ (vm.disk / 1024 / 1024)|number_format(0) }}
+                        {% set diskUsedBytes = (vm.disk ?? 0) + (vm.diskread ?? 0) + (vm.diskwrite ?? 0) %}
+                        {% set diskTotalBytes = vm.maxdisk ?? 0 %}
+
+                        {% if diskTotalBytes > 0 %}
+                            {% set diskUsedMb = (diskUsedBytes / 1024 / 1024) %}
+
+                            {# Valeur minimale forcée : 0.6 Mo #}
+                            {% if diskUsedMb < 0.6 %}
+                                {% set diskUsedMb = 0.6 %}
+                            {% endif %}
+
+                            {% set diskTotalMb = diskTotalBytes / 1024 / 1024 %}
+
+                            {{ diskUsedMb|number_format(1, '.', ' ') }}
                             /
-                            {{ (vm.maxdisk / 1024 / 1024)|number_format(0) }}
+                            {{ diskTotalMb|number_format(0, '.', ' ') }}
                         {% else %}
                             -
                         {% endif %}
@@ -114,11 +125,17 @@
 
                     <td>
                         {% if vm.uptime %}
-                            {{ (vm.uptime / 3600)|number_format(1) }} h
+                            {% if vm.uptime < 3600 %}
+                                {{ (vm.uptime / 60)|number_format(0) }} min
+                            {% else %}
+                                {{ (vm.uptime / 3600)|number_format(1) }} h
+                            {% endif %}
                         {% else %}
                             -
                         {% endif %}
                     </td>
+
+
                     {% if is_granted('ROLE_ADMIN') %}
                         <td>
                             <a href="{{ path('admin_vm_start', {'vmid': vm.vmid}) }}"

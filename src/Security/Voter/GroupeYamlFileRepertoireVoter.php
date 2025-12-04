@@ -11,6 +11,7 @@ final class GroupeYamlFileRepertoireVoter extends Voter
 {
     public const EDIT = 'GROUPE_FILE_EDIT';
     public const DELETE = 'GROUPE_FILE_DELETE';
+    private Security $security;
 
     public function __construct(Security $security)
     {

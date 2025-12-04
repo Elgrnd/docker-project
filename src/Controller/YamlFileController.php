@@ -411,59 +411,7 @@ final class YamlFileController extends AbstractController
         ]);
     }
 
-    /**
-     * @throws \Exception
-     */
-    #[IsGranted("ROLE_USER")]
-    #[Route('/repertoire/telecharger/{id}', name: 'repertoire_telecharger_zip')]
-    public function telechargerZip(
-        Repertoire $repertoire,
-        EntityManagerInterface $em
-    ): Response {
-        if ($repertoire->getUtilisateurRepertoire() !== $this->getUser()) {
-            $this->addFlash('error', "Vous ne pouvez pas télécharger ce répertoire.");
-            return $this->redirectToRoute('repertoire');
-        }
-
-        $zipPath = sys_get_temp_dir() . '/repertoire_' . $repertoire->getId() . '.zip';
-
-        $zip = new ZipArchive();
-        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new \Exception("Impossible de créer l’archive ZIP.");
-        }
-
-        $this->addRepertoireToZip($repertoire, $zip, '');
-
-        $zip->close();
-
-        return $this->file($zipPath, $repertoire->getName() . '.zip')
-            ->deleteFileAfterSend();
-    }
-
-    /**
-     * Ajoute un répertoire (et tout son contenu) dans un ZIP.
-     *
-     * @param Repertoire $repertoire  Le dossier qu’on est en train d'ajouter
-     * @param ZipArchive $zip         L’archive ZIP dans laquelle on écrit
-     * @param string $pathInZip       Le chemin actuel dans le ZIP (genre 'monDossier/sousDossier')
-     */
-    private function addRepertoireToZip(Repertoire $repertoire, ZipArchive $zip, string $pathInZip): void
-    {
-        $currentPath = ($pathInZip !== '' ? $pathInZip . '/' : '') . $repertoire->getName();
-
-        $zip->addEmptyDir($currentPath);
-
-        foreach ($repertoire->getAccesYamlFilesUtilisateur() as $uyr) {
-            $yaml = $uyr->getYamlFile();
-            $filepathInZip = $currentPath . '/' . $yaml->getNameFile();
-            $zip->addFromString($filepathInZip, $yaml->getBodyFile());
-        }
-
-        foreach ($repertoire->getChildren() as $child) {
-            $this->addRepertoireToZip($child, $zip, $currentPath);
-        }
-    }
-
+    #[IsGranted("FILE_OWNER", subject: 'yamlFile')]
     #[Route('/yamlfile/deplacer/{id}', name: 'yamlfile_deplacer', methods: ['GET', 'POST'])]
     public function deplacer(
         YamlFile $yamlFile,
@@ -471,11 +419,6 @@ final class YamlFileController extends AbstractController
         EntityManagerInterface $entityManager
     ): Response {
         $utilisateur = $this->getUser();
-
-        if ($yamlFile->getUtilisateurYamlfile() !== $utilisateur) {
-            $this->addFlash('error', "Vous n'avez pas accès à ce fichier.");
-            return $this->redirectToRoute('repertoire');
-        }
 
         $form = $this->createForm(DeplacerYamlFileType::class);
         $form->handleRequest($request);
@@ -498,8 +441,4 @@ final class YamlFileController extends AbstractController
             'yamlFile' => $yamlFile,
         ]);
     }
-
-
-
-
 }

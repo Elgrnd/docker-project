@@ -121,9 +121,9 @@ final class RepertoireController extends AbstractController
 
     #[IsGranted('REP_EDIT', subject: 'repertoire')]
     #[Route('/repertoire/supprimer/{id}', name: 'delete_repertoire_permanent')]
-    public function supprime(Repertoire $repertoire, EntityManagerInterface $em): Response
+    public function supprime(Repertoire $repertoire, EntityManagerInterface $em, RepertoireService $repertoireService): Response
     {
-        $this->deleteRepertoireWithFiles($repertoire, $em);
+        $repertoireService->deleteRepertoireWithFiles($repertoire, $em);
         $em->flush();
 
         $this->addFlash("success", "Le répertoire à bien été supprimé");

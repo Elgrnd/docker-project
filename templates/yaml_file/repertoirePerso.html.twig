@@ -98,6 +98,7 @@
                 <small class="text-muted">
                     {{ repertoire.children|length }} sous-répertoire(s))
                 </small>
+                {% if (repertoire.isRoot() == false)%}
                 <div class="file-actions">
                     <button
                             class="supprimerRepertoire"
@@ -107,6 +108,7 @@
                         <i class="bi bi-trash bin-icon" title="Supprimer le répertoire"></i>
                     </button>
                 </div>
+                {% endif %}
 
             </div>
 

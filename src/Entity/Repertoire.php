@@ -188,4 +188,11 @@ class Repertoire
     {
         $this->accesYamlFilesUtilisateur = $accesYamlFilesUtilisateur;
     }
+
+    public function isRoot()
+    {
+        if ($this->parent == null)
+            return true;
+        return false;
+    }
 }

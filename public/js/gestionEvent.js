@@ -92,6 +92,31 @@ async function deleteRepertoire(event) {
     }
 }
 
+async function deleteRepertoireGroupe(event) {
+    const repertoireId = event.currentTarget.dataset.repertoireId;
+    const groupeId = event.currentTarget.dataset.groupeId;
+    const csrfToken = event.currentTarget.dataset.csrfToken;
+
+    let url = Routing.generate("deleteRepertoireGroupe", {
+        "id": groupeId,
+        "repertoireId": repertoireId
+    });
+
+    const response = await fetch(url, {
+        method: 'DELETE',
+        body: JSON.stringify({
+            '_token': csrfToken
+        })
+    });
+
+    if (response.status === 204) {
+        const button = event.target;
+        const repertoireElement = button.closest(".tree-item");
+        repertoireElement.remove();
+    }
+}
+
+
 
 async function deleteYamlFile(event) {
     const fichierId = event.currentTarget.dataset.fichierId;
@@ -202,3 +227,9 @@ const buttonsRepertoires = document.getElementsByClassName("supprimerRepertoire"
 Array.from(buttonsRepertoires).forEach(function (button) {
     button.addEventListener("click", deleteRepertoire);
 });
+
+const buttonsRepertoiresGroupe = document.getElementsByClassName("supprimerRepertoireGroupe")
+Array.from(buttonsRepertoiresGroupe).forEach(function (button) {
+    button.addEventListener("click", deleteRepertoireGroupe);
+});
+

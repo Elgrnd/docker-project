@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Repertoire;
+use App\Entity\UtilisateurYamlFileRepertoire;
 use Doctrine\ORM\EntityManagerInterface;
 use ZipArchive;
 
@@ -34,9 +35,16 @@ class RepertoireService
 
     public function deleteRepertoireWithFiles(Repertoire $repertoire, EntityManagerInterface $em): void
     {
-        foreach ($repertoire->getAccesYamlFilesUtilisateur() as $uyr) {
-            $em->remove($uyr->getYamlFile());
-            $em->remove($uyr);
+        foreach ($repertoire->getAccesYamlFilesUtilisateur() as $rel) {
+            $em->remove($rel);
+            $em->remove($rel->getYamlFile());
+        }
+
+        foreach ($repertoire->getAccesYamlFilesGroupe() as $rel) {
+            $em->remove($rel);
+            if ($em->getRepository(UtilisateurYamlFileRepertoire::class)->findOneBy(['yamlFile' => $rel->getYamlFile()]) === null) {
+                $em->remove($rel->getYamlFile());
+            }
         }
 
         foreach ($repertoire->getChildren() as $child) {
@@ -45,4 +53,5 @@ class RepertoireService
 
         $em->remove($repertoire);
     }
+
 }

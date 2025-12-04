@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Groupe;
 use App\Entity\Repertoire;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -26,6 +27,17 @@ class RepertoireRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function recupererRepertoireGroupeActifs(Groupe $groupe)
+    {
+        return $this->createQueryBuilder('r')
+            ->andWhere('r.groupe_repertoire = :groupe')
+            ->andWhere('r.deletedAt IS NULL')
+            ->setParameter('groupe', $groupe)
+            ->getQuery()
+            ->getResult();
+    }
+
 
 
     public function recupererRepertoireUtilisateur(UserInterface $utilisateur)
@@ -138,6 +150,17 @@ class RepertoireRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function findDeletedByGroupe(?Groupe $groupe)
+    {
+        return $this->createQueryBuilder('r')
+            ->andWhere('r.groupe_repertoire = :idgroupe')
+            ->andWhere('r.deletedAt IS NOT NULL')
+            ->setParameter('idgroupe', $groupe->getId())
+            ->getQuery()
+            ->getResult();
+    }
+
 
 
 //    /**

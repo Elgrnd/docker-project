@@ -26,6 +26,9 @@ class GroupeYamlFileRepertoire
     #[ORM\Column(length: 255)]
     private ?string $droit = null;
 
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $deletedAt = null;
+
     public function getDroit(): ?string
     {
         return $this->droit;
@@ -68,5 +71,16 @@ class GroupeYamlFileRepertoire
         $this->groupe = $groupe;
     }
 
+    public function getDeletedAt(): ?\DateTimeInterface
+    {
+        return $this->deletedAt;
+    }
+
+    public function setDeletedAt(?\DateTimeInterface $deletedAt): static
+    {
+        $this->deletedAt = $deletedAt;
+
+        return $this;
+    }
 
 }

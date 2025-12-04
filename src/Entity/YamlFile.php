@@ -142,7 +142,7 @@ class YamlFile
         return $this;
     }
 
-    public function getDeletedAt(): DateTimeInterface
+    public function getDeletedAt(): ?DateTimeInterface
     {
         return $this->deletedAt;
     }

@@ -2,18 +2,10 @@
 
 {% block title %}<title>Liste des conteneurs</title> {% endblock %}
 
-{% block page_content %}
-{% if app.user and app.user.vmStatus == "creating" %}
-    <div class="alert alert-warning">
-        <i class="bi bi-hourglass-split"></i>
-        Votre machine Proxmox est en cours de création... Vous pourrez l'utiliser dans quelques instants.
-    </div>
-{% endif %}
+{% block scriptJs %}
+    <script defer type="text/javascript" src="{{ asset('js/vmStatus.js') }}"></script>
+{% endblock %}
 
-{% if app.user and app.user.vmStatus == "ready" %}
-    <div class="alert alert-success">
-        <i class="bi bi-check-circle-fill"></i>
-        Votre machine Proxmox est prête à être utilisée !
-    </div>
-{% endif %}
+{% block page_content %}
+    <div id="vm-status-box"></div>
 {% endblock %}

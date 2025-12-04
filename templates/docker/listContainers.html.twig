@@ -5,15 +5,25 @@
     <script src="{{ asset('js/searchContainers.js') }}"></script>{% endblock %}
 
 {% block page_content %}
-    <main>
-        <h2 class="mb-4">Conteneurs Docker en cours d’exécution</h2>
+    <h2 class="mb-4">Conteneurs Docker en cours d’exécution</h2>
 
-        <div class="mb-3">
-            <input type="text" id="searchInput" class="form-control" placeholder="Rechercher par nom ou ID...">
-        </div>
+    <div class="mb-3">
+        <input type="text" id="searchInput" class="form-control" placeholder="Rechercher par nom ou ID...">
+    </div>
 
-        <table class="table table-striped" id="containersTable">
-            <thead>
+    <table class="table table-striped" id="containersTable">
+        <thead>
+        <tr>
+            <th>User</th>
+            <th>Name</th>
+            <th>ID</th>
+            <th>Status</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        {% for c in containers %}
             <tr>
                 <td>{{ c.user }}</td>
                 <td>{{ c.name }}</td>
@@ -22,20 +32,23 @@
                 <td>
                     <a href="{{ path('container_start', {'vmid': c.vmid, 'id': c.id}) }}" class="btn btn-success btn-sm">Run</a>
                     <a href="{{ path('container_stop', {'vmid': c.vmid, 'id': c.id}) }}" class="btn btn-warning btn-sm">Down</a>
+
                     {% if 'Exited' in c.status %}
-                    <a href="{{ path('container_remove', {'vmid': c.vmid, 'id': c.id}) }}" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ce conteneur ?')">Delete</a>
+                        <a href="{{ path('container_remove', {'vmid': c.vmid, 'id': c.id}) }}"
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Supprimer ce conteneur ?')">Delete</a>
                     {% endif %}
                 </td>
+            </tr>
 
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="5" class="text-center">Aucun conteneur trouvé.</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-    </main>
+        {% else %}
+            <tr>
+                <td colspan="5" class="text-center">Aucun conteneur trouvé.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
     <hr class="my-5">
 
     <h2 class="mb-4">Monitoring des machines virtuelles Proxmox</h2>

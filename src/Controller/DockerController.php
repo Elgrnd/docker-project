@@ -8,6 +8,7 @@ use App\Service\ProxmoxService;
 use App\Service\UtilisateurManagerInterface;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
@@ -291,5 +292,16 @@ final class DockerController extends AbstractController
 
         return $this->redirectToRoute('repertoire');
     }
+
+    #[Route('/vm/status', name: 'vm_status', methods: ['GET'])]
+    public function vmStatus(): JsonResponse
+    {
+        $user = $this->getUser();
+
+        return new JsonResponse([
+            'status' => $user?->getVmStatus() ?? null
+        ]);
+    }
+
 
 }

@@ -114,33 +114,36 @@
             <div class="tree-children" data-children-of="{{ repertoire.id }}">
                 {# Afficher les fichiers YAML de ce répertoire #}
                 {% for uyr in listUyr %}
-                <div class="file-list">
-                    {% if uyr.repertoire.id == repertoire.id %}
-                        <div class="file-item">
-                            <div class="file-info">
-                                <i class="bi bi-file-earmark-text file-icon"></i>
-                                <span class="file-name">{{ uyr.yamlFile.nameFile }}</span>
-                            </div>
-                            <div class="file-actions">
-                                <i class="bi bi-eye view-icon" title="Afficher"
-                                   onclick="afficherContenuYamlFile('{{ uyr.yamlFile.bodyFile|escape('js') }}')"></i>
-                                <i class="bi bi-download download-icon" title="Télécharger"
-                                   onclick="downloadYamlFile('{{ uyr.yamlFile.bodyFile|escape('js') }}', '{{ uyr.yamlFile.nameFile|escape('js') }}')"></i>
-                                <a href="{{ path('modifierYamlFile', {"id": uyr.yamlFile.id}) }}">
-                                    <i class="bi bi-pencil edit-icon" title="Modifier"></i>
-                                </a>
-                                <a href="{{ path('yamlfile_deplacer', {'id': uyr.yamlFile.id}) }}">
-                                    <i class="bi bi-arrows-move" title="Déplacer"></i>
-                                </a>
+                    <div class="file-list">
+                        {% if uyr.repertoire.id == repertoire.id %}
+                            <div class="file-item">
+                                <div class="file-info">
+                                    <i class="bi bi-file-earmark-text file-icon"></i>
+                                    <span class="file-name">{{ uyr.yamlFile.nameFile }}</span>
+                                </div>
+                                <div class="file-actions">
+                                    <i class="bi bi-eye view-icon" title="Afficher"
+                                       onclick="afficherContenuYamlFile('{{ uyr.yamlFile.bodyFile|escape('js') }}')"></i>
+                                    <i class="bi bi-download download-icon" title="Télécharger"
+                                       onclick="downloadYamlFile('{{ uyr.yamlFile.bodyFile|escape('js') }}', '{{ uyr.yamlFile.nameFile|escape('js') }}')"></i>
+                                    <a href="{{ path('modifierYamlFile', {"id": uyr.yamlFile.id}) }}">
+                                        <i class="bi bi-pencil edit-icon" title="Modifier"></i>
+                                    </a>
+                                    <a href="{{ path('listVersion', {'id': uyr.yamlFile.id}) }}">
+                                        <i class="bi bi-clock-history version-icon" title="Voir les versions"></i>
+                                    </a>
+                                    <a href="{{ path('yamlfile_deplacer', {'id': uyr.yamlFile.id}) }}">
+                                        <i class="bi bi-arrows-move" title="Déplacer"></i>
+                                    </a>
 
-                                <button data-fichier-id="{{ uyr.yamlFile.id }}" class="supprimerFichier"
-                                        data-csrf-token="{{ csrf_token('delete' ~ uyr.yamlFile.id) }}">
-                                    <i class="bi bi-trash bin-icon" title="Supprimer"></i>
-                                </button>
+                                    <button data-fichier-id="{{ uyr.yamlFile.id }}" class="supprimerFichier"
+                                            data-csrf-token="{{ csrf_token('delete' ~ uyr.yamlFile.id) }}">
+                                        <i class="bi bi-trash bin-icon" title="Supprimer"></i>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-                    {% endif %}
-                </div>
+                        {% endif %}
+                    </div>
                 {% endfor %}
 
                 {# Afficher récursivement les sous-répertoires #}

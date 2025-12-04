@@ -38,8 +38,15 @@ class YamlFile
     #[ORM\OneToMany(mappedBy: "yamlFile", targetEntity: GroupeYamlFileRepertoire::class)]
     private Collection $groupeParRepertoire;
 
+    /**
+     * @var Collection<int, YamlFileVersion>
+     */
+    #[ORM\OneToMany(targetEntity: YamlFileVersion::class, mappedBy: 'yamlFileId', orphanRemoval: true)]
+    private Collection $version;
+
     public function __construct()
     {
+        $this->version = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -114,5 +121,35 @@ class YamlFile
         if (trim($content) === '') {
             throw new DomainException("Le fichier YAML ne peut pas être vide.");
         }
+    }
+
+    /**
+     * @return Collection<int, YamlFileVersion>
+     */
+    public function getVersion(): Collection
+    {
+        return $this->version;
+    }
+
+    public function addVersion(YamlFileVersion $version): static
+    {
+        if (!$this->version->contains($version)) {
+            $this->version->add($version);
+            $version->setYamlFileId($this);
+        }
+
+        return $this;
+    }
+
+    public function removeVersion(YamlFileVersion $version): static
+    {
+        if ($this->version->removeElement($version)) {
+            // set the owning side to null (unless already changed)
+            if ($version->getYamlFileId() === $this) {
+                $version->setYamlFileId(null);
+            }
+        }
+
+        return $this;
     }
 }

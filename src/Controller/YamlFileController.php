@@ -6,6 +6,7 @@ use App\Entity\Repertoire;
 use App\Entity\Utilisateur;
 use App\Entity\UtilisateurYamlFileRepertoire;
 use App\Entity\YamlFile;
+use App\Entity\YamlFileVersion;
 use App\Form\AjouterBiblioRepertoireType;
 use App\Form\DeplacerYamlFileType;
 use App\Form\DirectoryType;
@@ -229,7 +230,15 @@ final class YamlFileController extends AbstractController
                 try {
                     Yaml::parse($yamlContent);
 
+                    $version = new YamlFileVersion();
+                    $version->setBodyFile($yamlFile->getBodyFile());
+                    $version->setYamlFileId($yamlFile);
+                    $version->setDateEdition(new \DateTime());
+                    $entityManager->persist($version);
+
                     $yamlFile->setBodyFile($yamlContent);
+                    $yamlFile->addVersion($version);
+
                     $entityManager->flush();
 
                     $this->addFlash('success', 'Fichier YAML modifié avec succès');

@@ -1,0 +1,67 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    Détail de la version
+{% endblock %}
+
+{% block page_content %}
+    <div class="container mt-4">
+        <h1>Détail de la version</h1>
+
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3>{{ yamlFile.nameFile }}</h3>
+                <a href="{{ path('listVersion', {'id': yamlFile.id}) }}" class="btn btn-secondary">
+                    Retour à la liste
+                </a>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-3">Date d'édition :</dt>
+                    <dd class="col-sm-9">{{ version.dateEdition|date('d/m/Y H:i:s') }}</dd>
+
+                    <dt class="col-sm-3">Commentaire :</dt>
+                    <dd class="col-sm-9">{{ version.commentaire ?? 'Aucun commentaire' }}</dd>
+                </dl>
+
+                <hr>
+
+                <h4>Contenu du fichier :</h4>
+                <pre class="bg-light p-3 rounded"><code>{{ version.bodyFile }}</code></pre>
+
+                <div class="mt-3">
+                    <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#confirmRestoreModal">
+                        <i class="fas fa-undo"></i> Restaurer cette version
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmation -->
+    <div class="modal fade" id="confirmRestoreModal" tabindex="-1" aria-labelledby="confirmRestoreModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmRestoreModalLabel">Confirmer la restauration</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Êtes-vous sûr de vouloir restaurer cette version ?</p>
+                    <p class="text-muted">
+                        <small>
+                            <i class="fas fa-info-circle"></i>
+                            La version actuelle sera sauvegardée automatiquement avant la restauration.
+                        </small>
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <a href="{{ path('version_restore', {'id': version.id}) }}" class="btn btn-warning">
+                        Confirmer la restauration
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

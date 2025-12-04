@@ -66,6 +66,19 @@ class YamlFileRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
     }
 
+    // src/Repository/YamlFileRepository.php
+    public function findDeletedByUser(UserInterface $user)
+    {
+        return $this->createQueryBuilder('y')
+            ->where('y.deletedAt IS NOT NULL')
+            ->andWhere('y.utilisateur_yamlfile = :user')
+            ->setParameter('user', $user)
+            ->orderBy('y.deletedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+
 
 
     //    /**

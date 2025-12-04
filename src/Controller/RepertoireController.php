@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Repertoire;
 use App\Repository\RepertoireRepository;
+use App\Repository\YamlFileRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -72,13 +73,15 @@ final class RepertoireController extends AbstractController
 
     #[IsGranted('ROLE_USER')]
     #[Route('/repertoire/corbeille', name: 'repertoire_corbeille')]
-    public function corbeille(RepertoireRepository $repo): Response
+    public function corbeille(RepertoireRepository $repertoireRepository, YamlFileRepository $yamlFileRepository): Response
     {
         $user = $this->getUser();
-        $repertoires = $repo->findDeletedByUser($user);
+        $repertoires = $repertoireRepository->findDeletedByUser($user);
+        $yamlFiles   = $yamlFileRepository->findDeletedByUser($user);
 
         return $this->render('yaml_file/corbeilleRepertoire.html.twig', [
             'repertoires' => $repertoires,
+            'yamlFiles'   => $yamlFiles,
         ]);
     }
 

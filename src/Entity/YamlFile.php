@@ -32,11 +32,14 @@ class YamlFile
     #[ORM\JoinColumn(nullable: true)]
     private ?Utilisateur $utilisateur_yamlfile = null;
 
-    #[ORM\OneToMany(mappedBy: "yamlFile", targetEntity: UtilisateurYamlFileRepertoire::class)]
+    #[ORM\OneToMany(targetEntity: UtilisateurYamlFileRepertoire::class, mappedBy: "yamlFile")]
     private Collection $utilisateursParRepertoire;
 
-    #[ORM\OneToMany(mappedBy: "yamlFile", targetEntity: GroupeYamlFileRepertoire::class)]
+    #[ORM\OneToMany(targetEntity: GroupeYamlFileRepertoire::class, mappedBy: "yamlFile")]
     private Collection $groupeParRepertoire;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $description = null;
 
     public function __construct()
     {
@@ -114,5 +117,17 @@ class YamlFile
         if (trim($content) === '') {
             throw new DomainException("Le fichier YAML ne peut pas être vide.");
         }
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): static
+    {
+        $this->description = $description;
+
+        return $this;
     }
 }

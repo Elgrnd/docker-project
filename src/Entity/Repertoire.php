@@ -117,6 +117,7 @@ class Repertoire
         return $this->utilisateur_repertoire;
     }
 
+
     public function setUtilisateurRepertoire(?Utilisateur $utilisateur_repertoire): static
     {
         $this->utilisateur_repertoire = $utilisateur_repertoire;

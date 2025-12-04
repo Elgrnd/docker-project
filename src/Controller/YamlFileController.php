@@ -459,7 +459,7 @@ final class YamlFileController extends AbstractController
             $zip->addFromString($filepathInZip, $yaml->getBodyFile());
         }
 
-        foreach ($repertoire->getChildren() as $child) {
+        foreach ($repertoire->getChildrenActifs() as $child) {
             $this->addRepertoireToZip($child, $zip, $currentPath);
         }
     }

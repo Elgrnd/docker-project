@@ -30,12 +30,6 @@
             </a>
         </div>
 
-        <a href="{{ path('repertoire_telecharger_zip', {id: repertoireRacine.id}) }}"
-           class="btn btn-primary mt-3">
-            📦 Télécharger en ZIP
-        </a>
-
-
         {# Formulaire de création (masqué par défaut) #}
         <div id="formContainer" style="display: none;" class="card mb-4">
             <div class="card-header">
@@ -69,6 +63,11 @@
                 {{ form_end(formRepertoire) }}
             </div>
         </div>
+
+        <a href="{{ path('repertoire_telecharger_zip', {id: repertoireRacine.id}) }}"
+           class="btn btn-primary mt-3">
+            📦 Télécharger en ZIP
+        </a>
 
         {# Arborescence des répertoires et fichiers #}
         <div class="card">

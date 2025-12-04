@@ -229,11 +229,17 @@ final class YamlFileController extends AbstractController
             // Vérification CSRF
             if ($this->isCsrfTokenValid('edit-yaml', $submittedToken)) {
                 $yamlContent = $request->request->get('content');
+                $description = $request->request->get('description');
 
                 try {
                     Yaml::parse($yamlContent);
 
                     $yamlFile->setBodyFile($yamlContent);
+
+                    if ($description !== null) {
+                        $yamlFile->setDescription($description);
+                    }
+
                     $entityManager->flush();
 
                     $this->addFlash('success', 'Fichier YAML modifié avec succès');

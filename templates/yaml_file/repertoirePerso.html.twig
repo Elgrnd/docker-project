@@ -119,7 +119,10 @@
                         <div class="file-item">
                             <div class="file-info">
                                 <i class="bi bi-file-earmark-text file-icon"></i>
-                                <span class="file-name">{{ uyr.yamlFile.nameFile }}</span>
+                                <span class="file-name"
+                                      title="{{ uyr.yamlFile.description }}">
+                                    {{ uyr.yamlFile.nameFile }}
+                                </span>
                             </div>
                             <div class="file-actions">
                                 <i class="bi bi-eye view-icon" title="Afficher"

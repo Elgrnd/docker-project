@@ -302,6 +302,9 @@ final class GroupeYamlFileRepertoireController extends AbstractController
         }
 
         $gyrRepository->supprimerYamlfileGroupeParRepertoire($yamlFile->getId());
+        if ($entityManager->getRepository(UtilisateurYamlFileRepertoire::class)->findOneBy(['yamlFile' => $gyr->getYamlFile()]) === null) {
+            $entityManager->remove($gyr->getYamlFile());
+        }
         $entityManager->remove($gyr);
         $entityManager->flush();
 

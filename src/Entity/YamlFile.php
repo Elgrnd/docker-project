@@ -45,8 +45,15 @@ class YamlFile
     #[ORM\Column(type: 'datetime', nullable: true)]
     private ?DateTimeInterface $deletedAt = null;
 
+    /**
+     * @var Collection<int, YamlFileVersion>
+     */
+    #[ORM\OneToMany(targetEntity: YamlFileVersion::class, mappedBy: 'yamlFileId', orphanRemoval: true)]
+    private Collection $version;
+
     public function __construct()
     {
+        $this->version = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -143,6 +150,36 @@ class YamlFile
     public function setDeletedAt(?DateTimeInterface $deletedAt): static
     {
         $this->deletedAt = $deletedAt;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, YamlFileVersion>
+     */
+    public function getVersion(): Collection
+    {
+        return $this->version;
+    }
+
+    public function addVersion(YamlFileVersion $version): static
+    {
+        if (!$this->version->contains($version)) {
+            $this->version->add($version);
+            $version->setYamlFileId($this);
+        }
+
+        return $this;
+    }
+
+    public function removeVersion(YamlFileVersion $version): static
+    {
+        if ($this->version->removeElement($version)) {
+            // set the owning side to null (unless already changed)
+            if ($version->getYamlFileId() === $this) {
+                $version->setYamlFileId(null);
+            }
+        }
 
         return $this;
     }

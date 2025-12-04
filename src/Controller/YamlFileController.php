@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\GroupeYamlFileRepertoire;
 use App\Entity\Repertoire;
 use App\Entity\Utilisateur;
 use App\Entity\UtilisateurYamlFileRepertoire;
@@ -203,7 +204,9 @@ final class YamlFileController extends AbstractController
         }
 
         $uyrRepository->supprimerYamlfileUtilisateurParRepertoire($yamlFile->getId());
-        $entityManager->remove($yamlFile);
+        if ($entityManager->getRepository(GroupeYamlFileRepertoire::class)->findOneBy(['yamlFile' => $yamlFile]) === null) {
+            $entityManager->remove($yamlFile);
+        }
         $entityManager->flush();
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);

@@ -1,13 +1,13 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}
-    <title>Corbeille des répertoires</title>
+    <title>Corbeille des répertoires du groupe {{ groupe.nom }}</title>
 {% endblock %}
 
 {% block page_content %}
     <div class="container mt-4">
 
-        <h2 class="mb-4">Corbeille des répertoires</h2>
+        <h2 class="mb-4">Corbeille des répertoires du groupe {{ groupe.nom }}</h2>
 
         {% if repertoires is empty %}
             <div class="alert alert-info">
@@ -17,7 +17,7 @@
 
             <div class="mb-3 text-end">
                 <a
-                        href="{{ path('delete_repertoire_permanent_all') }}"
+                        href="{{ path('delete_repertoire_permanent_all_groupe', {id: groupe.id}) }}"
                         class="btn btn-danger"
                         onclick="return confirm('Supprimer définitivement tous les répertoires ?')"
                 >
@@ -37,9 +37,11 @@
                                     Supprimé le : {{ r.deletedAt|date('d/m/Y H:i') }}
                                 </small>
 
-                                {% set yamlFiles = r.accesYamlFilesUtilisateur
-                                    |map(u => u.getYamlFile())
-                                    |filter(y => y.deletedAt is not null) %}
+                                {% set yamlFiles = r.accesYamlFilesGroupe
+                                    |filter(rel => rel.groupe.id == groupe.id and rel.deletedAt is not null)
+                                    |map(rel => rel.yamlFile)
+                                %}
+
                                 {% if yamlFiles is not empty %}
                                     <div class="mt-2 ps-3 border-start">
                                         <strong>Fichiers YAML supprimés :</strong>
@@ -55,7 +57,7 @@
                             <div class="d-flex gap-2 mt-1">
 
                                 {% if r.canRestore() %}
-                                    <a href="{{ path('restore_repertoire', {id: r.id}) }}" class="btn btn-success btn-sm">
+                                    <a href="{{ path('restore_repertoire_groupe', {id: r.id, idGroupe: groupe.id}) }}" class="btn btn-success btn-sm">
                                         Restaurer
                                     </a>
                                 {% else %}
@@ -64,7 +66,7 @@
                                     </button>
                                 {% endif %}
 
-                                <a href="{{ path('delete_repertoire_permanent', {id: r.id}) }}"
+                                <a href="{{ path('delete_repertoire_permanent_groupe', {id: r.id, idGroupe: groupe.id}) }}"
                                    class="btn btn-danger btn-sm"
                                    onclick="return confirm('Supprimer définitivement ce répertoire et tous ses fichiers ?')">
                                     Supprimer
@@ -78,10 +80,10 @@
             </div>
         {% endif %}
 
-        {# Bouton pour revenir au répertoire personnel #}
+        {# Bouton pour retourner à la page principale du groupe #}
         <div class="mt-4">
-            <a href="{{ path('repertoire') }}" class="btn btn-secondary">
-                ← Retour au répertoire personnel
+            <a href="{{ path('fichiers_groupe', {id: groupe.id}) }}" class="btn btn-secondary">
+                ← Retour au groupe
             </a>
         </div>
 

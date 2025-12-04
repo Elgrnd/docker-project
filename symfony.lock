@@ -36,7 +36,7 @@
         ]
     },
     "friendsofsymfony/jsrouting-bundle": {
-        "version": "3.5",
+        "version": "3.6",
         "recipe": {
             "repo": "github.com/symfony/recipes-contrib",
             "branch": "main",

@@ -62,7 +62,7 @@ class GroupeYamlFileRepertoireType extends AbstractType
                 'attr' => [
                     'class' => 'form-select'
                 ],
-                'choices' => $this->repertoireRepository->recupererRepertoireGroupe($groupe->getId()),
+                'choices' => $this->repertoireRepository->recupererRepertoireGroupeActifs($groupe),
 
                 'help' => 'Choisissez le répertoire où sera enregistré votre fichier'
             ])

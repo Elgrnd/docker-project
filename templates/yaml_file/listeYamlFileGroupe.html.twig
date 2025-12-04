@@ -76,10 +76,21 @@
             </div>
             <div class="card-body tree-container">
                 {% if repertoireRacine %}
-                    {{ _self.render_tree(repertoireRacine, listGyr) }}
+                    {{ _self.render_tree(repertoireRacine, listGyr, groupe) }}
                 {% else %}
                     <p class="text-muted">Aucun répertoire trouvé.</p>
                 {% endif %}
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">🗑️ Corbeille</h5>
+            </div>
+            <div class="card-body">
+                <a href="{{ path('repertoire_corbeille_groupe',{id: groupe.id}) }}" class="btn btn-outline-danger">
+                    Voir les éléments supprimés
+                </a>
             </div>
         </div>
 
@@ -89,7 +100,7 @@
     </div>
 
     {# Macro récursive pour afficher l'arborescence #}
-    {% macro render_tree(repertoire, listGyr) %}
+    {% macro render_tree(repertoire, listGyr, groupe) %}
         <div class="tree-item">
             <div class="tree-folder" data-folder-id="{{ repertoire.id }}">
                 <span class="toggle-icon">▼</span>
@@ -105,6 +116,18 @@
                     {#                    ({{ listGyr.yamlFile|length }} fichier(s),#}
                     {{ repertoire.children|length }} sous-répertoire(s))
                 </small>
+                {% if is_granted('REP_EDIT', repertoire) %}
+                    <div class="file-actions">
+                        <button
+                                class="supprimerRepertoireGroupe"
+                                data-repertoire-id="{{ repertoire.id }}"
+                                data-groupe-id="{{ groupe.id }}"
+                                data-csrf-token="{{ csrf_token('delete_repertoire_groupe_' ~ groupe.id ~ '_' ~ repertoire.id) }}"
+                        >
+                            <i class="bi bi-trash bin-icon" title="Supprimer le répertoire"></i>
+                        </button>
+                    </div>
+                {% endif %}
             </div>
 
             <div class="tree-children" data-children-of="{{ repertoire.id }}">
@@ -145,8 +168,8 @@
                 {% endfor %}
 
                 {# Afficher récursivement les sous-répertoires #}
-                {% for child in repertoire.children %}
-                    {{ _self.render_tree(child, listGyr) }}
+                {% for child in repertoire.childrenActifs %}
+                    {{ _self.render_tree(child, listGyr, groupe) }}
                 {% endfor %}
             </div>
         </div>
@@ -287,6 +310,14 @@
             background: #f9f9f9;
             border-radius: 10px;
         }
+
+        .supprimerRepertoireGroupe {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+        }
+
 
     </style>
 {% endblock %}

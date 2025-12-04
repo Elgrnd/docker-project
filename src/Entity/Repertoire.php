@@ -154,6 +154,21 @@ class Repertoire
         }
     }
 
+    public function softDeleteForGroupe(Groupe $groupe): void
+    {
+        $this->deletedAt = new DateTime();
+        foreach ($this->accesYamlFilesGroupe as $gyr) {
+            if ($gyr->getGroupe() === $groupe) {
+                $gyr->setDeletedAt($this->deletedAt);
+            }
+        }
+
+        foreach ($this->children as $child) {
+            $child->softDeleteForGroupe($groupe);
+        }
+    }
+
+
     public function canRestore(): bool
     {
         if ($this->parent !== null && $this->parent->isDeleted()) {
@@ -188,4 +203,35 @@ class Repertoire
     {
         $this->accesYamlFilesUtilisateur = $accesYamlFilesUtilisateur;
     }
+
+    public function getAccesYamlFilesGroupe(): Collection
+    {
+        return $this->accesYamlFilesGroupe;
+    }
+
+    public function setAccesYamlFilesGroupe(Collection $accesYamlFilesGroupe): void
+    {
+        $this->accesYamlFilesGroupe = $accesYamlFilesGroupe;
+    }
+
+    public function getDeletedYamlFilesGroupe(): array
+    {
+        $files = [];
+
+        foreach ($this->accesYamlFilesGroupe as $rel) {
+            $yaml = $rel->getYamlFile();
+            if ($yaml->getDeletedAt() !== null) {
+                $files[] = $yaml;
+            }
+        }
+
+        // Parcours récursif des enfants
+        foreach ($this->children as $child) {
+            $files = array_merge($files, $child->getDeletedYamlFilesGroupe());
+        }
+
+        return $files;
+    }
+
+
 }

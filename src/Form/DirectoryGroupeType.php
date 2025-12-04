@@ -47,7 +47,7 @@ class DirectoryGroupeType extends AbstractType
                 'attr' => [
                     'class' => 'form-select'
                 ],
-                'choices' => $this->repertoireRepository->recupererRepertoireGroupe($groupe->getId()),
+                'choices' => $this->repertoireRepository->recupererRepertoireGroupeActifs($groupe),
                 // Sélectionner le répertoire racine par défaut
 
             ]);

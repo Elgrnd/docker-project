@@ -34,16 +34,15 @@ class Groupe
     #[ORM\ManyToMany(targetEntity: Utilisateur::class, mappedBy: 'utilisateur_groupe')]
     private Collection $utilisateur_groupe;
 
-    #[ORM\OneToMany(mappedBy: "utilisateur", targetEntity: GroupeYamlFileRepertoire::class)]
+    #[ORM\OneToMany(mappedBy: "groupe", targetEntity: GroupeYamlFileRepertoire::class)]
     private Collection $yamlfilesParRepertoire;
 
 
     public function __construct()
     {
-        $this->utilisateurs = new ArrayCollection();
-        $this->yamlFiles = new ArrayCollection();
         $this->groupe_repertoire = new ArrayCollection();
         $this->utilisateur_groupe = new ArrayCollection();
+        $this->yamlfilesParRepertoire = new ArrayCollection();
     }
 
     public function getId(): ?int

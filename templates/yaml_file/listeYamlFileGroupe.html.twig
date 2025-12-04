@@ -122,6 +122,11 @@
                                             <i class="bi bi-pencil edit-icon" title="Modifier"></i>
                                         </a>
                                     {% endif %}
+                                    {% if is_granted('GROUPE_EDIT', gyr.groupe) %}
+                                        <a href="{{ path('yamlfile_deplacer_groupe', {'id': gyr.groupe.id, 'idYamlFile': gyr.yamlFile.id}) }}">
+                                            <i class="bi bi-arrows-move" title="Déplacer"></i>
+                                        </a>
+                                    {% endif %}
                                     {% if is_granted('GROUPE_FILE_DELETE', gyr) %}
                                         <button data-groupe-id="{{ gyr.groupe.id }}" data-fichier-id="{{ gyr.yamlFile.id }}" class="supprimerFichierGroupe"
                                                 data-csrf-token="{{ csrf_token('delete' ~ gyr.groupe.id ~ gyr.yamlFile.id) }}">

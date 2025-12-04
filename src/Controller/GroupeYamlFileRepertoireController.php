@@ -8,6 +8,7 @@ use App\Entity\Repertoire;
 use App\Entity\Utilisateur;
 use App\Entity\UtilisateurYamlFileRepertoire;
 use App\Entity\YamlFile;
+use App\Form\DeplacerYamlFileGroupeType;
 use App\Form\DirectoryGroupeType;
 use App\Form\GroupeYamlFileRepertoireType;
 use App\Form\PartagerYamlFileGroupeType;
@@ -59,7 +60,7 @@ final class GroupeYamlFileRepertoireController extends AbstractController
 
             if($repertoireRepository->verifierNomDejaExistantGroupe($repertoire->getName(), $repertoire->getParent(), $groupe->getId()) != null){
                 $this->addFlash('error', 'Un répertoire avec ce nom existe déjà à cet emplacement');
-                return $this->redirectToRoute('fichiers_groupe');
+                return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
             }
 
             $entityManager->persist($repertoire);
@@ -378,5 +379,44 @@ final class GroupeYamlFileRepertoireController extends AbstractController
 
         $this->addFlash('success', 'Fichier ajouté au groupe avec succès.');
         return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
+    }
+
+    #[IsGranted(attribute: 'GROUPE_EDIT', subject: 'groupe')]
+    #[Route('/groupe/{id}/yamlfile/deplacer/{idYamlFile}', name: 'yamlfile_deplacer_groupe', methods: ['GET', 'POST'])]
+    public function deplacer_groupe(
+        int $idYamlFile,
+        Groupe $groupe,
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $form = $this->createForm(DeplacerYamlFileGroupeType::class, null, [
+            'groupe' => $groupe,
+        ]);
+        $form->handleRequest($request);
+
+        $yamlFile = $entityManager->getRepository(YamlFile::class)->find($idYamlFile);
+
+        if (!$yamlFile) {
+            $this->addFlash('error', "Fichier inconnu.");
+            return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
+        }
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $repertoire = $form->get('repertoire')->getData();
+
+            $gyr = $entityManager->getRepository(GroupeYamlFileRepertoire::class)
+                ->findByYamlFileAndGroupe($idYamlFile, $groupe->getId());
+
+            $gyr->setRepertoire($repertoire);
+            $entityManager->flush();
+
+            $this->addFlash('success', "Fichier déplacé avec succès !");
+            return $this->redirectToRoute('fichiers_groupe', ['id' => $groupe->getId()]);
+        }
+
+        return $this->render('yaml_file/deplacer.html.twig', [
+            'form' => $form->createView(),
+            'yamlFile' => $yamlFile,
+        ]);
     }
 }

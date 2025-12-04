@@ -9,7 +9,8 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 final class RepertoireVoter extends Voter
 {
-    public const OWNER = 'REP_EDIT';
+    public const EDIT = 'REP_EDIT';
+    public const UPLOAD = 'REP_UPLOAD';
     private Security $security;
 
     public function __construct(Security $security)
@@ -21,7 +22,7 @@ final class RepertoireVoter extends Voter
     {
         // replace with your own logic
         // https://symfony.com/doc/current/security/voters.html
-        return $attribute == self::OWNER
+        return in_array($attribute, [self::EDIT, self::UPLOAD])
             && $subject instanceof \App\Entity\Repertoire;
     }
 
@@ -34,22 +35,39 @@ final class RepertoireVoter extends Voter
         }
 
         // ... (check conditions and return true to grant permission) ...
-        if ($attribute == self::OWNER) {
-            if ($subject->getUtilisateurRepertoire() === $user) {
-                return true;
-            }
-
-            $userGroups = $user->getUtilisateurGroupe();
-            $repoGroup  = $subject->getGroupeRepertoire();
-
-            if ($repoGroup !== null && $userGroups->contains($repoGroup)) {
-                if ($this->security->isGranted('GROUPE_EDIT', $repoGroup)) {
+        switch ($attribute) {
+            case self::EDIT:
+                if ($subject->getUtilisateurRepertoire() === $user) {
                     return true;
                 }
-            }
-            else {
-                return false;
-            }
+
+                $repoGroup  = $subject->getGroupeRepertoire();
+
+                if ($repoGroup !== null) {
+                    if ($this->security->isGranted('GROUPE_EDIT', $repoGroup)) {
+                        return true;
+                    }
+                }
+                else {
+                    return false;
+                }
+                break;
+
+            case self::UPLOAD:
+                if ($subject->getUtilisateurRepertoire() === $user) {
+                    return true;
+                }
+
+                $repoGroup  = $subject->getGroupeRepertoire();
+
+                if ($repoGroup !== null) {
+                    if ($this->security->isGranted('GROUPE_VIEW', $repoGroup)) {
+                        return true;
+                    }
+                }
+                else {
+                    return false;
+                }
         }
 
         return false;

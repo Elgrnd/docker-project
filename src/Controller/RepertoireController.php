@@ -155,7 +155,7 @@ final class RepertoireController extends AbstractController
     /**
      * @throws Exception
      */
-    #[IsGranted("REP_EDIT", subject: 'repertoire')]
+    #[IsGranted("REP_UPLOAD", subject: 'repertoire')]
     #[Route('/repertoire/telecharger/{id}', name: 'repertoire_telecharger_zip')]
     public function telechargerZip(
         Repertoire $repertoire,

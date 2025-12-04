@@ -64,6 +64,11 @@
             </div>
         {% endif %}
 
+        <a href="{{ path('repertoire_telecharger_zip', {id: repertoireRacine.id}) }}"
+           class="btn btn-primary mt-3">
+            📦 Télécharger en ZIP
+        </a>
+
         {# Arborescence des répertoires et fichiers #}
         <div class="card">
             <div class="card-header">

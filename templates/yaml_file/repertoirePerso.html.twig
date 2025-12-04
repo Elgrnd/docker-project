@@ -114,32 +114,14 @@
                 {# Afficher les fichiers YAML de ce répertoire #}
                 {% for uyr in listUyr %}
                 <div class="file-list">
-                    {% if uyr.repertoire.id == repertoire.id %}
-                        <div class="file-item">
-                            <div class="file-info">
-                                <i class="bi bi-file-earmark-text file-icon"></i>
-                                <span class="file-name"
-                                      title="{{ uyr.yamlFile.description }}">
-                                    {{ uyr.yamlFile.nameFile }}
-                                </span>
-                            </div>
-                            <div class="file-actions">
-                                <i class="bi bi-eye view-icon" title="Afficher"
-                                   onclick="afficherContenuYamlFile('{{ uyr.yamlFile.bodyFile|escape('js') }}')"></i>
-                                <i class="bi bi-download download-icon" title="Télécharger"
-                                   onclick="downloadYamlFile('{{ uyr.yamlFile.bodyFile|escape('js') }}', '{{ uyr.yamlFile.nameFile|escape('js') }}')"></i>
-                                <a href="{{ path('modifierYamlFile', {"id": uyr.yamlFile.id}) }}">
-                                    <i class="bi bi-pencil edit-icon" title="Modifier"></i>
-                                </a>
-                                <a href="{{ path('yamlfile_deplacer', {'id': uyr.yamlFile.id}) }}">
-                                    <i class="bi bi-arrows-move" title="Déplacer"></i>
-                                </a>
-                    <div class="file-list">
                         {% if uyr.repertoire.id == repertoire.id %}
                             <div class="file-item">
                                 <div class="file-info">
                                     <i class="bi bi-file-earmark-text file-icon"></i>
-                                    <span class="file-name">{{ uyr.yamlFile.nameFile }}</span>
+                                    <span class="file-name"
+                                          title="{{ uyr.yamlFile.description }}">
+                                    {{ uyr.yamlFile.nameFile }}
+                                </span>
                                 </div>
                                 <div class="file-actions">
                                     <i class="bi bi-eye view-icon" title="Afficher"

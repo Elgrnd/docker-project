@@ -28,40 +28,53 @@
             <div class="list-group">
 
                 {% for r in repertoires %}
-    <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div class="list-group-item mb-3">
 
-        <div>
-            <strong>{{ r.getFullPath }}</strong><br>
-            <small class="text-muted">
-                Supprimé le : {{ r.deletedAt|date('d/m/Y H:i') }}
-            </small>
-        </div>
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ r.getFullPath }}</strong><br>
+                                <small class="text-muted">
+                                    Supprimé le : {{ r.deletedAt|date('d/m/Y H:i') }}
+                                </small>
 
-        <div class="d-flex gap-2">
+                                {% set yamlFiles = r.accesYamlFilesUtilisateur|map(u => u.getYamlFile())|filter(y => y.deletedAt is not null) %}
+                                {% if yamlFiles is not empty %}
+                                    <div class="mt-2 ps-3 border-start">
+                                        <strong>Fichiers YAML supprimés :</strong>
+                                        <ul class="mb-0 mt-1">
+                                            {% for y in yamlFiles %}
+                                                <li><i class="bi bi-filetype-yml"></i> {{ y.nameFile }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% endif %}
+                            </div>
 
-            {% if r.canRestore() %}
-                <a href="{{ path('restore_repertoire', {id: r.id}) }}" class="btn btn-success btn-sm">
-                    Restaurer
-                </a>
-            {% else %}
-                <button class="btn btn-secondary btn-sm" disabled>
-                    Parent supprimé
-                </button>
-            {% endif %}
+                            <div class="d-flex gap-2 mt-1">
 
+                                {% if r.canRestore() %}
+                                    <a href="{{ path('restore_repertoire', {id: r.id}) }}" class="btn btn-success btn-sm">
+                                        Restaurer
+                                    </a>
+                                {% else %}
+                                    <button class="btn btn-secondary btn-sm" disabled>
+                                        Parent supprimé
+                                    </button>
+                                {% endif %}
 
-            <a href="{{ path('delete_repertoire_permanent', {id: r.id}) }}"
-               class="btn btn-danger btn-sm"
-               onclick="return confirm('Supprimer définitivement ce répertoire ?')">
-                Supprimer
-            </a>
+                                <a href="{{ path('delete_repertoire_permanent', {id: r.id}) }}"
+                                   class="btn btn-danger btn-sm"
+                                   onclick="return confirm('Supprimer définitivement ce répertoire et tous ses fichiers ?')">
+                                    Supprimer
+                                </a>
 
-        </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+
+            </div>
+        {% endif %}
+
     </div>
-{% endfor %}
-
-</div>
-{% endif %}
-
-</div>
 {% endblock %}

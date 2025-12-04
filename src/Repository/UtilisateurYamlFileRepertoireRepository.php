@@ -46,6 +46,7 @@ class UtilisateurYamlFileRepertoireRepository extends ServiceEntityRepository
             ->select('uyfr', 'yf', 'r')
             ->join('uyfr.yamlFile', 'yf')
             ->join('uyfr.repertoire', 'r')
+            ->andWhere('yf.deletedAt IS NULL')
             ->addOrderBy('uyfr.utilisateur', 'ASC')
             ->addOrderBy('yf.nameFile', 'ASC');
 

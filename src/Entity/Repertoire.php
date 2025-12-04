@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\RepertoireRepository;
+use DateTime;
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -21,7 +23,7 @@ class Repertoire
     #[ORM\ManyToOne(targetEntity: self::class, inversedBy: 'children')]
     private ?self $parent = null;
 
-    #[ORM\OneToMany(mappedBy: 'parent', targetEntity: self::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToMany(targetEntity: self::class, mappedBy: 'parent', cascade: ['persist', 'remove'])]
     private Collection $children;
 
 
@@ -40,7 +42,7 @@ class Repertoire
     private Collection $accesYamlFilesGroupe;
 
     #[ORM\Column(type: 'datetime', nullable: true)]
-    private ?\DateTimeInterface $deletedAt = null;
+    private ?DateTimeInterface $deletedAt = null;
 
 
 
@@ -129,19 +131,22 @@ class Repertoire
         });
     }
 
-    public function getDeletedAt(): ?\DateTimeInterface
+    public function getDeletedAt(): ?DateTimeInterface
     {
         return $this->deletedAt;
     }
 
-    public function setDeletedAt(?\DateTimeInterface $deletedAt): void
+    public function setDeletedAt(?DateTimeInterface $deletedAt): void
     {
         $this->deletedAt = $deletedAt;
     }
 
     public function softDelete(): void
     {
-        $this->deletedAt = new \DateTime();
+        $this->deletedAt = new DateTime();
+        foreach($this->accesYamlFilesUtilisateur as $utilisateurYamlFile) {
+            $utilisateurYamlFile->getYamlFile()->setDeletedAt($this->deletedAt);
+        }
 
         foreach ($this->children as $child) {
             $child->softDelete();
@@ -159,6 +164,9 @@ class Repertoire
     public function restore(): void
     {
         $this->deletedAt = null;
+        foreach($this->accesYamlFilesUtilisateur as $utilisateurYamlFile) {
+            $utilisateurYamlFile->getYamlFile()->setDeletedAt($this->deletedAt);
+        }
 
         foreach ($this->children as $child) {
             $child->restore();

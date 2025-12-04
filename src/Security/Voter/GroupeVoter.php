@@ -38,10 +38,7 @@ final class GroupeVoter extends Voter
         // ... (check conditions and return true to grant permission) ...
         switch ($attribute) {
             case self::EDIT:
-                if ($user == null) {
-                    return false;
-                }
-                else if ($this->security->isGranted('ROLE_ADMIN')) {
+                if ($this->security->isGranted('ROLE_ADMIN')) {
                     return true;
                 }
                 else if ($subject->getEtreChef() === $user) {

@@ -29,7 +29,7 @@ class DeplacerYamlFileType extends AbstractType
             ->add('repertoire', EntityType::class, [
                 'class' => Repertoire::class,
                 'choice_label' => fn($r) => $r->getFullPath(),
-                'choices' => $this->repertoireRepository->recupererRepertoireUtilisateur($user),
+                'choices' => $this->repertoireRepository->recupererRepertoireUtilisateurActifs($user),
                 'label' => 'Répertoire de destination',
                 'placeholder' => 'Sélectionnez un répertoire',
                 'attr' => ['class' => 'form-select'],

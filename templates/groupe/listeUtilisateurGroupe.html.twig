@@ -33,7 +33,7 @@
                         {% set pivot = membre.getUtilisateurGroupeRelation(groupe) %}
                         {# pivot.role contient GROUPE_UTILISATEUR / GROUPE_MODERATEUR / GROUPE_CHEF #}
 
-                        {% if is_granted('GROUPE_EDIT', groupe) and membre != groupe.etreChef %}
+                        {% if is_granted('GROUPE_EDIT', groupe) and membre != groupe.etreChef and membre != app.user %}
                             <select
                                     class="form-select"
                                     data-utilisateur-login="{{ membre.login }}"

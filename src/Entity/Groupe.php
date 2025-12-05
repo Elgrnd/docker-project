@@ -31,7 +31,7 @@ class Groupe
     /**
      * @var Collection<int, Utilisateur>
      */
-    #[ORM\ManyToMany(targetEntity: Utilisateur::class, mappedBy: 'utilisateur_groupe')]
+    #[ORM\OneToMany(targetEntity: UtilisateurGroupe::class, mappedBy: "groupe", cascade: ['persist'], orphanRemoval: true)]
     private Collection $utilisateur_groupe;
 
     #[ORM\OneToMany(mappedBy: "groupe", targetEntity: GroupeYamlFileRepertoire::class)]
@@ -49,19 +49,6 @@ class Groupe
     {
         return $this->id;
     }
-
-    public function getUtilisateurChef(): ?Utilisateur
-    {
-        return $this->utilisateurChef;
-    }
-
-    public function setUtilisateurChef(?Utilisateur $utilisateurChef): static
-    {
-        $this->utilisateurChef = $utilisateurChef;
-
-        return $this;
-    }
-
 
     public function getNom(): ?string
     {
@@ -120,34 +107,61 @@ class Groupe
     }
 
     /**
-     * @return Collection<int, Utilisateur>
+     * Retourne la *vraie* liste des membres (sans l'entité pivot)
      */
-    public function getUtilisateurGroupe(): Collection
+    public function getMembres(): array
     {
-        return $this->utilisateur_groupe;
+        return array_map(fn($ug) => $ug->getUtilisateur(), $this->utilisateur_groupe->toArray());
     }
 
-    public function addUtilisateurGroupe(Utilisateur $utilisateurGroupe): static
+    public function addUtilisateurGroupe(Utilisateur $u): UtilisateurGroupe
     {
-        if (!$this->utilisateur_groupe->contains($utilisateurGroupe)) {
-            $this->utilisateur_groupe->add($utilisateurGroupe);
-            $utilisateurGroupe->addUtilisateurGroupe($this);
+        foreach ($this->utilisateur_groupe as $ug) {
+            if ($ug->getUtilisateur() === $u) {
+                return $ug;
+            }
         }
 
-        return $this;
+        $ug = new UtilisateurGroupe();
+        $ug->setUtilisateur($u);
+        $ug->setGroupe($this);
+
+        $this->utilisateur_groupe->add($ug);
+
+        return $ug;
     }
 
-    public function removeUtilisateurGroupe(Utilisateur $utilisateurGroupe): static
-    {
-        if ($this->utilisateur_groupe->removeElement($utilisateurGroupe)) {
-            $utilisateurGroupe->removeUtilisateurGroupe($this);
-        }
 
+
+
+    public function removeUtilisateurGroupe(Utilisateur $u): static
+    {
+        foreach ($this->utilisateur_groupe as $ug) {
+            if ($ug->getUtilisateur() === $u) {
+                $this->utilisateur_groupe->removeElement($ug);
+                break;
+            }
+        }
         return $this;
     }
 
     public function contientMembre(Utilisateur $u): bool
     {
-        return $this->utilisateur_groupe->contains($u);
+        foreach ($this->utilisateur_groupe as $ug) {
+            if ($ug->getUtilisateur() === $u) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function getUtilisateurGroupePour(Utilisateur $user): ?UtilisateurGroupe
+    {
+        foreach ($this->utilisateur_groupe as $ug) {
+            if ($ug->getUtilisateur() === $user) {
+                return $ug;
+            }
+        }
+        return null;
     }
 }

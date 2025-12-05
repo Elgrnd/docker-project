@@ -60,9 +60,6 @@ final class GroupeYamlFileRepertoireVoter extends Voter
                 else if ($this->security->isGranted('FILE_OWNER', $subject->getYamlFile())) {
                     return true;
                 }
-                else if ($subject->getGroupe()->contientMembre($user) && $subject->getDroit() === 'edition') {
-                    return true;
-                }
                 else {
                     return false;
                 }

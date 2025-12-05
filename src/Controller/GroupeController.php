@@ -5,12 +5,14 @@ namespace App\Controller;
 use App\Entity\Groupe;
 use App\Entity\Repertoire;
 use App\Entity\Utilisateur;
+use App\Entity\UtilisateurGroupe;
 use App\Form\AjouterMembreGroupeType;
 use App\Form\GroupeType;
 use App\Repository\GroupeRepository;
 use App\Repository\UtilisateurRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -40,9 +42,12 @@ final class GroupeController extends AbstractController
             $repertoire->setName('Répertoire groupe');
 
             $groupe->setEtreChef($utilisateur);
-            $groupe->addUtilisateurGroupe($utilisateur);
+            $ug = $groupe->addUtilisateurGroupe($utilisateur);
+            $ug->setRole("GROUPE_CHEF");
+
             $em->persist($groupe);
             $em->persist($repertoire);
+            $em->persist($ug);
             $em->flush();
             $this->addFlash('success', 'Groupe créé avec succès.');
             return $this->redirectToRoute('mes_groupes');
@@ -54,7 +59,7 @@ final class GroupeController extends AbstractController
         ]);
     }
 
-
+    #[IsGranted("GROUPE_VIEW", subject: 'groupe')]
     #[Route('/groupe/{id}', name: 'voir_groupe', methods: ['GET', 'POST'])]
     public function voirGroupe(
         Groupe $groupe,
@@ -66,7 +71,7 @@ final class GroupeController extends AbstractController
         ]);
         $formAjouterMembre->handleRequest($request);
 
-        if ($this->isGranted('GROUPE_EDIT', $groupe) && $formAjouterMembre->isSubmitted() && $formAjouterMembre->isValid()) {
+        if ($this->isGranted('GROUPE_MODERATE', $groupe) && $formAjouterMembre->isSubmitted() && $formAjouterMembre->isValid()) {
             $data = $formAjouterMembre->getData();
             $nouveauMembre = $data['utilisateur'];
 
@@ -101,7 +106,7 @@ final class GroupeController extends AbstractController
         return $this->redirectToRoute('mes_groupes');
     }
 
-    #[IsGranted(attribute: 'GROUPE_EDIT', subject: 'groupe')]
+    #[IsGranted(attribute: 'GROUPE_MODERATE', subject: 'groupe')]
     #[Route('/groupe/{id}/supprimer_membre/{login}', name: 'supprimer_membre_groupe', methods: ['POST'])]
     public function supprimerMembre(
         Groupe $groupe,
@@ -142,6 +147,33 @@ final class GroupeController extends AbstractController
         }
 
         return $this->redirectToRoute('mes_groupes');
+    }
+
+    #[IsGranted('GROUPE_EDIT', subject: 'groupe')]
+    #[Route('/groupe/{id}/changer_role/{login}/{role}', name: 'changeRoleGroupe', options: ['expose' => true], methods: ['POST'])]
+    public function changerRoleGroupe(
+        Groupe $groupe,
+        string $login,
+        string $role,
+        EntityManagerInterface $em
+    ): Response {
+        $utilisateur = $em->getRepository(Utilisateur::class)->findOneBy(['login' => $login]);
+        if (!$utilisateur) {
+            return new JsonResponse(['error' => 'Utilisateur introuvable'], Response::HTTP_NOT_FOUND);
+        }
+
+        $ug = $em->getRepository(\App\Entity\UtilisateurGroupe::class)
+            ->findOneBy(['groupe' => $groupe, 'utilisateur' => $utilisateur]);
+
+        if (!$ug) {
+            return new JsonResponse(['error' => 'Utilisateur non membre du groupe'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $ug->setRole($role);
+
+        $em->flush();
+
+        return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
 }

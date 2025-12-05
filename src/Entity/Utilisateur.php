@@ -56,11 +56,11 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $etrechef;
 
     /**
-     * @var Collection<int, Groupe>
+     * @var Collection<int, UtilisateurGroupe>
      */
-    #[ORM\ManyToMany(targetEntity: Groupe::class, inversedBy: 'utilisateur_groupe')]
-    #[ORM\JoinTable(name: "utilisateur_groupe")]
+    #[ORM\OneToMany(targetEntity: UtilisateurGroupe::class, mappedBy: "utilisateur", cascade: ['persist'], orphanRemoval: true)]
     private Collection $utilisateur_groupe;
+
 
     /**
      * @var Collection<int, YamlFile>
@@ -206,22 +206,28 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getUtilisateurGroupe(): Collection
     {
-        return $this->utilisateur_groupe;
+        return new ArrayCollection(
+            array_map(fn($ug) => $ug->getGroupe(), $this->utilisateur_groupe->toArray())
+        );
     }
 
-    public function addUtilisateurGroupe(Groupe $utilisateurGroupe): static
+    public function addUtilisateurGroupe(UtilisateurGroupe $ug): static
     {
-        if (!$this->utilisateur_groupe->contains($utilisateurGroupe)) {
-            $this->utilisateur_groupe->add($utilisateurGroupe);
+        if (!$this->utilisateur_groupe->contains($ug)) {
+            $this->utilisateur_groupe->add($ug);
         }
-
         return $this;
     }
 
-    public function removeUtilisateurGroupe(Groupe $utilisateurGroupe): static
-    {
-        $this->utilisateur_groupe->removeElement($utilisateurGroupe);
 
+    public function removeUtilisateurGroupe(Groupe $groupe): static
+    {
+        foreach ($this->utilisateur_groupe as $ug) {
+            if ($ug->getGroupe() === $groupe) {
+                $this->utilisateur_groupe->removeElement($ug);
+                break;
+            }
+        }
         return $this;
     }
 
@@ -295,4 +301,15 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         $this->gitlabUrl = $gitlabUrl;
         return $this;
     }
+
+    public function getUtilisateurGroupeRelation(Groupe $groupe): ?UtilisateurGroupe
+    {
+        foreach ($this->utilisateur_groupe as $ug) {
+            if ($ug->getGroupe() === $groupe) {
+                return $ug;
+            }
+        }
+        return null;
+    }
+
 }

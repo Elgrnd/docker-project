@@ -10,8 +10,8 @@ use Symfony\Component\Security\Core\User\UserInterface;
 final class GroupeVoter extends Voter
 {
     public const EDIT = 'GROUPE_EDIT';
+    public const MODERATE = 'GROUPE_MODERATE';
     public const LEAVE = 'GROUPE_LEAVE';
-    public const DELETE_MEMBER = 'GROUPE_DELETE_MEMBER';
     public const VIEW = 'GROUPE_VIEW';
 
     public function __construct(Security $security)
@@ -23,7 +23,7 @@ final class GroupeVoter extends Voter
     {
         // replace with your own logic
         // https://symfony.com/doc/current/security/voters.html
-        return in_array($attribute, [self::EDIT, self::LEAVE, self::DELETE_MEMBER, self::VIEW])
+        return in_array($attribute, [self::EDIT, self::LEAVE, self::VIEW, self::MODERATE])
             && $subject instanceof \App\Entity\Groupe;
     }
 
@@ -35,6 +35,13 @@ final class GroupeVoter extends Voter
             return false;
         }
 
+        $ug = $subject->getUtilisateurGroupePour($user);
+        $role = '';
+        if ($ug) {
+            $role = $ug->getRole();
+        }
+
+
         // ... (check conditions and return true to grant permission) ...
         switch ($attribute) {
             case self::EDIT:
@@ -42,6 +49,20 @@ final class GroupeVoter extends Voter
                     return true;
                 }
                 else if ($subject->getEtreChef() === $user) {
+                    return true;
+                }
+                else if ($role === 'GROUPE_ADMINISTRATEUR') {
+                    return true;
+                }
+                else {
+                    return false;
+                }
+
+            case self::MODERATE:
+                if ($this->voteOnAttribute(self::EDIT, $subject, $token)) {
+                    return true;
+                }
+                else if ($role === 'GROUPE_MODERATEUR') {
                     return true;
                 }
                 else {

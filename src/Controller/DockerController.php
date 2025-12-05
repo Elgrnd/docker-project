@@ -11,7 +11,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 final class DockerController extends AbstractController
 {
-    #[IsGranted("ROLE_ADMIN")]
+    #[IsGranted("ROLE_USER")]
     #[Route('/containers', name: 'listContainers')]
     public function list(DockerService $dockerService): Response
     {

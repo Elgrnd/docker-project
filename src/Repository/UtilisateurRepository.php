@@ -46,13 +46,25 @@ class UtilisateurRepository extends ServiceEntityRepository implements PasswordU
 
     public function findNonMembresDuGroupe(Groupe $groupe): array
     {
-        return $this->createQueryBuilder('u')
-            ->where(':groupe NOT MEMBER OF u.utilisateur_groupe')
+        $qb = $this->createQueryBuilder('u');
+        $em = $this->getEntityManager();
+
+        return $qb
+            ->where($qb->expr()->notIn(
+                'u.id',
+                $em->createQueryBuilder()
+                    ->select('IDENTITY(ug_sub.utilisateur)')
+                    ->from('App\Entity\UtilisateurGroupe', 'ug_sub')
+                    ->where('ug_sub.groupe = :groupe')
+                    ->getDQL()
+            ))
             ->setParameter('groupe', $groupe)
             ->orderBy('u.login', 'ASC')
             ->getQuery()
             ->getResult();
     }
+
+
 
 
     //    /**

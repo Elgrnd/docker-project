@@ -78,18 +78,7 @@ async function deleteRepertoire(event) {
 
     let url = Routing.generate("deleteRepertoire", { "id": repertoireId });
 
-    const response = await fetch(url, {
-        method: 'DELETE',
-        body: JSON.stringify({
-            '_token': csrfToken
-        })
-    });
-
-    if (response.status === 204) {
-        const button = event.target;
-        const repertoireElement = button.closest(".tree-item");
-        repertoireElement.remove();
-    }
+    await response(event, url, csrfToken)
 }
 
 async function deleteRepertoireGroupe(event) {
@@ -102,6 +91,10 @@ async function deleteRepertoireGroupe(event) {
         "repertoireId": repertoireId
     });
 
+    await response(event, url, csrfToken)
+}
+
+async function response(event, url, csrfToken) {
     const response = await fetch(url, {
         method: 'DELETE',
         body: JSON.stringify({
@@ -112,11 +105,18 @@ async function deleteRepertoireGroupe(event) {
     if (response.status === 204) {
         const button = event.target;
         const repertoireElement = button.closest(".tree-item");
+        const parentTree = repertoireElement.parentElement.closest(".tree-item");
         repertoireElement.remove();
+
+        if (parentTree) {
+            const countDisplay = parentTree.querySelector(".child-count");
+            if (countDisplay) {
+                const newCount = parentTree.querySelectorAll(":scope > .tree-children > .tree-item").length;
+                countDisplay.textContent = newCount + " sous-répertoire(s)";
+            }
+        }
     }
 }
-
-
 
 async function deleteYamlFile(event) {
     const fichierId = event.currentTarget.dataset.fichierId;

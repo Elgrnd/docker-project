@@ -183,10 +183,6 @@ class Repertoire
         foreach($this->accesYamlFilesUtilisateur as $utilisateurYamlFile) {
             $utilisateurYamlFile->getYamlFile()->setDeletedAt($this->deletedAt);
         }
-
-        foreach ($this->children as $child) {
-            $child->restore();
-        }
     }
 
     public function isDeleted(): bool

@@ -95,8 +95,8 @@
                    title="Renommer"
                    style="cursor: pointer; color: #6c757d;"
                    onclick="renameRepertoire({{ repertoire.id }})"></i>
-                <small class="text-muted">
-                    {{ repertoire.children|length }} sous-répertoire(s))
+                <small class="text-muted child-count" data-repertoire-id="{{ repertoire.id }}">
+                    {{ repertoire.children|length }} sous-répertoire(s)
                 </small>
                 {% if (repertoire.isRoot() == false)%}
                 <div class="file-actions">

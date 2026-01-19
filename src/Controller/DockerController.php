@@ -116,7 +116,6 @@ final class DockerController extends AbstractController
             $this->addFlash('error', 'Impossible de récupérer les informations de la VM : ' . $e->getMessage());
             $vms = [];
         }
-        $containers = $newContainer;
 
         return $this->render('docker/listContainers.html.twig', [
             'containers'       => $containers,

@@ -60,7 +60,6 @@ class DockerService
     }
 
 
-
     public function listContainers(string $vmIp): array
     {
         $cmd = $this->dockerPath . ' ps -a --format "{{.ID}}|{{.Names}}|{{.Status}}"';
@@ -68,24 +67,19 @@ class DockerService
 
         $containers = [];
 
-
         $lines = array_filter(array_map('trim', explode("\n", $output)));
 
 
         foreach ($lines as $line) {
-            {
-
-                $parts = explode('|', $line);
-                [$id, $name, $status] = $parts;
-                $containers[] = [
-                    'id' => $id,
-                    'name' => $name,
-                    'status' => $status,
-                ];
-            }
-            return $containers;
+            $parts = explode('|', $line);
+            [$id, $name, $status] = $parts;
+            $containers[] = [
+                'id' => $id,
+                'name' => $name,
+                'status' => $status,
+            ];
         }
-        return null;
+        return $containers;
     }
 
     public function startContainer(string $id, $vmIp): array

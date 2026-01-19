@@ -6,6 +6,7 @@ use App\Entity\YamlFile;
 use App\Service\DockerService;
 use App\Service\ProxmoxService;
 use App\Service\UtilisateurManagerInterface;
+use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -32,8 +33,13 @@ final class DockerController extends AbstractController
     public function list(
         DockerService               $dockerService,
         ProxmoxService              $proxmoxService,
-        UtilisateurManagerInterface $utilisateurManager
+        UtilisateurManagerInterface $utilisateurManager,
     ): Response {
+
+        if($this->getUser()->getVmStatus() == "none") {
+            $this->addFlash("error", "Vous n'avez pas encore créer de VM");
+            return $this->redirectToRoute('index');
+        }
         if ($this->getUser()->getVmStatus() !== "ready") {
             $this->addFlash("error", "Votre VM n'est pas encore prête !");
             return $this->redirectToRoute('index');
@@ -245,6 +251,7 @@ final class DockerController extends AbstractController
      * @throws ClientExceptionInterface
      */
     #[Route('/yaml/deploy/{id}', name: 'deploy_yaml_file', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
     public function deployYamlInVm(
         YamlFile $yaml,
         DockerService $dockerService,
@@ -300,15 +307,34 @@ final class DockerController extends AbstractController
         return $this->redirectToRoute('repertoire');
     }
 
+    #[IsGranted('ROLE_USER')]
     #[Route('/vm/status', name: 'vm_status', methods: ['GET'])]
     public function vmStatus(): JsonResponse
     {
         $user = $this->getUser();
 
         return new JsonResponse([
-            'status' => $user?->getVmStatus() ?? null
+            'status' => $user->getVmStatus() ?? null
         ]);
     }
+
+    #[Route('/vm/create', name: 'vm_create', methods: ['POST'])]
+    public function createVm(EntityManagerInterface $entityManager, ProxmoxService $proxmoxService): JsonResponse
+    {
+        $user = $this->getUser();
+
+        if ($user->getProxmoxVmid() !== null) {
+            return new JsonResponse(['status' => 'already_exists'], 400);
+        }
+
+        $user->setVmStatus('creating');
+        $entityManager->flush();
+
+        $proxmoxService->cloneUserVmAsynchrone($user->getLogin());
+
+        return new JsonResponse(['status' => 'creating']);
+    }
+
 
 
 }

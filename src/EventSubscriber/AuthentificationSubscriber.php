@@ -21,10 +21,15 @@ class AuthentificationSubscriber
     #[AsEventListener]
     public function loginSuccess(LoginSuccessEvent $event) {
         if($event->getAuthenticator()) {
-            if($event->getUser()->getProxmoxVmid() === null) {
-                $event->getUser()->setVmStatus('creating');
-                $this->entityManager->flush();
-                $this->proxmoxService->cloneUserVmAsynchrone($event->getUser()->getLogin());
+            $request = $this->requestStack->getCurrentRequest();
+
+            $createVm = $request?->request->get('create_vm');
+            if($createVm) {
+                if ($event->getUser()->getProxmoxVmid() === null) {
+                    $event->getUser()->setVmStatus('creating');
+                    $this->entityManager->flush();
+                    $this->proxmoxService->cloneUserVmAsynchrone($event->getUser()->getLogin());
+                }
             }
 
             $flashBag = $this->requestStack->getSession()->getFlashBag();

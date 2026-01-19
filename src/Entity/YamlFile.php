@@ -3,10 +3,12 @@
 namespace App\Entity;
 
 use App\Repository\YamlFileRepository;
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use DomainException;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 
@@ -31,14 +33,27 @@ class YamlFile
     #[ORM\JoinColumn(nullable: true)]
     private ?Utilisateur $utilisateur_yamlfile = null;
 
-    #[ORM\OneToMany(mappedBy: "yamlFile", targetEntity: UtilisateurYamlFileRepertoire::class)]
+    #[ORM\OneToMany(targetEntity: UtilisateurYamlFileRepertoire::class, mappedBy: "yamlFile")]
     private Collection $utilisateursParRepertoire;
 
-    #[ORM\OneToMany(mappedBy: "yamlFile", targetEntity: GroupeYamlFileRepertoire::class)]
+    #[ORM\OneToMany(targetEntity: GroupeYamlFileRepertoire::class, mappedBy: "yamlFile")]
     private Collection $groupeParRepertoire;
+
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $description = null;
+
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?DateTimeInterface $deletedAt = null;
+
+    /**
+     * @var Collection<int, YamlFileVersion>
+     */
+    #[ORM\OneToMany(targetEntity: YamlFileVersion::class, mappedBy: 'yamlFileId', orphanRemoval: true)]
+    private Collection $version;
 
     public function __construct()
     {
+        $this->version = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -103,5 +118,69 @@ class YamlFile
         $this->groupeParRepertoire = $groupeParRepertoire;
     }
 
+    public function assertValidExtension(string $extension): void {
+        if (!in_array($extension, ['yaml','yml'])) {
+            throw new DomainException("Extension du fichier invalide (seulement .yml ou .yaml).");
+        }
+    }
 
+    public function assertNotEmpty(string $content): void {
+        if (trim($content) === '') {
+            throw new DomainException("Le fichier YAML ne peut pas être vide.");
+        }
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): static
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    public function getDeletedAt(): ?DateTimeInterface
+    {
+        return $this->deletedAt;
+    }
+
+    public function setDeletedAt(?DateTimeInterface $deletedAt): static
+    {
+        $this->deletedAt = $deletedAt;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, YamlFileVersion>
+     */
+    public function getVersion(): Collection
+    {
+        return $this->version;
+    }
+
+    public function addVersion(YamlFileVersion $version): static
+    {
+        if (!$this->version->contains($version)) {
+            $this->version->add($version);
+            $version->setYamlFileId($this);
+        }
+
+        return $this;
+    }
+
+    public function removeVersion(YamlFileVersion $version): static
+    {
+        if ($this->version->removeElement($version)) {
+            // set the owning side to null (unless already changed)
+            if ($version->getYamlFileId() === $this) {
+                $version->setYamlFileId(null);
+            }
+        }
+
+        return $this;
+    }
 }

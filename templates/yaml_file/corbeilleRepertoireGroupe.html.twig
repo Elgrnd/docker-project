@@ -1,0 +1,91 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    <title>Corbeille des répertoires du groupe {{ groupe.nom }}</title>
+{% endblock %}
+
+{% block page_content %}
+    <div class="container mt-4">
+
+        <h2 class="mb-4">Corbeille des répertoires du groupe {{ groupe.nom }}</h2>
+
+        {% if repertoires is empty %}
+            <div class="alert alert-info">
+                Aucun répertoire supprimé pour le moment.
+            </div>
+        {% else %}
+
+            <div class="mb-3 text-end">
+                <a
+                        href="{{ path('delete_repertoire_permanent_all_groupe', {id: groupe.id}) }}"
+                        class="btn btn-danger"
+                        onclick="return confirm('Supprimer définitivement tous les répertoires ?')"
+                >
+                    Supprimer tout
+                </a>
+            </div>
+
+            <div class="list-group">
+
+                {% for r in repertoires %}
+                    <div class="list-group-item mb-3">
+
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <strong>{{ r.getFullPath }}</strong><br>
+                                <small class="text-muted">
+                                    Supprimé le : {{ r.deletedAt|date('d/m/Y H:i') }}
+                                </small>
+
+                                {% set yamlFiles = r.accesYamlFilesGroupe
+                                    |filter(rel => rel.groupe.id == groupe.id and rel.deletedAt is not null)
+                                    |map(rel => rel.yamlFile)
+                                %}
+
+                                {% if yamlFiles is not empty %}
+                                    <div class="mt-2 ps-3 border-start">
+                                        <strong>Fichiers YAML supprimés :</strong>
+                                        <ul class="mb-0 mt-1">
+                                            {% for y in yamlFiles %}
+                                                <li><i class="bi bi-filetype-yml"></i> {{ y.nameFile }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="d-flex gap-2 mt-1">
+
+                                {% if r.canRestore() %}
+                                    <a href="{{ path('restore_repertoire_groupe', {id: r.id, idGroupe: groupe.id}) }}" class="btn btn-success btn-sm">
+                                        Restaurer
+                                    </a>
+                                {% else %}
+                                    <button class="btn btn-secondary btn-sm" disabled>
+                                        Parent supprimé
+                                    </button>
+                                {% endif %}
+
+                                <a href="{{ path('delete_repertoire_permanent_groupe', {id: r.id, idGroupe: groupe.id}) }}"
+                                   class="btn btn-danger btn-sm"
+                                   onclick="return confirm('Supprimer définitivement ce répertoire et tous ses fichiers ?')">
+                                    Supprimer
+                                </a>
+
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+
+            </div>
+        {% endif %}
+
+        {# Bouton pour retourner à la page principale du groupe #}
+        <div class="mt-4">
+            <a href="{{ path('fichiers_groupe', {id: groupe.id}) }}" class="btn btn-secondary">
+                ← Retour au groupe
+            </a>
+        </div>
+
+    </div>
+{% endblock %}

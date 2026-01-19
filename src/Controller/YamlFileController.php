@@ -2,15 +2,21 @@
 
 namespace App\Controller;
 
+use App\Entity\GroupeYamlFileRepertoire;
 use App\Entity\Repertoire;
 use App\Entity\Utilisateur;
 use App\Entity\UtilisateurYamlFileRepertoire;
 use App\Entity\YamlFile;
+use App\Entity\YamlFileVersion;
+use App\Form\AjouterBiblioRepertoireType;
+use App\Form\DeplacerYamlFileType;
 use App\Form\DirectoryType;
+use App\Form\YamlFileBiblioType;
 use App\Form\YamlFileType;
 use App\Repository\RepertoireRepository;
 use App\Service\FlashMessageHelperInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use DomainException;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,9 +27,11 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Yaml\Yaml;
+use ZipArchive;
 
 final class YamlFileController extends AbstractController
 {
+    #[IsGranted('ROLE_USER')]
     #[Route('/upload', name: 'yaml_upload', methods: ['GET', 'POST'])]
     public function upload(
         Request                     $request,
@@ -34,16 +42,6 @@ final class YamlFileController extends AbstractController
         $utilisateur = $this->getUser();
         $repertoireRepository = $entityManager->getRepository(Repertoire::class);
 
-        if ($utilisateur === null) {
-            $this->addFlash('error', 'Vous devez être connecté pour importer un fichier');
-            return $this->redirectToRoute('connexion');
-        }
-
-        if (!$utilisateur instanceof \App\Entity\Utilisateur) {
-            throw $this->createAccessDeniedException('Utilisateur non reconnu.');
-        }
-
-        // Créer une nouvelle instance de YamlFile
         $yamlFile = new YamlFile();
 
         $form = $this->createForm(YamlFileType::class, $yamlFile, [
@@ -63,35 +61,28 @@ final class YamlFileController extends AbstractController
                 return $this->redirectToRoute('yaml_upload');
             }
 
-            $extension = strtolower($uploadedFile->getClientOriginalExtension());
-            if (!in_array($extension, ['yaml', 'yml'])) {
-                $this->addFlash('error', 'Seuls les fichiers .yaml ou .yml sont autorisés.');
-                return $this->redirectToRoute('yaml_upload');
-            }
-
             $nameFile = $uploadedFile->getClientOriginalName();
-
-
-            // Vérifier si un fichier avec le même nom existe déjà pour cet utilisateur
-            $results = $entityManager
+            $exists = $entityManager
                 ->getRepository(UtilisateurYamlFileRepertoire::class)
-                ->verifierSiYamlFileExiste($utilisateur->getId(), $nameFile, $repertoireId);
+                ->existsYamlFileUtilisateur($utilisateur->getId(), $nameFile, $repertoireId);
 
-            if (count($results) > 0) {
+            if ($exists) {
                 $this->addFlash('error', sprintf(
-                    'Un fichier nommé "%s" existe déjà pour votre compte.',
+                    'Un fichier nommé "%s" existe déjà pour votre compte dans ce répertoire.',
                     $nameFile
                 ));
                 return $this->redirectToRoute('yaml_upload');
             }
 
-            try {
-                $content = file_get_contents($uploadedFile->getRealPath());
 
-                if (trim($content) === '') {
-                    $this->addFlash('error', 'Le fichier YAML ne peut pas être vide');
-                    return $this->redirectToRoute('yaml_upload');
-                }
+            try {
+                $extension = strtolower($uploadedFile->getClientOriginalExtension());
+                $yamlFile->assertValidExtension($extension);
+
+                $content = file_get_contents($uploadedFile->getRealPath());
+                $yamlFile->assertNotEmpty($content);
+
+                Yaml::parse($content);
 
                 // Définir le répertoire par défaut (racine) si disponible
                 $repertoire = $repertoireRepository->find($repertoireId);
@@ -120,8 +111,13 @@ final class YamlFileController extends AbstractController
                 ));
 
                 return $this->redirectToRoute('yaml_upload');
+            } catch (DomainException $e) {
+                $this->addFlash('error', $e->getMessage());
+                return $this->redirectToRoute('yaml_upload');
             } catch (FileException $e) {
                 $this->addFlash('error', 'Erreur lors de la lecture du fichier: ' . $e->getMessage());
+            } catch(ParseException $e) {
+                $this->addFlash('error', "La syntaxe du fichier n'est pas bonne " . $e->getMessage());
             } catch (\Exception $e) {
                 $this->addFlash('error', 'Une erreur est survenue: ' . $e->getMessage());
             }
@@ -142,7 +138,6 @@ final class YamlFileController extends AbstractController
     ): Response
     {
         $utilisateur = $this->getUser();
-        assert($utilisateur instanceof Utilisateur);
 
         $repertoire = new Repertoire();
         $form = $this->createForm(DirectoryType::class, $repertoire);
@@ -164,6 +159,12 @@ final class YamlFileController extends AbstractController
                 }
             }
 
+            if($repertoireRepository->verifierNomDejaExistant($repertoire->getName(), $repertoire->getParent(), $utilisateur->getId()) != null){
+                $this->addFlash('error', 'Un répertoire avec ce nom existe déjà à cet emplacement');
+                return $this->redirectToRoute('repertoire');
+            }
+
+
             $entityManager->persist($repertoire);
             $entityManager->flush();
 
@@ -184,22 +185,17 @@ final class YamlFileController extends AbstractController
         ]);
     }
 
-    #[IsGranted('ROLE_USER')]
+    #[IsGranted('FILE_OWNER', subject: 'yamlFile')]
     #[Route('/yamlfile/supprimer/{id}', name: 'deleteYamlFile', options: ["expose" => true], methods: ['DELETE'])]
     public function supprimerYamlFile(?YamlFile                   $yamlFile,
                                       Request                     $request,
-                                      EntityManagerInterface      $entityManager,
-                                      FlashMessageHelperInterface $flashMessageHelperInterface): Response
+                                      EntityManagerInterface      $entityManager): Response
     {
         $utilisateur = $this->getUser();
         $uyrRepository = $entityManager->getRepository(UtilisateurYamlFileRepertoire::class);
 
         if (!$yamlFile) {
             return new JsonResponse(null, Response::HTTP_NOT_FOUND);
-        }
-
-        if ($yamlFile->getUtilisateurYamlfile() !== $utilisateur) {
-            return new JsonResponse(null, Response::HTTP_FORBIDDEN);
         }
 
         $submittedToken = $request->getPayload()->get('_token');
@@ -209,18 +205,19 @@ final class YamlFileController extends AbstractController
         }
 
         $uyrRepository->supprimerYamlfileUtilisateurParRepertoire($yamlFile->getId());
-        $entityManager->remove($yamlFile);
+        if ($entityManager->getRepository(GroupeYamlFileRepertoire::class)->findOneBy(['yamlFile' => $yamlFile]) === null) {
+            $entityManager->remove($yamlFile);
+        }
         $entityManager->flush();
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
-    #[IsGranted('ROLE_USER')]
+    #[IsGranted('FILE_OWNER', subject: 'yamlFile')]
     #[Route('yamlfile/modifier/{id}', name: 'modifierYamlFile', methods: ['GET', 'POST'])]
     public function modifierYamlFile(?YamlFile                   $yamlFile,
                                      Request                     $request,
-                                     EntityManagerInterface      $entityManager,
-                                     FlashMessageHelperInterface $flashMessageHelperInterface): Response
+                                     EntityManagerInterface      $entityManager): Response
     {
 
         $utilisateur = $this->getUser();
@@ -230,22 +227,31 @@ final class YamlFileController extends AbstractController
             return $this->redirectToRoute('repertoire');
         }
 
-        if ($yamlFile->getUtilisateurYamlfile() !== $utilisateur) {
-            $this->addFlash('error', "Vous ne pouvez pas modifier ce fichier");
-            return $this->redirectToRoute('repertoire');
-        }
-
         if ($request->isMethod('POST')) {
             $submittedToken = $request->request->get('_token');
 
             // Vérification CSRF
             if ($this->isCsrfTokenValid('edit-yaml', $submittedToken)) {
                 $yamlContent = $request->request->get('content');
+                $description = $request->request->get('description');
 
                 try {
                     Yaml::parse($yamlContent);
 
+                    $version = new YamlFileVersion();
+                    $version->setBodyFile($yamlFile->getBodyFile());
+                    $version->setYamlFileId($yamlFile);
+                    $version->setDateEdition(new \DateTime());
+                    $entityManager->persist($version);
+
                     $yamlFile->setBodyFile($yamlContent);
+
+                    if ($description !== null) {
+                        $yamlFile->setDescription($description);
+                    }
+
+                    $yamlFile->addVersion($version);
+
                     $entityManager->flush();
 
                     $this->addFlash('success', 'Fichier YAML modifié avec succès');
@@ -262,5 +268,189 @@ final class YamlFileController extends AbstractController
 
         return $this->render('yaml_file/edityamlfile.html.twig', ['yamlfile' => $yamlFile]);
 
+    }
+
+    #[IsGranted('ROLE_USER')]
+    #[Route('/bibliotheque', name: 'bibliotheque')]
+    public function bibliotheque(EntityManagerInterface $entityManager): Response
+    {
+        $repository  = $entityManager->getRepository(YamlFile::class);
+        $utilisateur = $this->getUser();
+
+        $fichiers = $repository->recupererYamlFileSansUtilisateur();
+
+        return $this->render('yaml_file/bibliotheque.html.twig', ["fichiers" => $fichiers]);
+    }
+
+    #[IsGranted("ROLE_PROF")]
+    #[Route('/bibliotheque/upload', name: 'biblio_upload', methods: ['GET', 'POST'])]
+    public function upload_biblio(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        FlashMessageHelperInterface $flashMessageHelperInterface,
+    ): Response {
+
+        $yamlFile = new YamlFile();
+
+        $form = $this->createForm(YamlFileBiblioType::class, $yamlFile, [
+            'method' => 'POST',
+            'action' => $this->generateUrl('biblio_upload'),
+        ]);
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+
+            $uploadedFile = $form->get('yamlFile')->getData();
+
+            if (!$uploadedFile) {
+                $this->addFlash('error', 'Aucun fichier reçu.');
+                return $this->redirectToRoute('biblio_upload');
+            }
+
+            $nameFile = $uploadedFile->getClientOriginalName();
+
+            $repo = $entityManager->getRepository(YamlFile::class);
+
+            if ($repo->existeDansBiblio($nameFile)) {
+                $this->addFlash('error', sprintf(
+                    'Un fichier nommé "%s" existe déjà.',
+                    $nameFile
+                ));
+                return $this->redirectToRoute('biblio_upload');
+            }
+
+
+            try {
+                $extension = strtolower($uploadedFile->getClientOriginalExtension());
+                $yamlFile->assertValidExtension($extension);
+
+                $content = file_get_contents($uploadedFile->getRealPath());
+
+                $content = file_get_contents($uploadedFile->getRealPath());
+                $yamlFile->assertNotEmpty($content);
+
+                // Le répertoire a déjà été défini par le formulaire via setRepertoire()
+                $yamlFile->setNameFile($nameFile);
+                $yamlFile->setBodyFile($content);
+
+                $entityManager->persist($yamlFile);
+                $entityManager->flush();
+
+                $this->addFlash('success', sprintf(
+                    'Fichier YAML "%s" importé avec succès.',
+                    $nameFile,
+                ));
+
+                return $this->redirectToRoute('bibliotheque');
+            } catch (DomainException $e) {
+                $this->addFlash('error', $e->getMessage());
+                return $this->redirectToRoute('yaml_upload');
+            } catch (FileException $e) {
+                $this->addFlash('error', 'Erreur lors de la lecture du fichier: ' . $e->getMessage());
+            } catch (\Exception $e) {
+                $this->addFlash('error', 'Une erreur est survenue: ' . $e->getMessage());
+            }
+        }
+        $flashMessageHelperInterface->addFormErrorsAsFlash($form);
+
+        return $this->render('yaml_file/uploadBiblio.html.twig', [
+            'formulaireYaml' => $form
+        ]);
+    }
+
+    #[IsGranted("FILE_BIBLIO", subject: 'yamlFile')]
+    #[Route("/bibliotheque/ajouterAuRepertoire/{id}", name: 'ajouterAuRepertoire', methods: ['GET', 'POST'])]
+    public function ajouterAuRepertoire(?YamlFile $yamlFile, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        if (!$yamlFile) {
+            $this->addFlash("error", "Le fichier n'existe pas");
+            return $this->redirectToRoute('bibliotheque');
+        }
+
+        $form = $this->createForm(AjouterBiblioRepertoireType::class, null, [
+            'method' => 'POST',
+            'action' => $this->generateUrl('ajouterAuRepertoire', ['id' => $yamlFile->getId()]),
+        ]);
+
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $data = $form->getData();
+            $repertoire = $data['repertoire'];
+
+            // Récupérer l'utilisateur courant
+            $utilisateur = $this->getUser();
+
+            // Créer un nouveau YamlFile à partir du YamlFileBiblio
+            $newYamlFile = new YamlFile();
+
+            $newYamlFile->setNameFile($yamlFile->getNameFile());
+            $newYamlFile->setBodyFile($yamlFile->getBodyFile());
+            $newYamlFile->setUtilisateurYamlfile($utilisateur);
+
+            $uyr = new UtilisateurYamlFileRepertoire();
+            $uyr->setYamlFile($newYamlFile);
+            $uyr->setRepertoire($repertoire);
+            $uyr->setUtilisateur($utilisateur);
+
+
+            $repo = $entityManager->getRepository(UtilisateurYamlFileRepertoire::class);
+
+            if ($repo->existsYamlFileUtilisateur($utilisateur->getId(), $newYamlFile->getNameFile(), $repertoire)) {
+                $this->addFlash('error', sprintf(
+                    'Un fichier nommé "%s" existe déjà dans ce répertoire.',
+                    $newYamlFile->getNameFile()
+                ));
+                return $this->redirectToRoute('bibliotheque');
+            }
+
+            $entityManager->persist($newYamlFile);
+            $entityManager->persist($uyr);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Fichier ajouté à votre répertoire avec succès');
+
+            return $this->redirectToRoute('bibliotheque');
+        }
+
+        $routeAnnuler = 'bibliotheque';
+
+        return $this->render('yaml_file/ajouterAuRepertoire.html.twig', [
+            'formulaire' => $form->createView(),
+            'yamlFileBiblio' => $yamlFile,
+            'routeAnnuler' => $routeAnnuler
+        ]);
+    }
+
+    #[IsGranted("FILE_OWNER", subject: 'yamlFile')]
+    #[Route('/yamlfile/deplacer/{id}', name: 'yamlfile_deplacer', methods: ['GET', 'POST'])]
+    public function deplacer(
+        YamlFile $yamlFile,
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $utilisateur = $this->getUser();
+
+        $form = $this->createForm(DeplacerYamlFileType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $repertoire = $form->get('repertoire')->getData();
+
+            $uyr = $entityManager->getRepository(UtilisateurYamlFileRepertoire::class)
+                ->findOneBy(['yamlFile' => $yamlFile, 'utilisateur' => $utilisateur]);
+
+            $uyr->setRepertoire($repertoire);
+            $entityManager->flush();
+
+            $this->addFlash('success', "Fichier déplacé avec succès !");
+            return $this->redirectToRoute('repertoire');
+        }
+
+        return $this->render('yaml_file/deplacer.html.twig', [
+            'form' => $form->createView(),
+            'yamlFile' => $yamlFile,
+        ]);
     }
 }

@@ -10,6 +10,7 @@ use Symfony\Bundle\SecurityBundle\Security;
 final class UtilisateurVoter extends Voter
 {
     public const CHANGE = 'CHANGE_ROLE';
+    private Security $security;
 
     public function __construct(Security $security)
     {

@@ -8,11 +8,10 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: GroupeYamlFileRepertoireRepository::class)]
 class GroupeYamlFileRepertoire
 {
-    // Decommenter + enlever le null
-//    #[ORM\Id]
+    #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: Repertoire::class)]
-    #[ORM\JoinColumn(nullable: true)]
-    private ?Repertoire $repertoire = null;
+    #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
+    private ?Repertoire $repertoire;
 
     #[ORM\Id]
     #[ORM\ManyToOne(targetEntity: YamlFile::class)]
@@ -26,6 +25,9 @@ class GroupeYamlFileRepertoire
 
     #[ORM\Column(length: 255)]
     private ?string $droit = null;
+
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $deletedAt = null;
 
     public function getDroit(): ?string
     {
@@ -69,5 +71,16 @@ class GroupeYamlFileRepertoire
         $this->groupe = $groupe;
     }
 
+    public function getDeletedAt(): ?\DateTimeInterface
+    {
+        return $this->deletedAt;
+    }
+
+    public function setDeletedAt(?\DateTimeInterface $deletedAt): static
+    {
+        $this->deletedAt = $deletedAt;
+
+        return $this;
+    }
 
 }

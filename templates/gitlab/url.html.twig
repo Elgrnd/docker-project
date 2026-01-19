@@ -1,0 +1,61 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}<title>Configuration GitLab</title>{% endblock %}
+
+{% block page_content %}
+
+    <div class="container mt-4">
+
+        <h1 class="mb-4">
+            🔧 Configuration de l’URL GitLab
+        </h1>
+
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">🌐 Définir l’URL GitLab du projet</h5>
+            </div>
+
+            <div class="card-body">
+
+                {{ form_start(form, {'attr': {'class': 'needs-validation'}}) }}
+
+                <div class="mb-3">
+                    {{ form_label(form.gitlabUrl) }}
+                    {{ form_widget(form.gitlabUrl, {
+                        'attr': {
+                            'class': 'form-control',
+                            'placeholder': 'https://gitlab.com/mon-projet/...'
+                        }
+                    }) }}
+                    {{ form_errors(form.gitlabUrl) }}
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        💾 Enregistrer
+                    </button>
+
+                    <a href="{{ path('index') }}" class="btn btn-secondary">
+                        ↩️ Retour
+                    </a>
+                </div>
+
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .card {
+            border-radius: 10px;
+        }
+        .card-header {
+            background: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+        }
+        button.btn-primary:hover {
+            opacity: 0.85;
+        }
+    </style>
+
+{% endblock %}

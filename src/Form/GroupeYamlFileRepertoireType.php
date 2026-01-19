@@ -6,18 +6,29 @@ use App\Entity\Groupe;
 use App\Entity\GroupeYamlFileRepertoire;
 use App\Entity\Repertoire;
 use App\Entity\YamlFile;
+use App\Repository\RepertoireRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Component\Validator\Constraints\File;
 
 class GroupeYamlFileRepertoireType extends AbstractType
 {
+    private RepertoireRepository $repertoireRepository;
+
+    public function __construct(RepertoireRepository $repertoireRepository)
+    {
+        $this->repertoireRepository = $repertoireRepository;
+    }
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        $groupe = $options['groupe'];
+
         $builder
             ->add('yamlFile', FileType::class, [
                 'label' => 'Fichier YAML à importer',
@@ -40,6 +51,21 @@ class GroupeYamlFileRepertoireType extends AbstractType
                     'accept' => '.yaml,.yml',
                 ],
             ])
+            ->add('repertoire', EntityType::class, [
+                'class' => Repertoire::class,
+                'choice_label' => function (Repertoire $repertoire) {
+                    return $repertoire->getFullPath();
+                },
+                'mapped' => false,
+                'label' => 'Répertoire de destination',
+                'required' => true,
+                'attr' => [
+                    'class' => 'form-select'
+                ],
+                'choices' => $this->repertoireRepository->recupererRepertoireGroupeActifs($groupe),
+
+                'help' => 'Choisissez le répertoire où sera enregistré votre fichier'
+            ])
             ->add('droit', ChoiceType::class, [
                 'label' => 'Droits sur le fichier',
                 'choices' => [
@@ -57,6 +83,7 @@ class GroupeYamlFileRepertoireType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => GroupeYamlFileRepertoire::class,
+            'groupe' => Groupe::class,
         ]);
     }
 }

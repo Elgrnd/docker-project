@@ -4,17 +4,25 @@
 
 {% block page_content %}
     <main class="center">
-        <h2>Mes Groupes</h2>
+        <h2>{% if not is_granted('ROLE_ADMIN') %}
+                Mes
+            {% endif %} Groupes</h2>
         <ul>
             {% for g in groupesMembre %}
                 <li>
-                    <strong>{{ g.nom }}</strong>
+                    <strong>{{ g.nom }}
+                    {% if is_granted('ROLE_ADMIN') %}
+                        ({{ g.getEtreChef().getLogin() }})
+                    {% endif %}
+                    </strong>
 
                     <div style="display: inline-flex; gap: 8px;">
                         <a href="{{ path('voir_groupe', {id: g.id}) }}" class="btn btn-secondary">Membres</a>
                         <a href="{{ path('fichiers_groupe', {id: g.id}) }}" class="btn btn-primary">Fichiers YAML</a>
+                        <a href="{{ path('upload_yaml_groupe', {id: g.id}) }}" class="btn btn-import">Importer un Fichier YAML</a>
+                        <a href="{{ path('partager_yaml_groupe', {id: g.id}) }}" class="btn btn-shared">Partager un Fichier YAML</a>
 
-                        {% if app.user and (g.etreChef == app.user or is_granted('ROLE_ADMIN')) %}
+                        {% if is_granted('GROUPE_EDIT', g) %}
                             <form method="post"
                                   action="{{ path('supprimer_groupe', {id: g.id}) }}"
                                   style="display:inline;"
@@ -38,4 +46,31 @@
             {{ form_end(formGroupe) }}
         </fieldset>
     </main>
+
+    <style>
+        .btn-import {
+            background-color: #53aa2c;
+            color: white;
+            border: 1px solid #7ed957;
+            transition: all 0.2s ease;
+        }
+
+        .btn-import:hover {
+            background-color: #418722;
+            color: white;
+        }
+
+        .btn-shared {
+            background-color: #51b5d3;
+            color: white;
+            border: 1px solid #6dc1e0;
+            transition: all 0.2s ease;
+        }
+
+        .btn-shared:hover {
+            background-color: #459eb8;
+            color: white;
+        }
+
+    </style>
 {% endblock %}

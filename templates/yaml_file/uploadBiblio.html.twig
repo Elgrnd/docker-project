@@ -37,6 +37,15 @@
                             Formats acceptés : .yaml, .yml (max 2MB)
                         </small>
                     </div>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-card-text"></i>
+                            {{ form_label(formulaireYaml.description) }}
+                        </label>
+                        {{ form_widget(formulaireYaml.description, {'attr': {'class': 'form-control'}}) }}
+                        {{ form_errors(formulaireYaml.description) }}
+                    </div>
+
 
                     {# Boutons d'action #}
                     <div class="d-grid gap-2">

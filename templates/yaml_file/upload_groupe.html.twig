@@ -1,0 +1,168 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    <title>Importer un fichier YAML dans le groupe {{ groupe.nom }}</title>
+{% endblock %}
+
+{% block scriptJs %}
+    <script defer type="text/javascript" src="{{ asset('js/gestionEvent.js') }}"></script>
+{% endblock %}
+
+{% block page_content %}
+
+    <div class="container mt-5">
+        <div class="upload-container">
+
+            <h1 class="text-center mb-4">📤 Importer un fichier YAML dans le groupe {{ groupe.nom }}</h1>
+
+            {# --- BLOC CONSEILS --- #}
+            <div class="card mt-3 border-info">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-lightbulb text-warning"></i> Conseils
+                    </h6>
+                    <ul class="mb-0 small">
+                        <li>Utilisez ce formulaire pour importer un nouveau fichier YAML</li>
+                        <li>Le fichier sera directement ajouté au groupe</li>
+                        <li>Les fichiers ne doivent pas dépasser 2MB</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mt-4">
+                <div class="card-body p-4">
+
+                    {{ form_start(formImport, {'attr': {'id': 'uploadForm'}}) }}
+
+                    {# Zone d’import / drag & drop #}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-file-earmark-arrow-up"></i>
+                            {{ form_label(formImport.yamlFile) }}
+                        </label>
+
+                        <div class="file-upload-area" id="fileUploadArea">
+                            <div class="upload-icon">
+                                <i class="bi bi-cloud-upload"></i>
+                            </div>
+
+                            <p class="mb-2">Glissez-déposez votre fichier YAML ici</p>
+                            <p class="text-muted small mb-3">ou</p>
+
+                            {{ form_widget(formImport.yamlFile, {'attr': {'class': 'form-control'}}) }}
+
+                            <div class="file-info" id="fileInfo">
+                                <i class="bi bi-file-earmark-text"></i>
+                                <strong>Fichier sélectionné :</strong>
+                                <span id="fileName"></span>
+                                <span class="badge bg-secondary" id="fileSize"></span>
+                            </div>
+                        </div>
+
+                        {{ form_errors(formImport.yamlFile) }}
+
+                        <small class="form-text text-muted d-block mt-2">
+                            <i class="bi bi-info-circle"></i>
+                            Formats acceptés : .yaml, .yml (max 2MB)
+                        </small>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <label class="form-label fw-bold">
+                        <i class="bi bi-shield-lock"></i> Droits sur le fichier
+                    </label>
+
+                    <div class="droit-choice-container">
+                        {{ form_widget(formImport.droit) }}
+                    </div>
+
+                    <div class="mb-4 mt-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-folder"></i>
+                            {{ form_label(formImport.repertoire) }}
+                        </label>
+                        {{ form_widget(formImport.repertoire) }}
+                        {{ form_errors(formImport.repertoire) }}
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-upload"></i> Importer le fichier
+                        </button>
+
+                        <a href="{{ path('mes_groupes') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Retour à mes groupes
+                        </a>
+                    </div>
+
+                    {{ form_end(formImport) }}
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <style>
+        .upload-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .file-upload-area {
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            background-color: #f8f9fa;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-area:hover {
+            border-color: #0d6efd;
+            background-color: #e7f1ff;
+        }
+
+        .file-upload-area.dragover {
+            border-color: #0d6efd;
+            background-color: #cfe2ff;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #6c757d;
+            margin-bottom: 15px;
+        }
+
+        .file-info {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .droit-choice-container label {
+            display:flex;
+            align-items:center;
+            gap:8px;
+            padding:10px;
+            background:white;
+            margin-bottom:8px;
+            border:1px solid #ddd;
+            border-radius:8px;
+            transition:0.2s;
+        }
+
+        .droit-choice-container label:hover {
+            background:#eef4ff;
+            border-color:#0d6efd;
+        }
+    </style>
+
+{% endblock %}

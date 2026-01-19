@@ -7,25 +7,23 @@ use App\Form\EtrePartageType;
 use App\Repository\EtrePartageRepository;
 use App\Service\FlashMessageHelperInterface;
 use Doctrine\ORM\EntityManagerInterface;
+use DomainException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 final class EtrePartageController extends AbstractController
 {
+    #[IsGranted("ROLE_USER")]
     #[Route('/partager_fichier', name: 'partager_yaml', methods: ['GET', 'POST'])]
-    public function partagerYaml(
+    public function partagerYamlFile(
         Request $request,
         EntityManagerInterface $entityManager,
         EtrePartageRepository $etrePartageRepo
     ): Response {
         $utilisateur = $this->getUser();
-        if (!$utilisateur) {
-            $this->addFlash('error', 'Veuillez vous connecter.');
-            return $this->redirectToRoute('connexion');
-        }
-
         $form = $this->createForm(EtrePartageType::class, null, [
             'is_admin' => $this->isGranted('ROLE_ADMIN'),
             'utilisateur' => $utilisateur
@@ -34,17 +32,17 @@ final class EtrePartageController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $partage = $form->getData();
-            $utilisateurCourant = $this->getUser();
             $cible = $partage->getUtilisateur();
             $fichier = $partage->getYamlFile();
 
-            if ($partage->getUtilisateur() === $utilisateurCourant) {
-                $this->addFlash('error', 'Vous ne pouvez pas partager un fichier avec vous-même.');
-                return $this->redirectToRoute('partager_yaml');
-            }
+            try {
+                $partage->assertNotSelfShare($this->getUser());
+                $partage->assertNotDuplicate(
+                    $etrePartageRepo->existsPartage($cible, $fichier)
+                );
 
-            if ($etrePartageRepo->existsPartage($cible, $fichier)) {
-                $this->addFlash('error', 'Ce fichier a déjà été partagé avec cet utilisateur.');
+            } catch (DomainException $e) {
+                $this->addFlash('error', $e->getMessage());
                 return $this->redirectToRoute('partager_yaml');
             }
 

@@ -68,19 +68,24 @@ class DockerService
 
         $containers = [];
 
+
         $lines = array_filter(array_map('trim', explode("\n", $output)));
 
 
         foreach ($lines as $line) {
-            $parts = explode('|', $line);
-            [$id, $name, $status] = $parts;
-            $containers[] = [
-                'id' => $id,
-                'name' => $name,
-                'status' => $status,
-            ];
+            {
+
+                $parts = explode('|', $line);
+                [$id, $name, $status] = $parts;
+                $containers[] = [
+                    'id' => $id,
+                    'name' => $name,
+                    'status' => $status,
+                ];
+            }
+            return $containers;
         }
-        return $containers;
+        return null;
     }
 
     public function startContainer(string $id, $vmIp): array

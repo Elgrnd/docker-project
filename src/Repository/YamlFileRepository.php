@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Groupe;
 use App\Entity\Utilisateur;
 use App\Entity\YamlFile;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -55,16 +56,43 @@ class YamlFileRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-    public function verifierSiYamlFileExisteBiblio($nameFile)
+    public function existeDansBiblio(string $nameFile): bool
     {
-        return $this->createQueryBuilder('u')
+        return (bool) $this->createQueryBuilder('u')
+            ->select('COUNT(u.id)')
             ->andWhere('u.nameFile = :nameFile')
             ->andWhere('u.utilisateur_yamlfile IS NULL')
             ->setParameter('nameFile', $nameFile)
-            ->orderBy('u.nameFile', 'ASC')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    // src/Repository/YamlFileRepository.php
+    public function findDeletedByUser(UserInterface $user)
+    {
+        return $this->createQueryBuilder('y')
+            ->where('y.deletedAt IS NOT NULL')
+            ->andWhere('y.utilisateur_yamlfile = :user')
+            ->setParameter('user', $user)
+            ->orderBy('y.deletedAt', 'DESC')
             ->getQuery()
             ->getResult();
     }
+
+    public function findDeletedByGroupe(Groupe $groupe)
+    {
+        return $this->createQueryBuilder('y')
+            ->join('y.groupeParRepertoire', 'gyr')
+            ->join('gyr.groupe', 'g')
+            ->where('gyr.deletedAt IS NOT NULL')
+            ->andWhere('g = :groupe')
+            ->setParameter('groupe', $groupe)
+            ->orderBy('gyr.deletedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+
 
 
     //    /**

@@ -46,7 +46,7 @@ class DirectoryType extends AbstractType
                 'attr' => [
                     'class' => 'form-select'
                 ],
-                'choices' => $this->repertoireRepository->recupererRepertoireUtilisateur($user),
+                'choices' => $this->repertoireRepository->recupererRepertoireUtilisateurActifs($user),
                 // Sélectionner le répertoire racine par défaut
 
             ]);

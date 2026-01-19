@@ -16,14 +16,55 @@ class GroupeYamlFileRepertoireRepository extends ServiceEntityRepository
         parent::__construct($registry, GroupeYamlFileRepertoire::class);
     }
 
-    public function recupererYamlFileDepuisGroupe($idYamlFile)
+    public function findByYamlFileAndGroupe(int $yamlFileId, int $groupeId)
     {
-        return $this->createQueryBuilder('g')
-            ->andWhere('g.yamlFile = :yamlFile')
-            ->setParameter('yamlFile', $idYamlFile)
+        return $this->createQueryBuilder('yg')
+            ->join('yg.yamlFile', 'yf')
+            ->join('yg.groupe', 'g')
+            ->andWhere('yf.id = :yamlFileId')
+            ->andWhere('g.id = :groupeId')
+            ->setParameter('yamlFileId', $yamlFileId)
+            ->setParameter('groupeId', $groupeId)
             ->getQuery()
             ->getOneOrNullResult();
     }
+
+    public function existsYamlFileGroupe($idGroupe, $nameFile, $idRepertoire): bool
+    {
+        return (bool) $this->createQueryBuilder('u')
+            ->select('COUNT(yf)')
+            ->join('u.yamlFile', 'yf')
+            ->andWhere('u.groupe = :idGroupe')
+            ->andWhere('u.repertoire = :idRepertoire')
+            ->andWhere('yf.nameFile = :nameFile')
+            ->setParameter('idGroupe', $idGroupe)
+            ->setParameter('idRepertoire', $idRepertoire)
+            ->setParameter('nameFile', $nameFile)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function recuperertoutYamlfileGroupeParRepertoire($idGroupe)
+    {
+        return $this->createQueryBuilder('u')
+            ->andWhere('u.groupe = :idGroupe')
+            ->setParameter('idGroupe', $idGroupe)
+            ->OrderBy('u.repertoire', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function supprimerYamlfileGroupeParRepertoire($idYamlfile)
+    {
+        $qb = $this->createQueryBuilder('y')
+            ->delete()
+            ->where('y.yamlFile = :id')
+            ->setParameter('id', $idYamlfile)
+            ->getQuery();
+
+        return $qb->execute();
+    }
+
 
     //    /**
     //     * @return GroupeYamlFileRepertoire[] Returns an array of GroupeYamlFileRepertoire objects

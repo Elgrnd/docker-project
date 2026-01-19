@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Groupe;
 use App\Entity\Utilisateur;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -51,6 +52,29 @@ class UtilisateurRepository extends ServiceEntityRepository implements PasswordU
             ->getQuery()
             ->getResult();
     }
+
+    public function findNonMembresDuGroupe(Groupe $groupe): array
+    {
+        $qb = $this->createQueryBuilder('u');
+        $em = $this->getEntityManager();
+
+        return $qb
+            ->where($qb->expr()->notIn(
+                'u.id',
+                $em->createQueryBuilder()
+                    ->select('IDENTITY(ug_sub.utilisateur)')
+                    ->from('App\Entity\UtilisateurGroupe', 'ug_sub')
+                    ->where('ug_sub.groupe = :groupe')
+                    ->getDQL()
+            ))
+            ->setParameter('groupe', $groupe)
+            ->orderBy('u.login', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+
+
 
     //    /**
     //     * @return Utilisateur[] Returns an array of Utilisateur objects

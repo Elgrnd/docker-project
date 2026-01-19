@@ -2,22 +2,22 @@
 
 namespace App\Repository;
 
-use App\Entity\YamlfileUtilisateur;
+use App\Entity\YamlFileVersion;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<YamlfileUtilisateur>
+ * @extends ServiceEntityRepository<YamlFileVersion>
  */
-class YamlfileUtilisateurRepository extends ServiceEntityRepository
+class YamlFileVersionRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, YamlfileUtilisateur::class);
+        parent::__construct($registry, YamlFileVersion::class);
     }
 
     //    /**
-    //     * @return YamlfileUtilisateur[] Returns an array of YamlfileUtilisateur objects
+    //     * @return YamlFileVersion[] Returns an array of YamlFileVersion objects
     //     */
     //    public function findByExampleField($value): array
     //    {
@@ -31,7 +31,7 @@ class YamlfileUtilisateurRepository extends ServiceEntityRepository
     //        ;
     //    }
 
-    //    public function findOneBySomeField($value): ?YamlfileUtilisateur
+    //    public function findOneBySomeField($value): ?YamlFileVersion
     //    {
     //        return $this->createQueryBuilder('y')
     //            ->andWhere('y.exampleField = :val')

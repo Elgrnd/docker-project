@@ -16,6 +16,13 @@
                 <h1 class="text-center mb-4 fw-semibold">Modifier {{ yamlfile.nameFile }}</h1>
 
                 <form method="post" id="yaml-form" class="bg-light p-4 rounded shadow-sm">
+                    <div class="mb-3">
+                        <label for="desc" class="form-label fw-semibold">Description</label>
+                        <textarea id="desc"
+                                  name="description"
+                                  class="form-control"
+                                  rows="2">{{ yamlfile.description }}</textarea>
+                    </div>
                     <div class="mb-3" style="height: 70vh;">
                         <textarea id="editor" name="yaml_content" class="form-control h-100">{{ yamlfile.bodyFile }}</textarea>
                     </div>

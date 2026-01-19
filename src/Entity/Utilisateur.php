@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\UtilisateurRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -58,11 +59,11 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $proxmoxVmid = null;
 
     /**
-     * @var Collection<int, Groupe>
+     * @var Collection<int, UtilisateurGroupe>
      */
-    #[ORM\ManyToMany(targetEntity: Groupe::class, inversedBy: 'utilisateur_groupe')]
-    #[ORM\JoinTable(name: "utilisateur_groupe")]
+    #[ORM\OneToMany(targetEntity: UtilisateurGroupe::class, mappedBy: "utilisateur", cascade: ['persist'], orphanRemoval: true)]
     private Collection $utilisateur_groupe;
+
 
     /**
      * @var Collection<int, YamlFile>
@@ -79,15 +80,14 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: UtilisateurYamlFileRepertoire::class, mappedBy: "utilisateur")]
     private Collection $yamlfilesParRepertoire;
 
+    #[ORM\Column(length: 500, nullable: true)]
+    private ?string $gitlabUrl = null;
+
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $vmStatus = null;
 
     public function __construct()
     {
-        $this->yamlFiles = new ArrayCollection();
-        $this->groupes = new ArrayCollection();
-        $this->groupesMembre = new ArrayCollection();
-        $this->repertoires = new ArrayCollection();
         $this->etrechef = new ArrayCollection();
         $this->utilisateur_groupe = new ArrayCollection();
         $this->utilisateur_yamlfile = new ArrayCollection();
@@ -212,22 +212,28 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getUtilisateurGroupe(): Collection
     {
-        return $this->utilisateur_groupe;
+        return new ArrayCollection(
+            array_map(fn($ug) => $ug->getGroupe(), $this->utilisateur_groupe->toArray())
+        );
     }
 
-    public function addUtilisateurGroupe(Groupe $utilisateurGroupe): static
+    public function addUtilisateurGroupe(UtilisateurGroupe $ug): static
     {
-        if (!$this->utilisateur_groupe->contains($utilisateurGroupe)) {
-            $this->utilisateur_groupe->add($utilisateurGroupe);
+        if (!$this->utilisateur_groupe->contains($ug)) {
+            $this->utilisateur_groupe->add($ug);
         }
-
         return $this;
     }
 
-    public function removeUtilisateurGroupe(Groupe $utilisateurGroupe): static
-    {
-        $this->utilisateur_groupe->removeElement($utilisateurGroupe);
 
+    public function removeUtilisateurGroupe(Groupe $groupe): static
+    {
+        foreach ($this->utilisateur_groupe as $ug) {
+            if ($ug->getGroupe() === $groupe) {
+                $this->utilisateur_groupe->removeElement($ug);
+                break;
+            }
+        }
         return $this;
     }
 
@@ -289,6 +295,27 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         return $this;
+    }
+
+    public function getGitlabUrl(): ?string
+    {
+        return $this->gitlabUrl;
+    }
+
+    public function setGitlabUrl(?string $gitlabUrl): self
+    {
+        $this->gitlabUrl = $gitlabUrl;
+        return $this;
+    }
+
+    public function getUtilisateurGroupeRelation(Groupe $groupe): ?UtilisateurGroupe
+    {
+        foreach ($this->utilisateur_groupe as $ug) {
+            if ($ug->getGroupe() === $groupe) {
+                return $ug;
+            }
+        }
+        return null;
     }
 
     public function getProxmoxVmid(): ?int

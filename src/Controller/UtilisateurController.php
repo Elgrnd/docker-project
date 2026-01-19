@@ -85,14 +85,14 @@ final class UtilisateurController extends AbstractController
         return $this->render('utilisateur/connexion.html.twig', ['lastUsername' => $lastUsername]);
     }
 
-    #[IsGranted(new Expression("is_granted('ROLE_ADMIN')"))]
+    #[IsGranted('ROLE_ADMIN')]
     #[Route('/panneauadmin', name: 'panneauAdmin', methods: ['GET'])]
     public function panneauAdmin(): Response
     {
         return $this->render('utilisateur/panneauAdmin.html.twig');
     }
 
-    #[IsGranted(new Expression("is_granted('ROLE_ADMIN')"))]
+    #[IsGranted('ROLE_ADMIN')]
     #[Route('/panneauadmin/listeutilisateurs', name: 'listeUtilisateurs', methods: ['GET'])]
     public function listeUtilisateurs(): Response
     {
@@ -104,20 +104,16 @@ final class UtilisateurController extends AbstractController
         ]);
     }
 
-    #[IsGranted(attribute: 'CHANGE_ROLE', subject: 'utilisateur')]
+    #[IsGranted('ROLE_ADMIN')]
     #[Route('/panneauadmin/listeutilisateurs/{login}/{role}', name: 'changeRole', options: ['expose' => true], methods: ['POST'])]
     public function changerRole(?Utilisateur $utilisateur, ?string $role, EntityManagerInterface $entityManager): Response
     {
-        if ($utilisateur != null) {
-            if ($role === "~") {
-                $utilisateur->setRoles([]);
-            } else {
-                $utilisateur->setRoles([$role]);
-            }
-            $entityManager->flush();
+        if ($role === "~") {
+            $utilisateur->setRoles([]);
         } else {
-            return new JsonResponse(null, Response::HTTP_NOT_FOUND);
+            $utilisateur->setRoles([$role]);
         }
+        $entityManager->flush();
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 

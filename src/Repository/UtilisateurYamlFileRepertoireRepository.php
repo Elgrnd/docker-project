@@ -2,7 +2,9 @@
 
 namespace App\Repository;
 
+use App\Entity\Utilisateur;
 use App\Entity\UtilisateurYamlFileRepertoire;
+use App\Entity\YamlFile;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -38,6 +40,39 @@ class UtilisateurYamlFileRepertoireRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function findYamlFilesForUserAdmin(Utilisateur $utilisateur, bool $isAdmin): array
+    {
+        $qb = $this->createQueryBuilder('uyfr')
+            ->select('uyfr', 'yf', 'r')
+            ->join('uyfr.yamlFile', 'yf')
+            ->join('uyfr.repertoire', 'r')
+            ->andWhere('yf.deletedAt IS NULL')
+            ->addOrderBy('uyfr.utilisateur', 'ASC')
+            ->addOrderBy('yf.nameFile', 'ASC');
+
+        if (!$isAdmin) {
+            $qb->andWhere('uyfr.utilisateur = :user')
+                ->setParameter('user', $utilisateur);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    public function findYamlFilesForUser(Utilisateur $utilisateur): array
+    {
+        $qb = $this->createQueryBuilder('uyfr')
+            ->select('uyfr', 'yf', 'r')
+            ->join('uyfr.yamlFile', 'yf')
+            ->join('uyfr.repertoire', 'r')
+            ->andWhere('uyfr.utilisateur = :user')
+            ->setParameter('user', $utilisateur)
+            ->addOrderBy('yf.nameFile', 'ASC');
+
+        return $qb->getQuery()->getResult();
+    }
+
+
+
     public function supprimerYamlfileUtilisateurParRepertoire($idYamlfile)
     {
         $qb = $this->createQueryBuilder('y')
@@ -49,8 +84,10 @@ class UtilisateurYamlFileRepertoireRepository extends ServiceEntityRepository
         return $qb->execute();
     }
 
-    public function verifierSiYamlFileExiste($idUtilisateur, $nameFile, $idRepertoire){
-        return $this->createQueryBuilder('u')
+    public function existsYamlFileUtilisateur($idUtilisateur, $nameFile, $idRepertoire): bool
+    {
+        return (bool) $this->createQueryBuilder('u')
+            ->select('COUNT(yf)')
             ->join('u.yamlFile', 'yf')
             ->andWhere('u.utilisateur = :idUtilisateur')
             ->andWhere('u.repertoire = :idRepertoire')
@@ -59,7 +96,7 @@ class UtilisateurYamlFileRepertoireRepository extends ServiceEntityRepository
             ->setParameter('idRepertoire', $idRepertoire)
             ->setParameter('nameFile', $nameFile)
             ->getQuery()
-            ->getResult();
+            ->getSingleScalarResult();
     }
 
     //    /**

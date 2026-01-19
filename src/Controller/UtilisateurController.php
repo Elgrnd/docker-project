@@ -6,8 +6,8 @@ use App\Entity\Repertoire;
 use App\Entity\Utilisateur;
 use App\Form\UtilisateurType;
 use App\Repository\UtilisateurRepository;
-use App\Repository\YamlFileRepository;
 use App\Service\FlashMessageHelperInterface;
+use App\Service\ProxmoxService;
 use App\Service\UtilisateurManagerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -18,6 +18,11 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 use Symfony\Component\ExpressionLanguage\Expression;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
 final class UtilisateurController extends AbstractController
 {
@@ -29,7 +34,7 @@ final class UtilisateurController extends AbstractController
     #[Route('/', name: 'index', methods: ['GET'])]
     public function index(): Response
     {
-        return $this->render('base.html.twig');
+        return $this->render('accueil.html.twig');
     }
 
     #[Route('/inscription', name: 'inscription', methods: ['GET', 'POST'])]
@@ -110,6 +115,54 @@ final class UtilisateurController extends AbstractController
         }
         $entityManager->flush();
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws ClientExceptionInterface
+     */
+    #[IsGranted(new Expression("is_granted('ROLE_ADMIN')"))]
+    #[Route('/panneauadmin/listeutilisateurs/{login}/creationVM', name: 'creerVmUtilisateur', methods: ['GET'])]
+    public function creerVmUtilisateur(?Utilisateur $utilisateur, ProxmoxService $proxmoxService, EntityManagerInterface $entityManager) : Response {
+        if($utilisateur === null) {
+            $this->addFlash('error', "L'utilisateur n'existe pas");
+            return $this->redirectToRoute('listeUtilisateurs');
+        } else if($utilisateur->getProxmoxVmid() !== null) {
+            $this->addFlash('error', "Cette Utilisateur à déjà une VM actif");
+            return $this->redirectToRoute('listeUtilisateurs');
+        } else {
+            $vmId = $proxmoxService->cloneUserVM($utilisateur->getLogin());
+            $utilisateur->setProxmoxVmid($vmId);
+            $entityManager->flush();
+
+            $this->addFlash('success', "Une VM a été ajouté à l'utilisateur " . $utilisateur->getLogin());
+            return $this->redirectToRoute('listeUtilisateurs');
+        }
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     */
+    #[IsGranted(new Expression("is_granted('ROLE_ADMIN')"))]
+    #[Route('/panneauadmin/listeutilisateurs/{login}/suppressionVM', name: 'supprimerVmUtilisateur', methods: ['GET'])]
+    public function suppressionVmUtilisateur(?Utilisateur $utilisateur, ProxmoxService $proxmoxService, EntityManagerInterface $entityManager) : Response {
+        if($utilisateur === null) {
+            $this->addFlash('error', "L'utilisateur n'existe pas");
+            return $this->redirectToRoute('listeUtilisateurs');
+        } else if($utilisateur->getProxmoxVmid() === null) {
+            $this->addFlash('error', "Cette Utilisateur n'a pas de VM actif");
+            return $this->redirectToRoute('listeUtilisateurs');
+        } else {
+            $proxmoxService->deleteVM($utilisateur->getProxmoxVmid());
+            $utilisateur->setProxmoxVmid(null);
+            $entityManager->flush();
+
+            $this->addFlash('success', "La VM a été supprimé à l'utilisateur " . $utilisateur->getLogin());
+            return $this->redirectToRoute('listeUtilisateurs');
+        }
     }
 
 }

@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Utilisateur;
+use App\Repository\UtilisateurRepository;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -11,7 +12,8 @@ class UtilisateurManager implements UtilisateurManagerInterface
 {
 
     public function __construct(
-        private UserPasswordHasherInterface $passwordHasher
+        private UserPasswordHasherInterface $passwordHasher,
+        private UtilisateurRepository $utilisateurRepository
     ){}
 
     /**
@@ -27,6 +29,10 @@ class UtilisateurManager implements UtilisateurManagerInterface
      */
     public function processNewUtilisateur(Utilisateur $utilisateur, ?string $plainPassword) : void {
         $this->chiffrerMotDePasse($utilisateur, $plainPassword);
+    }
+
+    public function getUtilisateursAvecVm() : array {
+        return $this->utilisateurRepository->getUtilisateursAvecVm();
     }
 
 }

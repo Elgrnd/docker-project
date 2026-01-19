@@ -1,10 +1,10 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}<title>Liste des conteneurs</title> {% endblock %}
-{% block scriptJs %}<script src="{{ asset('js/searchContainers.js') }}"></script>{% endblock %}
+{% block scriptJs %}
+    <script src="{{ asset('js/searchContainers.js') }}"></script>{% endblock %}
 
 {% block page_content %}
-<main>
     <h2 class="mb-4">Conteneurs Docker en cours d’exécution</h2>
 
     <div class="mb-3">
@@ -14,30 +14,144 @@
     <table class="table table-striped" id="containersTable">
         <thead>
         <tr>
-            <th>Nom</th>
+            <th>User</th>
+            <th>Name</th>
             <th>ID</th>
-            <th>Statut</th>
+            <th>Status</th>
+            <th>Actions</th>
         </tr>
         </thead>
+
         <tbody>
         {% for c in containers %}
             <tr>
+                <td>{{ c.user }}</td>
                 <td>{{ c.name }}</td>
                 <td>{{ c.id }}</td>
                 <td>{{ c.status }}</td>
                 <td>
-                    <a href="{{ path('container_start', {'id': c.id}) }}" class="btn btn-success btn-sm">Run</a>
-                    <a href="{{ path('container_stop', {'id': c.id}) }}" class="btn btn-warning btn-sm">Down</a>
-                    <a href="{{ path('container_remove', {'id': c.id}) }}" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ce conteneur ?')">Delete</a>
-                </td>
+                    <a href="{{ path('container_start', {'vmid': c.vmid, 'id': c.id}) }}" class="btn btn-success btn-sm">Run</a>
+                    <a href="{{ path('container_stop', {'vmid': c.vmid, 'id': c.id}) }}" class="btn btn-warning btn-sm">Down</a>
 
+                    {% if 'Exited' in c.status %}
+                        <a href="{{ path('container_remove', {'vmid': c.vmid, 'id': c.id}) }}"
+                           class="btn btn-danger btn-sm"
+                           onclick="return confirm('Supprimer ce conteneur ?')">Delete</a>
+                    {% endif %}
+                </td>
             </tr>
+
         {% else %}
             <tr>
-                <td colspan="3" class="text-center">Aucun conteneur trouvé.</td>
+                <td colspan="5" class="text-center">Aucun conteneur trouvé.</td>
             </tr>
         {% endfor %}
         </tbody>
     </table>
-</main>
+
+    <hr class="my-5">
+
+    <h2 class="mb-4">Monitoring des machines virtuelles Proxmox</h2>
+
+    {% if vms is empty %}
+        <p class="text-center text-muted">Aucune VM détectée.</p>
+    {% else %}
+        <table class="table table-bordered table-hover">
+            <thead class="table-dark">
+            <tr>
+                <th>VMID</th>
+                <th>Nom</th>
+                <th>Statut</th>
+                <th>CPU (%)</th>
+                <th>RAM (Mo)</th>
+                <th>Disque (Mo)</th>
+                <th>Uptime</th>
+                {% if is_granted('ROLE_ADMIN') %}
+                    <th>Actions</th>
+                {% endif %}
+            </tr>
+            </thead>
+
+            <tbody>
+            {% for vm in vms %}
+                <tr>
+                    <td>{{ vm.vmid }}</td>
+                    <td>{{ vm.name }}</td>
+
+                    <td>
+                        {% if vm.status == 'running' %}
+                            <span class="badge bg-success">Running</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ vm.status }}</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if vm.cpu is not null %}
+                            {{ (vm.cpu * 100)|number_format(1, '.', '') }} %
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if vm.mem and vm.maxmem %}
+                            {{ (vm.mem / 1024 / 1024)|number_format(0) }}
+                            /
+                            {{ (vm.maxmem / 1024 / 1024)|number_format(0) }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% set diskUsedBytes = (vm.disk ?? 0) + (vm.diskread ?? 0) + (vm.diskwrite ?? 0) %}
+                        {% set diskTotalBytes = vm.maxdisk ?? 0 %}
+
+                        {% if diskTotalBytes > 0 %}
+                            {% set diskUsedMb = (diskUsedBytes / 1024 / 1024) %}
+
+                            {# Valeur minimale forcée : 0.6 Mo #}
+                            {% if diskUsedMb < 0.6 %}
+                                {% set diskUsedMb = 0.6 %}
+                            {% endif %}
+
+                            {% set diskTotalMb = diskTotalBytes / 1024 / 1024 %}
+
+                            {{ diskUsedMb|number_format(1, '.', ' ') }}
+                            /
+                            {{ diskTotalMb|number_format(0, '.', ' ') }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if vm.uptime %}
+                            {% if vm.uptime < 3600 %}
+                                {{ (vm.uptime / 60)|number_format(0) }} min
+                            {% else %}
+                                {{ (vm.uptime / 3600)|number_format(1) }} h
+                            {% endif %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+
+                    {% if is_granted('ROLE_ADMIN') %}
+                        <td>
+                            <a href="{{ path('admin_vm_start', {'vmid': vm.vmid}) }}"
+                               class="btn btn-success btn-sm">Start</a>
+                            <a href="{{ path('admin_vm_stop', {'vmid': vm.vmid}) }}"
+                               class="btn btn-warning btn-sm">Stop</a>
+                            <a href="{{ path('admin_vm_delete', {'vmid': vm.vmid}) }}" class="btn btn-danger btn-sm"
+                               onclick="return confirm('Supprimer cette VM ?')">Delete</a>
+                        </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
 {% endblock %}

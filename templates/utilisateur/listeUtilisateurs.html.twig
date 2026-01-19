@@ -18,6 +18,7 @@
                 <th>Login</th>
                 <th>ID</th>
                 <th>Rôles</th>
+                <th>Actions</th>
             </tr>
             </thead>
             <tbody>
@@ -39,10 +40,17 @@
                             {% endfor %}
                         </select>
                     </td>
+                    <td>
+                        {% if u.proxmoxVmid is null %}
+                            <a href="{{ path('creerVmUtilisateur', {'login': u.login}) }}" class="btn btn-success btn-sm">Creer VM</a>
+                        {% else  %}
+                            <a href="{{ path('supprimerVmUtilisateur', {'login': u.login}) }}" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ce conteneur ?')">Supprimer VM</a>
+                        {% endif %}
+                    </td>
                 </tr>
             {% else %}
                 <tr>
-                    <td colspan="3" class="text-center">Aucun utilisateur trouvé.</td>
+                    <td colspan="4" class="text-center">Aucun utilisateur trouvé.</td>
                 </tr>
             {% endfor %}
             </tbody>

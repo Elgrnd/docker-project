@@ -2,39 +2,142 @@
 
 namespace App\Controller;
 
+use App\Entity\YamlFile;
 use App\Service\DockerService;
-use phpDocumentor\Reflection\Types\This;
+use App\Service\ProxmoxService;
+use App\Service\UtilisateurManagerInterface;
+use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Throwable;
+
 
 final class DockerController extends AbstractController
 {
-    #[IsGranted("ROLE_USER")]
-    #[Route('/containers', name: 'listContainers')]
-    public function list(DockerService $dockerService): Response
-    {
-        $containers = $dockerService->listContainers();
 
-        $newContainer = [];
-        foreach ($containers as $container)
-        {
-            if(str_contains($container['name'], 'user_' . $this->getUser()->getUserIdentifier())) {
-                $newContainer[] = $container;
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
+     */
+    #[Route('/containers', name: 'listContainers')]
+    public function list(
+        DockerService               $dockerService,
+        ProxmoxService              $proxmoxService,
+        UtilisateurManagerInterface $utilisateurManager,
+    ): Response {
+
+        if($this->getUser()->getVmStatus() == "none") {
+            $this->addFlash("error", "Vous n'avez pas encore créer de VM");
+            return $this->redirectToRoute('index');
+        }
+        if ($this->getUser()->getVmStatus() !== "ready") {
+            $this->addFlash("error", "Votre VM n'est pas encore prête !");
+            return $this->redirectToRoute('index');
+        }
+
+        $user = $this->getUser();
+        $containers = [];
+        $vms = [];
+
+        if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+            $users = $utilisateurManager->getUtilisateursAvecVm();
+            foreach ($users as $userWithVm) {
+                try {
+                    $vmIp = $proxmoxService->getVMIp($userWithVm->getProxmoxVmid());
+                } catch (Exception $e) {
+                    $this->addFlash('error', "le QGA n'est pas encore prêt pour la VM");
+                    return $this->redirectToRoute("index");
+                }
+                if ($vmIp) {
+                    $userContainers = $dockerService->listContainers($vmIp);
+                    foreach ($userContainers as &$userContainer) {
+                        $userContainer['user'] = $userWithVm->getLogin();
+                        $userContainer['vmid'] = $userWithVm->getProxmoxVmid();
+                    }
+                    $containers = array_merge($containers, $userContainers);
+                }
             }
+        } else {
+            if ($user->getProxmoxVmid()) {
+                try {
+                    $vmIp = $proxmoxService->getVMIp($user->getProxmoxVmid());
+                } catch (Exception $e) {
+                    $this->addFlash('error', "le QGA n'est pas encore prêt pour la VM");
+                    return $this->redirectToRoute("index");
+                }
+                if ($vmIp) {
+                    $containers = $dockerService->listContainers($vmIp);
+                    foreach ($containers as &$container) {
+                        $container['user'] = $user->getLogin();
+                        $container['vmid'] = $user->getProxmoxVmid();
+                    }
+                }
+            }
+        }
+
+        // ---- MONITORING DES VM (TOUS LES UTILISATEURS) ----
+        try {
+            if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+                // Admin : vue globale de toutes les VM
+                $vms = $proxmoxService->getAdminVmOverview();
+            } else {
+                // Utilisateur normal : seulement sa VM
+                $vmid = $user->getProxmoxVmid();
+                if ($vmid) {
+                    $runtime = $proxmoxService->getVMRuntimeStatus((int) $vmid);
+
+                    $vms = [[
+                        'vmid'    => $vmid,
+                        'name'    => 'VM ' . $user->getLogin(),
+                        'status'  => $runtime['status']  ?? 'unknown',
+                        'cpu'     => $runtime['cpu']     ?? null,
+                        'maxcpu'  => $runtime['maxcpu']  ?? null,
+                        'mem'     => $runtime['mem']     ?? null,
+                        'maxmem'  => $runtime['maxmem']  ?? null,
+                        'disk'    => $runtime['disk']    ?? null,
+                        'maxdisk' => $runtime['maxdisk'] ?? null,
+                        'uptime'  => $runtime['uptime']  ?? null,
+                    ]];
+                } else {
+                    $vms = [];
+                }
+            }
+        } catch (Throwable $e) {
+            $this->addFlash('error', 'Impossible de récupérer les informations de la VM : ' . $e->getMessage());
+            $vms = [];
         }
         $containers = $newContainer;
 
         return $this->render('docker/listContainers.html.twig', [
-            'containers' => $containers,
-            'controller_name' => 'DockerController',
+            'containers'       => $containers,
+            'vms'              => $vms,
+            'controller_name'  => 'DockerController',
         ]);
     }
-    #[Route('/container/{id}/start', name: 'container_start')]
-    public function start(string $id, DockerService $dockerService): Response
+
+
+
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
+     */
+    #[Route('/container/{vmid}/{id}/start', name: 'container_start')]
+    public function start(string $id, string $vmid, DockerService $dockerService, ProxmoxService $proxmoxService): Response
     {
-        $result = $dockerService->startContainer($id);
+        $vmIp = $proxmoxService->getVMIp($vmid);
+        $result = $dockerService->startContainer($id, $vmIp);
 
         if ($result['success']) {
             $this->addFlash('success', 'Container started successfully.');
@@ -42,13 +145,21 @@ final class DockerController extends AbstractController
             $this->addFlash('error', $result['message']);
         }
 
-        return $this->redirectToRoute('listContainers');
+        return $this->redirectToRoute("listContainers");
     }
 
-    #[Route('/container/{id}/stop', name: 'container_stop')]
-    public function stop(string $id, DockerService $dockerService): Response
+
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
+     */
+    #[Route('/container/{vmid}/{id}/stop', name: 'container_stop')]
+    public function stop(string $id, string $vmid, DockerService $dockerService, ProxmoxService $proxmoxService): Response
     {
-        $result = $dockerService->stopContainer($id);
+        $vmIp = $proxmoxService->getVMIp($vmid);
+        $result = $dockerService->stopContainer($id, $vmIp);
 
         if ($result['success']) {
             $this->addFlash('success', 'Container stopped successfully.');
@@ -59,10 +170,17 @@ final class DockerController extends AbstractController
         return $this->redirectToRoute('listContainers');
     }
 
-    #[Route('/container/{id}/remove', name: 'container_remove')]
-    public function remove(string $id, DockerService $dockerService): Response
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
+     */
+    #[Route('/container/{vmid}/{id}/remove', name: 'container_remove')]
+    public function remove(string $id, string $vmid, DockerService $dockerService, ProxmoxService $proxmoxService): Response
     {
-        $result = $dockerService->removeContainer($id);
+        $vmIp = $proxmoxService->getVMIp($vmid);
+        $result = $dockerService->removeContainer($id, $vmIp);
 
         if ($result['success']) {
             $this->addFlash('success', 'Container removed successfully.');
@@ -71,6 +189,151 @@ final class DockerController extends AbstractController
         }
 
         return $this->redirectToRoute('listContainers');
+    }
+
+    #[Route('/admin/vm/{vmid}/start', name: 'admin_vm_start')]
+    #[IsGranted('ROLE_ADMIN')]
+    public function adminStartVm(string $vmid, ProxmoxService $proxmoxService): Response
+    {
+        try {
+            $ok = $proxmoxService->startVM($vmid);
+            if ($ok) {
+                $this->addFlash('success', "VM $vmid démarrée avec succès.");
+            } else {
+                $this->addFlash('error', "Impossible de démarrer la VM $vmid.");
+            }
+        } catch (Throwable $e) {
+            $this->addFlash('error', "Erreur lors du démarrage de la VM $vmid : " . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('listContainers');
+    }
+
+    #[Route('/admin/vm/{vmid}/stop', name: 'admin_vm_stop')]
+    #[IsGranted('ROLE_ADMIN')]
+    public function adminStopVm(string $vmid, ProxmoxService $proxmoxService): Response
+    {
+        try {
+            $ok = $proxmoxService->stopVM($vmid);
+            if ($ok) {
+                $this->addFlash('success', "VM $vmid arrêtée avec succès.");
+            } else {
+                $this->addFlash('error', "Impossible d'arrêter la VM $vmid.");
+            }
+        } catch (Throwable $e) {
+            $this->addFlash('error', "Erreur lors de l'arrêt de la VM $vmid : " . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('listContainers');
+    }
+
+    #[Route('/admin/vm/{vmid}/delete', name: 'admin_vm_delete')]
+    #[IsGranted('ROLE_ADMIN')]
+    public function adminDeleteVm(string $vmid, ProxmoxService $proxmoxService): Response
+    {
+        try {
+            $ok = $proxmoxService->deleteVM($vmid);
+            if ($ok) {
+                $this->addFlash('success', "VM $vmid supprimée avec succès.");
+            } else {
+                $this->addFlash('error', "Impossible de supprimer la VM $vmid.");
+            }
+        } catch (Throwable $e) {
+            $this->addFlash('error', "Erreur lors de la suppression de la VM $vmid : " . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('listContainers');
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
+     */
+    #[Route('/yaml/deploy/{id}', name: 'deploy_yaml_file', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
+    public function deployYamlInVm(
+        YamlFile $yaml,
+        DockerService $dockerService,
+        ProxmoxService $proxmoxService
+    ): Response {
+        try {
+            $content = $yaml->getBodyFile();
+            $baseName = $yaml->getNameFile() ?? 'compose.yaml';
+
+            $projectName = preg_replace('/[^a-z0-9_]/', '_', strtolower(pathinfo($baseName, PATHINFO_FILENAME)));
+            $remotePath = $projectName . '_' . uniqid() . '.yaml';
+
+            $vmId = $this->getUser()->getProxmoxVmid();
+            if (!$vmId) {
+                throw new Exception("L'utilisateur n'a pas de VMID Proxmox.");
+            }
+
+            $vmIp = $proxmoxService->getVMIp($vmId);
+            if (!$vmIp) {
+                throw new Exception("Impossible de récupérer l'IP de la VM.");
+            }
+
+            $uploadError = $dockerService->sendFileToVm($content, $remotePath, $vmIp);
+            if (str_contains($uploadError, 'Permanently added')) {
+                $uploadError = '';
+            }
+
+            if (!empty($uploadError)) {
+                throw new Exception("Erreur SCP vers la VM: " . $uploadError);
+            }
+
+            $cmd = sprintf('/usr/bin/docker compose -p %s -f %s up -d 2>&1', escapeshellarg($projectName), escapeshellarg($remotePath));
+            $output = $dockerService->runInVm($cmd, $vmIp);
+
+            $lines = explode("\n", $output);
+
+            $important = array_filter($lines, fn($line) =>
+                str_contains(strtolower($line), 'error') ||
+                str_contains(strtolower($line), 'warning')
+            );
+
+            if (!empty($important)) {
+                $msg = implode("\n", $important);
+                throw new Exception("Erreur détectée pendant le déploiement :\n" . $msg);
+            }
+
+            $this->addFlash('success', "Déploiement OK : " . $baseName);
+
+        } catch (Throwable $e) {
+            $this->addFlash('error', "ERREUR : " . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('repertoire');
+    }
+
+    #[IsGranted('ROLE_USER')]
+    #[Route('/vm/status', name: 'vm_status', methods: ['GET'])]
+    public function vmStatus(): JsonResponse
+    {
+        $user = $this->getUser();
+
+        return new JsonResponse([
+            'status' => $user->getVmStatus() ?? null
+        ]);
+    }
+
+    #[Route('/vm/create', name: 'vm_create', methods: ['POST'])]
+    public function createVm(EntityManagerInterface $entityManager, ProxmoxService $proxmoxService): JsonResponse
+    {
+        $user = $this->getUser();
+
+        if ($user->getProxmoxVmid() !== null) {
+            return new JsonResponse(['status' => 'already_exists'], 400);
+        }
+
+        $user->setVmStatus('creating');
+        $entityManager->flush();
+
+        $proxmoxService->cloneUserVmAsynchrone($user->getLogin());
+
+        return new JsonResponse(['status' => 'creating']);
     }
 
 

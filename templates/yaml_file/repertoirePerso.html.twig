@@ -146,8 +146,25 @@
                                     </button>
                                 </div>
                             </div>
-                        {% endif %}
-                    </div>
+                            <div class="file-actions">
+                                <i class="bi bi-eye view-icon" title="Afficher"
+                                   onclick="afficherContenuYamlFile('{{ uyr.yamlFile.bodyFile|escape('js') }}')"></i>
+                                <i class="bi bi-download download-icon" title="Télécharger"></i>
+                                <a href="{{ path('modifierYamlFile', {"id": uyr.yamlFile.id}) }}">
+                                    <i class="bi bi-pencil edit-icon" title="Modifier"></i>
+                                </a>
+                                <a href="{{ path('deploy_yaml_file', {'id': uyr.yamlFile.id}) }}" title="Déployer sur VM">
+                                    <i class="bi bi-rocket-takeoff deploy-icon"></i>
+                                </a>
+
+                                <button data-fichier-id="{{ uyr.yamlFile.id }}" class="supprimerFichier"
+                                        data-csrf-token="{{ csrf_token('delete' ~ uyr.yamlFile.id) }}">
+                                    <i class="bi bi-trash bin-icon" title="Supprimer"></i>
+                                </button>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
                 {% endfor %}
 
                 {# Afficher récursivement les sous-répertoires #}
@@ -242,6 +259,19 @@
             display: flex;
             align-items: center;
         }
+
+        .deploy-icon-btn {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            color: inherit;
+        }
+
+        .deploy-icon-btn:hover .deploy-icon {
+            color: #0d6efd;
+        }
+Z
 
         .supprimerFichier {
             background: none;

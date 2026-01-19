@@ -55,6 +55,9 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Groupe::class, mappedBy: 'etreChef', orphanRemoval: true)]
     private Collection $etrechef;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $proxmoxVmid = null;
+
     /**
      * @var Collection<int, UtilisateurGroupe>
      */
@@ -79,6 +82,9 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 500, nullable: true)]
     private ?string $gitlabUrl = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $vmStatus = null;
 
     public function __construct()
     {
@@ -312,4 +318,27 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return null;
     }
 
+    public function getProxmoxVmid(): ?int
+    {
+        return $this->proxmoxVmid;
+    }
+
+    public function setProxmoxVmid(?int $proxmoxVmid): static
+    {
+        $this->proxmoxVmid = $proxmoxVmid;
+
+        return $this;
+    }
+
+    public function getVmStatus(): ?string
+    {
+        return $this->vmStatus;
+    }
+
+    public function setVmStatus(?string $vmStatus): static
+    {
+        $this->vmStatus = $vmStatus;
+
+        return $this;
+    }
 }

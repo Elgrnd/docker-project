@@ -6,17 +6,71 @@ class DockerService
 {
 
     private string $dockerPath = '/usr/bin/docker';
+    private string $sshUser = 'root';
+    private string $sshPrivateKey = '/var/www/.ssh/projet_vm_id_rsa';
+    private string $hoteProxMoxIp;
 
-    public function listContainers(): ?array
+    public function __construct()
     {
+        $this->hoteProxMoxIp = $_ENV['PROXMOX_HOTE'];
+    }
 
-        $cmd = "$this->dockerPath ps -a --format \"{{.ID}}|{{.Names}}|{{.Status}}\" 2>&1";
-        $output = shell_exec($cmd);
+    public function runInVm(string $cmd, string $vmIp): string {
+        $proxyCmd = sprintf(
+            'ssh -i %s -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -W %%h:%%p %s@%s',
+            escapeshellarg($this->sshPrivateKey),
+            $this->sshUser,
+            $this->hoteProxMoxIp
+        );
+
+        $sshCommand = 'ssh -i ' . escapeshellarg($this->sshPrivateKey)
+            . ' -o UserKnownHostsFile=/dev/null'
+            . ' -o StrictHostKeyChecking=no'
+            . ' -o ProxyCommand="' . $proxyCmd . '"'
+            . ' ' . escapeshellarg($this->sshUser . '@' . $vmIp)
+            . ' ' . escapeshellarg($cmd);
+
+        return trim(shell_exec($sshCommand));
+    }
+
+    public function sendFileToVm(string $content, string $remotePath, string $vmIp): string
+    {
+        $tmpFile = tempnam(sys_get_temp_dir(), 'yaml_');
+        file_put_contents($tmpFile, $content);
+
+        $proxyCmd = sprintf(
+            'ssh -i %s -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -W %%h:%%p %s@%s',
+            escapeshellarg($this->sshPrivateKey),
+            $this->sshUser,
+            $this->hoteProxMoxIp
+        );
+
+        $scpCommand =
+            'scp -i ' . escapeshellarg($this->sshPrivateKey)
+            . ' -o UserKnownHostsFile=/dev/null'
+            . ' -o StrictHostKeyChecking=no'
+            . ' -o ProxyCommand="' . $proxyCmd . '"'
+            . ' ' . escapeshellarg($tmpFile)
+            . ' ' . escapeshellarg($this->sshUser . '@' . $vmIp . ':' . $remotePath);
+
+        $output = shell_exec($scpCommand . ' 2>&1');
+        unlink($tmpFile);
+
+        return trim($output ?? '');
+    }
+
+
+
+    public function listContainers(string $vmIp): array
+    {
+        $cmd = $this->dockerPath . ' ps -a --format "{{.ID}}|{{.Names}}|{{.Status}}"';
+        $output = $this->runInVm($cmd, $vmIp);
 
         $containers = [];
 
 
         $lines = array_filter(array_map('trim', explode("\n", $output)));
+
 
         foreach ($lines as $line) {
             {
@@ -34,35 +88,29 @@ class DockerService
         return null;
     }
 
-    public function startContainer(string $id): array
+    public function startContainer(string $id, $vmIp): array
     {
-        return $this->executeCommand("start", $id);
+        return $this->executeCommand("start", $id, $vmIp);
     }
 
-    public function stopContainer(string $id): array
+    public function stopContainer(string $id, $vmIp): array
     {
-        return $this->executeCommand("stop", $id);
+        return $this->executeCommand("stop", $id, $vmIp);
     }
 
-    public function removeContainer(string $id): array
+    public function removeContainer(string $id, $vmIp): array
     {
-        return $this->executeCommand("rm", $id);
+        return $this->executeCommand("rm", $id, $vmIp);
     }
 
-    private function executeCommand(string $action, string $id) : array {
-        $command = $this->dockerPath . " " . escapeshellcmd($action) . " " . escapeshellarg($id) . " 2>&1";
-        exec($command, $output, $returnCode);
-        if ($returnCode === 0) {
-            return [
-                'success' => true,
-                'message' => "Container $action successful: " . implode(' ', $output)
-            ];
-        } else {
-            return [
-                'success' => false,
-                'message' => "Error while running '$action' on container $id: " . implode(' ', $output)
-            ];
-        }
+    private function executeCommand(string $action, string $id, $vmIp): array
+    {
+        $command = "$this->dockerPath $action $id 2>&1";
+        $output = $this->runInVm($command, $vmIp);
+        return [
+            'success' => str_contains($output, $id) || str_contains($output, 'running'),
+            'message' => trim($output),
+        ];
     }
 
 

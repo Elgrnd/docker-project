@@ -34,6 +34,15 @@ class UtilisateurRepository extends ServiceEntityRepository implements PasswordU
         $this->getEntityManager()->flush();
     }
 
+    public function getUtilisateursAvecVm(): array
+    {
+        return $this->createQueryBuilder('u')
+            ->where('u.proxmoxVmid IS NOT NULL')
+            ->getQuery()
+            ->getResult();
+    }
+
+
     public function findAllExcept(Utilisateur $utilisateur): array
     {
         return $this->createQueryBuilder('u')

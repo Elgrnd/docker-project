@@ -16,6 +16,7 @@ use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Throwable;
 
 
 final class DockerController extends AbstractController
@@ -105,7 +106,7 @@ final class DockerController extends AbstractController
                     $vms = [];
                 }
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->addFlash('error', 'Impossible de récupérer les informations de la VM : ' . $e->getMessage());
             $vms = [];
         }
@@ -194,7 +195,7 @@ final class DockerController extends AbstractController
             } else {
                 $this->addFlash('error', "Impossible de démarrer la VM $vmid.");
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->addFlash('error', "Erreur lors du démarrage de la VM $vmid : " . $e->getMessage());
         }
 
@@ -212,7 +213,7 @@ final class DockerController extends AbstractController
             } else {
                 $this->addFlash('error', "Impossible d'arrêter la VM $vmid.");
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->addFlash('error', "Erreur lors de l'arrêt de la VM $vmid : " . $e->getMessage());
         }
 
@@ -230,7 +231,7 @@ final class DockerController extends AbstractController
             } else {
                 $this->addFlash('error', "Impossible de supprimer la VM $vmid.");
             }
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->addFlash('error', "Erreur lors de la suppression de la VM $vmid : " . $e->getMessage());
         }
 
@@ -279,15 +280,21 @@ final class DockerController extends AbstractController
             $output = $dockerService->runInVm($cmd, $vmIp);
 
             $lines = explode("\n", $output);
-            $important = array_filter($lines, fn($line) => str_contains(strtolower($line), 'error') || str_contains(strtolower($line), 'warning'));
+
+            $important = array_filter($lines, fn($line) =>
+                str_contains(strtolower($line), 'error') ||
+                str_contains(strtolower($line), 'warning')
+            );
+
             if (!empty($important)) {
-                $this->addFlash('danger', implode("\n", $important));
-            } else {
-                $this->addFlash('success', "Déploiement OK : " . $baseName);
+                $msg = implode("\n", $important);
+                throw new Exception("Erreur détectée pendant le déploiement :\n" . $msg);
             }
 
-        } catch (\Throwable $e) {
-            $this->addFlash('danger', "ERREUR : " . $e->getMessage());
+            $this->addFlash('success', "Déploiement OK : " . $baseName);
+
+        } catch (Throwable $e) {
+            $this->addFlash('error', "ERREUR : " . $e->getMessage());
         }
 
         return $this->redirectToRoute('repertoire');

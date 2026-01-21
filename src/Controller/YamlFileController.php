@@ -282,7 +282,7 @@ final class YamlFileController extends AbstractController
         return $this->render('yaml_file/bibliotheque.html.twig', ["fichiers" => $fichiers]);
     }
 
-    #[IsGranted("ROLE_PROF")]
+    #[IsGranted("ROLE_PROFESSEUR")]
     #[Route('/bibliotheque/upload', name: 'biblio_upload', methods: ['GET', 'POST'])]
     public function upload_biblio(
         Request $request,

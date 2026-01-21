@@ -247,7 +247,6 @@ final class RepertoireController extends AbstractController
         }
 
         $repertoireService->addRepertoireToZip($repertoire, $zip, '');
-
         $zip->close();
 
         return $this->file($zipPath, $repertoire->getName() . '.zip')

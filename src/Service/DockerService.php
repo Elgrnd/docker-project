@@ -15,20 +15,33 @@ class DockerService
         $this->hoteProxMoxIp = $_ENV['PROXMOX_HOTE'];
     }
 
-    public function runInVm(string $cmd, string $vmIp): string {
-        $proxyCmd = sprintf(
+    private function buildProxyCommand(): string
+    {
+        return sprintf(
             'ssh -i %s -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -W %%h:%%p %s@%s',
             escapeshellarg($this->sshPrivateKey),
             $this->sshUser,
             $this->hoteProxMoxIp
         );
+    }
 
-        $sshCommand = 'ssh -i ' . escapeshellarg($this->sshPrivateKey)
-            . ' -o UserKnownHostsFile=/dev/null'
-            . ' -o StrictHostKeyChecking=no'
-            . ' -o ProxyCommand="' . $proxyCmd . '"'
-            . ' ' . escapeshellarg($this->sshUser . '@' . $vmIp)
-            . ' ' . escapeshellarg($cmd);
+    private function getSshBaseOptions(): string
+    {
+        return sprintf(
+            '-i %s -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ProxyCommand="%s"',
+            escapeshellarg($this->sshPrivateKey),
+            $this->buildProxyCommand()
+        );
+    }
+
+
+    public function runInVm(string $cmd, string $vmIp): string {
+        $sshCommand = sprintf(
+            'ssh %s %s %s',
+            $this->getSshBaseOptions(),
+            escapeshellarg($this->sshUser . '@' . $vmIp),
+            escapeshellarg($cmd)
+        );
 
         return trim(shell_exec($sshCommand));
     }
@@ -38,20 +51,12 @@ class DockerService
         $tmpFile = tempnam(sys_get_temp_dir(), 'yaml_');
         file_put_contents($tmpFile, $content);
 
-        $proxyCmd = sprintf(
-            'ssh -i %s -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -W %%h:%%p %s@%s',
-            escapeshellarg($this->sshPrivateKey),
-            $this->sshUser,
-            $this->hoteProxMoxIp
+        $scpCommand = sprintf(
+            'scp %s %s %s',
+            $this->getSshBaseOptions(),
+            escapeshellarg($tmpFile),
+            escapeshellarg($this->sshUser . '@' . $vmIp . ':' . $remotePath)
         );
-
-        $scpCommand =
-            'scp -i ' . escapeshellarg($this->sshPrivateKey)
-            . ' -o UserKnownHostsFile=/dev/null'
-            . ' -o StrictHostKeyChecking=no'
-            . ' -o ProxyCommand="' . $proxyCmd . '"'
-            . ' ' . escapeshellarg($tmpFile)
-            . ' ' . escapeshellarg($this->sshUser . '@' . $vmIp . ':' . $remotePath);
 
         $output = shell_exec($scpCommand . ' 2>&1');
         unlink($tmpFile);

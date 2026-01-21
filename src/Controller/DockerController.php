@@ -29,6 +29,7 @@ final class DockerController extends AbstractController
      * @throws RedirectionExceptionInterface
      * @throws ClientExceptionInterface
      */
+    #[IsGranted('ROLE_USER')]
     #[Route('/containers', name: 'listContainers')]
     public function list(
         DockerService               $dockerService,
@@ -132,6 +133,7 @@ final class DockerController extends AbstractController
      * @throws RedirectionExceptionInterface
      * @throws ClientExceptionInterface
      */
+    #[IsGranted('ROLE_USER')]
     #[Route('/container/{vmid}/{id}/start', name: 'container_start')]
     public function start(string $id, string $vmid, DockerService $dockerService, ProxmoxService $proxmoxService): Response
     {
@@ -154,6 +156,7 @@ final class DockerController extends AbstractController
      * @throws RedirectionExceptionInterface
      * @throws ClientExceptionInterface
      */
+    #[IsGranted('ROLE_USER')]
     #[Route('/container/{vmid}/{id}/stop', name: 'container_stop')]
     public function stop(string $id, string $vmid, DockerService $dockerService, ProxmoxService $proxmoxService): Response
     {
@@ -175,6 +178,7 @@ final class DockerController extends AbstractController
      * @throws RedirectionExceptionInterface
      * @throws ClientExceptionInterface
      */
+    #[IsGranted('ROLE_USER')]
     #[Route('/container/{vmid}/{id}/remove', name: 'container_remove')]
     public function remove(string $id, string $vmid, DockerService $dockerService, ProxmoxService $proxmoxService): Response
     {
@@ -318,6 +322,7 @@ final class DockerController extends AbstractController
         ]);
     }
 
+    #[IsGranted('ROLE_USER')]
     #[Route('/vm/create', name: 'vm_create', methods: ['POST'])]
     public function createVm(EntityManagerInterface $entityManager, ProxmoxService $proxmoxService): JsonResponse
     {

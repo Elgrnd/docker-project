@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Groupe;
 use App\Entity\Repertoire;
 use App\Repository\RepertoireRepository;
+use App\Service\DockerService;
 use App\Service\RepertoireService;
 use App\Repository\YamlFileRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -252,4 +253,30 @@ final class RepertoireController extends AbstractController
         return $this->file($zipPath, $repertoire->getName() . '.zip')
             ->deleteFileAfterSend();
     }
+
+    #[IsGranted("ROLE_USER")]
+    #[Route('/repertoire/copier-vm-direct/{id}', name: 'repertoire_copier_vm_direct')]
+    public function copierRepertoireDansVmDirect(
+        Repertoire $repertoire,
+        DockerService $dockerService
+    ): Response
+    {
+        $user = $this->getUser();
+        $vmIp = $user->getProxmoxVmid();
+
+        if ($user->getVmStatus() !== 'ready') {
+            $this->addFlash('error', "Votre VM n'est pas prête pour la copie du répertoire.");
+            return $this->redirectToRoute('repertoire_afficher', ['id' => $repertoire->getId()]);
+        }
+
+        $localPath = $repertoire->getFullPath();
+        $remotePath = '/root/' . $repertoire->getName();
+
+        $dockerService->sendDirectoryToVm($localPath, $remotePath, $vmIp);
+
+        $this->addFlash('success', "Répertoire copié avec succès dans votre VM !");
+
+        return $this->redirectToRoute('repertoire_afficher', ['id' => $repertoire->getId()]);
+    }
+
 }

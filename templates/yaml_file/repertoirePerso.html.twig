@@ -69,6 +69,14 @@
             📦 Télécharger en ZIP
         </a>
 
+        {% if app.user and app.user.vmStatus == 'ready' %}
+            <a href="{{ path('repertoire_copier_vm', {'id': repertoireRacine.id}) }}"
+               class="btn btn-primary mt-3">
+                ⬆️ Copier mon répertoire dans la VM
+            </a>
+        {% endif %}
+
+
         {# Arborescence des répertoires et fichiers #}
         <div class="card">
             <div class="card-header">

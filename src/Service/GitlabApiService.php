@@ -3,6 +3,8 @@
 namespace App\Service;
 
 use RuntimeException;
+use Symfony\Component\Yaml\Exception\ParseException;
+use Symfony\Component\Yaml\Yaml;
 
 class GitlabApiService
 {
@@ -22,12 +24,64 @@ class GitlabApiService
             return false;
         }
 
-        // Vérification que l'hôte est bien autorisé
         if (!in_array($parsed['host'], $this->allowedHosts, true)) {
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * Détecte un projet privé via l'URL web du projet (redirection vers /users/sign_in).
+     */
+    public function isPrivateProjectUrl(string $url): bool
+    {
+        $parsed = $this->parseGitlabUrl($url);
+        if (!$parsed) return false;
+
+        $projectWebUrl = "https://{$parsed['host']}/{$parsed['namespace']}/{$parsed['project']}";
+
+        $ch = curl_init($projectWebUrl);
+
+        curl_setopt_array($ch, [
+            CURLOPT_NOBODY => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => false, // on veut voir la redirection
+            CURLOPT_TIMEOUT => 5,
+            CURLOPT_CONNECTTIMEOUT => 3,
+            CURLOPT_HEADER => true,
+        ]);
+
+        $headers = curl_exec($ch);
+
+        if ($headers === false) {
+            curl_close($ch);
+            return false;
+        }
+
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if (in_array($httpCode, [301, 302, 303, 307, 308], true)) {
+            if (preg_match('#^Location:\s*(.+)$#mi', $headers, $m)) {
+                $location = trim($m[1]);
+                if (str_contains($location, '/users/sign_in')) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Vérifie que le token (PRIVATE-TOKEN) est valide via /api/v4/user.
+     * @throws GitlabApiException
+     */
+    public function assertTokenValid(string $host, string $privateToken): void
+    {
+        $url = "https://$host/api/v4/user";
+        $this->request($url, $privateToken);
     }
 
     private function projectExists(string $host, string $projectId): bool
@@ -57,18 +111,19 @@ class GitlabApiService
     }
 
     /**
-     * Vérifie qu'une URL GitLab pointe vers un projet réel et accessible.
+     * Vérifie que le projet est atteignable via /api/v4/projects/:id
+     * @throws GitlabApiException|RuntimeException
      */
-    public function isReachableGitlabProjectUrl(string $url): bool
+    public function assertProjectReachable(string $url, ?string $privateToken): void
     {
         $parsed = $this->parseGitlabUrl($url);
         if (!$parsed) {
-            return false;
+            throw new RuntimeException("URL GitLab invalide.");
         }
 
-        return $this->projectExists($parsed["host"], $parsed["projectId"]);
+        $apiUrl = "https://{$parsed['host']}/api/v4/projects/{$parsed['projectId']}";
+        $this->request($apiUrl, $privateToken);
     }
-
 
     public function parseGitlabUrl(string $url): ?array
     {
@@ -109,7 +164,7 @@ class GitlabApiService
         }
 
         $namespace = implode('/', $namespaceParts);
-        $projectId = urlencode("$namespace/$project");
+        $projectId = rawurlencode("$namespace/$project");
 
         return [
             "host" => $host,
@@ -122,52 +177,60 @@ class GitlabApiService
         ];
     }
 
-
-    public function request(string $url)
+    /**
+     * Appel API GitLab avec header PRIVATE-TOKEN optionnel.
+     * @throws GitlabApiException
+     */
+    public function request(string $url, ?string $privateToken = null)
     {
         $ch = curl_init($url);
+
+        $headers = [];
+        if ($privateToken) {
+            $headers[] = 'PRIVATE-TOKEN: ' . $privateToken;
+        }
 
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_TIMEOUT => 5,
-            CURLOPT_CONNECTTIMEOUT => 3,
+            CURLOPT_TIMEOUT => 8,
+            CURLOPT_CONNECTTIMEOUT => 4,
+            CURLOPT_HTTPHEADER => $headers,
         ]);
 
         $result = curl_exec($ch);
-
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
 
         curl_close($ch);
 
-        // Erreur réseau (DNS, timeout, etc.)
         if ($curlError) {
-            throw new \RuntimeException("Erreur cURL : $curlError");
+            throw new \RuntimeException("Impossible de contacter GitLab : $curlError", 0);
         }
 
-        // Erreur HTTP GitLab (403, 404, 500, etc.)
         if ($httpCode >= 400) {
-            throw new \RuntimeException("Erreur GitLab API HTTP $httpCode pour $url");
+            throw new GitlabApiException(
+                $httpCode,
+                "GitLab a refusé la requête (HTTP $httpCode).",
+                $url
+            );
         }
 
-        if (!$result) {
+        if ($result === false || $result === null || $result === '') {
             return null;
         }
 
         $decoded = json_decode($result, true);
-
         return $decoded === null ? $result : $decoded;
     }
+
 
     public function buildTree(array $items): array
     {
         $tree = [];
 
         foreach ($items as $item) {
-            // Validation minimale
             if (!isset($item['path']) || !isset($item['type'])) {
-                // skip or throw depending on your policy
                 continue;
             }
 
@@ -180,26 +243,21 @@ class GitlabApiService
                 if ($isLast) {
                     // Si déjà existant et contient des enfants, on doit MERGER intelligemment
                     if (isset($current[$part]) && isset($current[$part]['children'])) {
-                        // cas où on a d'abord créé le dossier via un chemin enfant
-                        // on garde les children et on complète les métadonnées
                         $current[$part]['type'] = $item['type'];
                         $current[$part]['path'] = $item['path'];
                     } else {
-                        // création normale de la feuille
                         $current[$part] = [
                             'type' => $item['type'],
                             'path' => $item['path']
                         ];
                     }
                 } else {
-                    // Créer le dossier s’il n'existe pas ou s'il a été créé comme feuille -> convertir en dossier
                     if (!isset($current[$part])) {
                         $current[$part] = [
                             'type' => 'tree',
                             'children' => []
                         ];
                     } elseif (!isset($current[$part]['children'])) {
-                        // Si l'entrée existe mais n'a pas 'children', on la convertit en dossier en préservant le path si besoin
                         $existing = $current[$part];
                         $current[$part] = [
                             'type' => 'tree',
@@ -208,16 +266,13 @@ class GitlabApiService
                         ];
                     }
 
-                    // Descendre
                     $current = &$current[$part]['children'];
                 }
             }
 
-            // Important : détruit la référence pour éviter effets de bord
             unset($current);
         }
 
-        // Optionnel : trier récursivement (dossiers avant fichiers, alphabétique)
         $this->sortTree($tree);
 
         return $tree;
@@ -225,7 +280,6 @@ class GitlabApiService
 
     private function sortTree(array &$nodes): void
     {
-        // Recurse on children and sort keys
         foreach ($nodes as $key => &$node) {
             if (isset($node['children']) && is_array($node['children'])) {
                 $this->sortTree($node['children']);
@@ -233,17 +287,50 @@ class GitlabApiService
         }
         unset($node);
 
-        // Sort so that folders appear before files, then alphabetical by key
         uasort($nodes, function ($a, $b) {
             $isTreeA = ($a['type'] ?? '') === 'tree';
             $isTreeB = ($b['type'] ?? '') === 'tree';
 
             if ($isTreeA !== $isTreeB) {
-                return $isTreeA ? -1 : 1; // tree first
+                return $isTreeA ? -1 : 1;
             }
 
-            // fallback on key names: we don't have keys here, so this comparator will preserve insertion order.
             return 0;
         });
+    }
+
+    /**
+     * Filtre une liste d'items GitLab "tree API" pour ne garder que les YAML
+     * non vides et parseables.
+     *
+     * @return array filtered items
+     */
+    public function filterValidYamlFiles(array $items, string $host, string $projectId, string $branch, ?string $token): array
+    {
+        return array_values(array_filter($items, function ($item) use ($host, $projectId, $branch, $token) {
+            if (!isset($item['path'])) return false;
+            if (($item['type'] ?? null) !== 'blob') return false;
+
+            $filename = basename($item['path']);
+            if (!preg_match('/^[^.].*\.ya?ml$/i', $filename)) return false;
+
+            $rawUrl = "https://$host/api/v4/projects/$projectId/repository/files/" . rawurlencode($item['path']) . "/raw?ref=$branch";
+
+            try {
+                $content = $this->request($rawUrl, $token);
+            } catch (\Throwable $e) {
+                return false;
+            }
+
+            if (!is_string($content) || trim($content) === '') return false;
+
+            try {
+                Yaml::parse($content);
+            } catch (ParseException $e) {
+                return false;
+            }
+
+            return true;
+        }));
     }
 }

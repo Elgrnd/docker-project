@@ -69,6 +69,14 @@
             📦 Télécharger en ZIP
         </a>
 
+        {% if app.user and app.user.vmStatus == 'ready' %}
+            <a href="{{ path('repertoire_copier_vm', {'id': repertoireRacine.id}) }}"
+               class="btn btn-primary mt-3">
+                ⬆️ Copier mon répertoire dans la VM
+            </a>
+        {% endif %}
+
+
         {# Arborescence des répertoires et fichiers #}
         <div class="card">
             <div class="card-header">
@@ -153,10 +161,11 @@
                                 <a href="{{ path('modifierYamlFile', {"id": uyr.yamlFile.id}) }}">
                                     <i class="bi bi-pencil edit-icon" title="Modifier"></i>
                                 </a>
+                                {% if app.user.vmStatus == 'ready'%}
                                 <a href="{{ path('deploy_yaml_file', {'id': uyr.yamlFile.id}) }}" title="Déployer sur VM">
                                     <i class="bi bi-rocket-takeoff deploy-icon"></i>
                                 </a>
-
+                                {% endif %}
                                 <button data-fichier-id="{{ uyr.yamlFile.id }}" class="supprimerFichier"
                                         data-csrf-token="{{ csrf_token('delete' ~ uyr.yamlFile.id) }}">
                                     <i class="bi bi-trash bin-icon" title="Supprimer"></i>

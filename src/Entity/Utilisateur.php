@@ -86,6 +86,13 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $vmStatus = null;
 
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
+    private ?string $gitlabTokenCipher = null;
+
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $gitlabTokenNonce = null;
+
+
     public function __construct()
     {
         $this->etrechef = new ArrayCollection();
@@ -341,4 +348,27 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+
+    public function getGitlabTokenCipher(): ?string
+    {
+        return $this->gitlabTokenCipher;
+    }
+
+    public function setGitlabTokenCipher(?string $gitlabTokenCipher): self
+    {
+        $this->gitlabTokenCipher = $gitlabTokenCipher;
+        return $this;
+    }
+
+    public function getGitlabTokenNonce(): ?string
+    {
+        return $this->gitlabTokenNonce;
+    }
+
+    public function setGitlabTokenNonce(?string $gitlabTokenNonce): self
+    {
+        $this->gitlabTokenNonce = $gitlabTokenNonce;
+        return $this;
+    }
+
 }

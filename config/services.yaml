@@ -27,3 +27,7 @@ services:
         arguments:
             $security: '@security.helper'
         tags: [ 'form.type' ]
+
+    App\Service\GitlabTokenCryptoService:
+        arguments:
+            $gitlabTokenKey: '%env(GITLAB_TOKEN_KEY)%'

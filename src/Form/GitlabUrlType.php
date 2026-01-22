@@ -2,12 +2,12 @@
 
 namespace App\Form;
 
-use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\Form\Extension\Core\Type\UrlType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-use Symfony\Component\OptionsResolver\OptionsResolver;
 use App\Entity\Utilisateur;
+use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\PasswordType;
+use Symfony\Component\Form\Extension\Core\Type\UrlType;
+use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class GitlabUrlType extends AbstractType
 {
@@ -18,10 +18,18 @@ class GitlabUrlType extends AbstractType
                 'label' => 'URL GitLab du projet',
                 'required' => true,
                 'attr' => [
-                    'placeholder' => 'ex : https://gitlab.com/organisation/projet/-/tree/main',
+                    'placeholder' => 'https://gitlab.../groupe/projet/-/tree/main',
                 ]
             ])
-        ;
+            ->add('gitlabToken', PasswordType::class, [
+                'label' => 'Token GitLab (PRIVATE-TOKEN) — requis pour dépôt privé',
+                'required' => false,
+                'mapped' => false,
+                'attr' => [
+                    'placeholder' => 'glpat-xxxxxxxxxxxx',
+                    'autocomplete' => 'new-password',
+                ],
+            ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void

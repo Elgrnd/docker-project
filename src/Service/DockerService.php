@@ -64,6 +64,20 @@ class DockerService
         return trim($output ?? '');
     }
 
+    public function deployZipInVm(
+        string $localZipPath,
+        string $remoteDir,
+        string $vmIp
+    ): void {
+        $remoteZip = $remoteDir . '.zip';
+
+        $this->sendFileToVm($localZipPath, $remoteZip, $vmIp);
+
+        $this->runInVm(sprintf('mkdir -p %s', escapeshellarg($remoteDir)), $vmIp);
+        $this->runInVm(sprintf('unzip -o %s -d %s', escapeshellarg($remoteZip), escapeshellarg($remoteDir)), $vmIp);
+        $this->runInVm(sprintf('rm -f %s', escapeshellarg($remoteZip)), $vmIp);
+
+    }
 
     public function listContainers(string $vmIp): array
     {

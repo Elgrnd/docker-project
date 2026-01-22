@@ -6,6 +6,7 @@ use App\Entity\Groupe;
 use App\Entity\Repertoire;
 use App\Repository\RepertoireRepository;
 use App\Service\DockerService;
+use App\Service\ProxmoxService;
 use App\Service\RepertoireService;
 use App\Repository\YamlFileRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -244,7 +245,8 @@ final class RepertoireController extends AbstractController
 
         $zip = new ZipArchive();
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
-            throw new \Exception("Impossible de créer l’archive ZIP.");
+            $this->addFlash('error', "Impossible de créer l’archive ZIP.");
+            $this->redirectToRoute("repertoire");
         }
 
         $repertoireService->addRepertoireToZip($repertoire, $zip, '');
@@ -255,28 +257,43 @@ final class RepertoireController extends AbstractController
     }
 
     #[IsGranted("ROLE_USER")]
-    #[Route('/repertoire/copier-vm-direct/{id}', name: 'repertoire_copier_vm_direct')]
-    public function copierRepertoireDansVmDirect(
+    #[Route('/repertoire/copier-vm/{id}', name: 'repertoire_copier_vm')]
+    public function copierRepertoireDansVm(
         Repertoire $repertoire,
-        DockerService $dockerService
+        DockerService $dockerService,
+        RepertoireService $repertoireService,
+        ProxmoxService $proxmoxService
     ): Response
     {
-        $user = $this->getUser();
-        $vmIp = $user->getProxmoxVmid();
+        if (!$this->getUser() || $this->getUser()->getVmStatus() !== 'ready') {
+            $this->addFlash('error', 'VM non disponible.');
+            return $this->redirectToRoute('repertoire');
+        }
+        $zipPath = sys_get_temp_dir() . '/repertoire_' . $repertoire->getId() . '.zip';
 
-        if ($user->getVmStatus() !== 'ready') {
-            $this->addFlash('error', "Votre VM n'est pas prête pour la copie du répertoire.");
-            return $this->redirectToRoute('repertoire_afficher', ['id' => $repertoire->getId()]);
+        $zip = new ZipArchive();
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            $this->addFlash('error', "Impossible de créer l’archive ZIP.");
+            return $this->redirectToRoute('repertoire');
         }
 
-        $localPath = $repertoire->getFullPath();
-        $remotePath = '/root/' . $repertoire->getName();
+        $repertoireService->addRepertoireToZip($repertoire, $zip, '');
+        $zip->close();
 
-        $dockerService->sendDirectoryToVm($localPath, $remotePath, $vmIp);
+        try {
+            $dockerService->deployZipInVm(
+                $zipPath,
+                '/root/' . str_replace(' ', '_', $repertoire->getName()),
+                $proxmoxService->getVMIp($this->getUser()->getProxmoxVmid())
+            );
 
-        $this->addFlash('success', "Répertoire copié avec succès dans votre VM !");
+            $this->addFlash('success', 'Répertoire copié dans la VM avec succès.');
+        } catch (Exception) {
+            $this->addFlash('error', 'Erreur lors de la copie dans la VM.');
+        }
 
-        return $this->redirectToRoute('repertoire_afficher', ['id' => $repertoire->getId()]);
+        @unlink($zipPath);
+        return $this->redirectToRoute("repertoire");
     }
 
 }

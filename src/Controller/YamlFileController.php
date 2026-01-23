@@ -232,7 +232,7 @@ final class YamlFileController extends AbstractController
 
             // Vérification CSRF
             if ($this->isCsrfTokenValid('edit-yaml', $submittedToken)) {
-                $yamlContent = $request->request->get('content');
+                $yamlContent = $request->request->get('yaml_content');
                 $description = $request->request->get('description');
 
                 try {

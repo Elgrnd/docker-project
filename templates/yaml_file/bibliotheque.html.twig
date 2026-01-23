@@ -17,7 +17,7 @@
         <div id="contentDisplay" class="modal-body-yaml"></div>
     </div>
 
-    {% if is_granted("ROLE_PROF") %}
+    {% if is_granted("ROLE_PROFESSEUR") %}
         <div>
             <a href="{{ path("biblio_upload") }}">Importer un fichier</a>
         </div>

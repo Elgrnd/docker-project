@@ -35,8 +35,8 @@ security:
                 target: index
     role_hierarchy:
         ROLE_ETUDIANT: ROLE_USER
-        ROLE_PROF: ROLE_USER
-        ROLE_ADMIN: ROLE_ETUDIANT, ROLE_PROF
+        ROLE_PROFESSEUR: ROLE_ETUDIANT
+        ROLE_ADMIN: ROLE_ETUDIANT, ROLE_PROFESSEUR
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall

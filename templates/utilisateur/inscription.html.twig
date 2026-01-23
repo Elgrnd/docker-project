@@ -1,38 +1,59 @@
 {% extends "base.html.twig" %}
+
 {% block title %}<title>Inscription</title>{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/utilisateur/inscription.css') }}">
+{% endblock %}
+
 {% block page_content %}
-<main>
-    {{ form_start(formulaireUtilisateur) }}
+    <div class="auth-wrapper">
+        <div class="auth-card">
 
-    <div class="mb-3">
-        {{ form_label(formulaireUtilisateur.login, "Login", {'label_attr': {'class': 'form-label fw-semibold'}}) }}
-        <p class="text-muted small mb-1">Entre 4 et 20 caractères</p>
-        {{ form_widget(formulaireUtilisateur.login, {'attr': {'class': 'form-control rounded-pill'}}) }}
-    </div>
+            <div class="auth-header">
+                <h1>Inscription</h1>
+                <p class="auth-subtitle">Créez votre compte</p>
+            </div>
 
-    <div class="mb-3">
-        {{ form_label(formulaireUtilisateur.plainPassword, "Mot de passe", {'label_attr': {'class': 'form-label fw-semibold'}}) }}
-        <p class="text-muted small mb-1">
-            Entre 8 et 30 caractères, au moins une minuscule, une majuscule et un nombre
-        </p>
-        {{ form_widget(formulaireUtilisateur.plainPassword, {'attr': {'class': 'form-control rounded-pill'}}) }}
-    </div>
+            {{ form_start(formulaireUtilisateur, {
+                'attr': {'class': 'auth-form needs-validation'}
+            }) }}
 
-    <div class="mb-4">
-        {{ form_label(formulaireUtilisateur.adresseMail, "Adresse mail", {'label_attr': {'class': 'form-label fw-semibold'}}) }}
-        {{ form_widget(formulaireUtilisateur.adresseMail, {'attr': {'class': 'form-control rounded-pill'}}) }}
-    </div>
+            <div class="mb-3">
+                {{ form_label(formulaireUtilisateur.login, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+                <p class="form-hint">Entre 4 et 20 caractères</p>
+                {{ form_widget(formulaireUtilisateur.login) }}
+                {{ form_errors(formulaireUtilisateur.login) }}
+            </div>
 
-    <div class="d-grid mb-3">
-        {{ form_widget(formulaireUtilisateur.inscription, {'attr': {'class': 'btn btn-primary rounded-pill fw-semibold'}}) }}
-    </div>
+            <div class="mb-3">
+                {{ form_label(formulaireUtilisateur.plainPassword, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+                <p class="form-hint">
+                    8 à 30 caractères, avec une minuscule, une majuscule et un chiffre
+                </p>
+                {{ form_widget(formulaireUtilisateur.plainPassword) }}
+                {{ form_errors(formulaireUtilisateur.plainPassword) }}
+            </div>
 
-    <div class="text-center">
-        <small class="text-muted">
-            Déjà un compte ? <a href="{{ path('connexion') }}" class="text-primary fw-medium">Se connecter</a>
-        </small>
+            <div class="mb-4">
+                {{ form_label(formulaireUtilisateur.adresseMail, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+                {{ form_widget(formulaireUtilisateur.adresseMail) }}
+                {{ form_errors(formulaireUtilisateur.adresseMail) }}
+            </div>
+
+            {{ form_widget(formulaireUtilisateur.inscription) }}
+
+            <div class="auth-footer text-center">
+                <small class="text-muted">
+                    Déjà un compte ?
+                    <a href="{{ path('connexion') }}" class="text-primary fw-medium">
+                        Se connecter
+                    </a>
+                </small>
+            </div>
+
+            {{ form_end(formulaireUtilisateur) }}
+
+        </div>
     </div>
-    {{ form_rest(formulaireUtilisateur) }}
-    {{ form_end(formulaireUtilisateur) }}
-</main>
 {% endblock %}

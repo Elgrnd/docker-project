@@ -15,9 +15,7 @@
         {{ form_start(formulaire) }}
 
         <div class="mb-3">
-            {{ form_label(formulaire.repertoire, null, {
-                'label_attr': {'class': 'form-label fw-bold'}
-            }) }}
+            {{ form_label(formulaire.repertoire) }}
             <i class="bi bi-folder"></i>
             {{ form_widget(formulaire.repertoire) }}
             {{ form_errors(formulaire.repertoire) }}

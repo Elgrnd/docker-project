@@ -336,7 +336,7 @@ class GitlabController extends AbstractController
 
         $routeAnnuler = 'gitlab_fichiers';
 
-        return $this->render('yaml_file/ajouterAuRepertoire.html.twig', [
+        return $this->render('gitlab/ajouterAuRepertoire.html.twig', [
             'formulaire' => $form->createView(),
             'yamlFileBiblio' => $yamlFile,
             'routeAnnuler' => $routeAnnuler,

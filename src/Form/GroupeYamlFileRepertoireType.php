@@ -83,7 +83,9 @@ class GroupeYamlFileRepertoireType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => GroupeYamlFileRepertoire::class,
-            'groupe' => Groupe::class,
         ]);
+
+        $resolver->setRequired('groupe');
+        $resolver->setAllowedTypes('groupe', Groupe::class);
     }
 }

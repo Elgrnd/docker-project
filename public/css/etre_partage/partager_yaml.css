@@ -1,0 +1,38 @@
+.share-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    background: #f8f9fa;
+}
+
+.card-share {
+    background: #fff;
+    padding: 30px 40px;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    width: 100%;
+    font-family: system-ui, sans-serif;
+}
+
+.card-share .title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.subtitle {
+    font-size: 0.95rem;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    border: none;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: #0069d9;
+}

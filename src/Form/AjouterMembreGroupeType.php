@@ -10,6 +10,7 @@ use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\NotBlank;
 
 class AjouterMembreGroupeType extends AbstractType
 {
@@ -28,7 +29,15 @@ class AjouterMembreGroupeType extends AbstractType
             'choices' => $this->utilisateurRepository->findNonMembresDuGroupe($groupe),
             'label' => 'Choisir un utilisateur à ajouter',
             'placeholder' => 'Sélectionnez un utilisateur',
-            'attr' => ['class' => 'form-select'],
+            'required' => true,
+            'constraints' => [
+                new NotBlank([
+                    'message' => 'Veuillez sélectionner un utilisateur',
+                ]),
+            ],
+            'attr' => [
+                'class' => 'form-select'
+            ],
         ]);
     }
 
@@ -36,7 +45,8 @@ class AjouterMembreGroupeType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => null, // Pas d'entité directement liée
-            'groupe' => Groupe::class,
         ]);
+        $resolver->setRequired('groupe');
+        $resolver->setAllowedTypes('groupe', Groupe::class);
     }
 }

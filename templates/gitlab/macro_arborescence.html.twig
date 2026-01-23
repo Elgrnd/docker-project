@@ -1,0 +1,34 @@
+{% macro render_tree(nodes) %}
+    {% for name, item in nodes %}
+        <li class="tree-item">
+            {% if item.type == 'tree' %}
+                <div class="repertoire-gitlab">
+                    <span class="toggle-icon">▼</span>
+                    <i class="bi bi-folder-fill folder-icon"></i>
+                    <strong>{{ name }}</strong>
+                </div>
+                {% if item.children is defined %}
+                    <ul class="tree-children">
+                        {{ _self.render_tree(item.children) }}
+                    </ul>
+                {% endif %}
+            {% else %}
+                <div class="tree-file">
+                    <i class="bi bi-file-earmark-text file-icon"></i>
+                    {{ name }}
+                    <div class="file-actions">
+                        <i class="bi bi-eye view-icon" title="Afficher"
+                           data-url="{{ path('gitlab_fichier', { path: item.path }) }}"></i>
+                        <i class="bi bi-download download-icon" title="Télécharger"
+                           data-url="{{ path('gitlab_fichier', { path: item.path }) }}"
+                           data-filename="{{ name }}"></i>
+                        <a href="{{ path('ajouterAuRepertoireGitlab', { path: item.path }) }}"
+                           class="text-success ms-2 icon-action">
+                            <i class="bi bi-plus-circle" title="Ajouter au répertoire"></i>
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </li>
+    {% endfor %}
+{% endmacro %}

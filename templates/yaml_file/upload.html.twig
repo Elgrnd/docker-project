@@ -2,200 +2,39 @@
 
 {% block title %}<title>Upload de fichier YAML</title>{% endblock %}
 
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/yaml_file/upload.css') }}">
+{% endblock %}
+
+{% block scriptJs %}
+    <script src="{{ asset('js/yaml_file/yaml_file.js') }}"></script>
+{% endblock %}
+
 {% block page_content %}
     <div class="container mt-5">
         <div class="upload-container">
+
             <h1 class="text-center mb-4">📤 Importer un fichier YAML</h1>
 
-            <div class="card shadow-sm">
-                <div class="card-body p-4">
-                    {{ form_start(formulaireYaml, {'attr': {'id': 'uploadForm'}}) }}
-
-                    {# Zone de dépôt de fichier #}
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">
-                            <i class="bi bi-file-earmark-arrow-up"></i>
-                            {{ form_label(formulaireYaml.yamlFile) }}
-                        </label>
-                        <div class="file-upload-area" id="fileUploadArea">
-                            <div class="upload-icon">
-                                <i class="bi bi-cloud-upload"></i>
-                            </div>
-                            <p class="mb-2">Glissez-déposez votre fichier YAML ici</p>
-                            <p class="text-muted small mb-3">ou</p>
-                            {{ form_widget(formulaireYaml.yamlFile, {'attr': {'class': 'form-control'}}) }}
-                            <div class="file-info" id="fileInfo">
-                                <i class="bi bi-file-earmark-text"></i>
-                                <strong>Fichier sélectionné :</strong>
-                                <span id="fileName"></span>
-                                <span class="badge bg-secondary" id="fileSize"></span>
-                            </div>
-                        </div>
-                        {{ form_errors(formulaireYaml.yamlFile) }}
-                        <small class="form-text text-muted d-block mt-2">
-                            <i class="bi bi-info-circle"></i>
-                            Formats acceptés : .yaml, .yml (max 2MB)
-                        </small>
-                    </div>
-
-                    {# Sélection du répertoire #}
-                    <div class="mb-4">
-                        <label class="form-label fw-bold">
-                            <i class="bi bi-folder"></i>
-                            {{ form_label(formulaireYaml.repertoire) }}
-                        </label>
-                        {{ form_widget(formulaireYaml.repertoire) }}
-                        {{ form_errors(formulaireYaml.repertoire) }}
-                        {% if form_help(formulaireYaml.repertoire) %}
-                            <small class="form-text text-muted d-block mt-2">
-                                {{ form_help(formulaireYaml.repertoire) }}
-                            </small>
-                        {% endif %}
-                    </div>
-
-                    {# Boutons d'action #}
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>
-                            <i class="bi bi-upload"></i> Importer le fichier
-                        </button>
-                        <a href="{{ path('repertoire') }}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left"></i> Retour aux répertoires
-                        </a>
-                    </div>
-
-                    {{ form_end(formulaireYaml) }}
-                </div>
-            </div>
-
-            {# Informations supplémentaires #}
             <div class="card mt-4 border-info">
                 <div class="card-body">
                     <h6 class="card-title">
                         <i class="bi bi-lightbulb text-warning"></i> Conseils
                     </h6>
                     <ul class="mb-0 small">
-                        <li>Assurez-vous que votre fichier YAML est valide avant de l'importer</li>
-                        <li>Les fichiers ne doivent pas dépasser 2MB</li>
-                        <li>Le nom du fichier doit être unique dans votre compte</li>
-                        <li>Choisissez le bon répertoire pour organiser vos fichiers</li>
+                        <li>Assurez-vous que votre fichier YAML est valide</li>
+                        <li>Le fichier ne doit pas dépasser 2MB</li>
+                        <li>Le nom doit être unique</li>
+                        <li>Choisissez le bon répertoire</li>
                     </ul>
                 </div>
             </div>
+
+            {{ include('yaml_file/components/formulaire_upload.html.twig', {
+                'form': formulaireYaml,
+                'cancel_path': path('repertoire')
+            }) }}
+
         </div>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const fileInput = document.getElementById('yaml_file_yamlFile');
-            const fileUploadArea = document.getElementById('fileUploadArea');
-            const fileInfo = document.getElementById('fileInfo');
-            const fileName = document.getElementById('fileName');
-            const fileSize = document.getElementById('fileSize');
-            const submitBtn = document.getElementById('submitBtn');
-
-            // Gérer la sélection de fichier
-            fileInput.addEventListener('change', function(e) {
-                handleFiles(e.target.files);
-            });
-
-            // Drag & Drop
-            fileUploadArea.addEventListener('dragover', function(e) {
-                e.preventDefault();
-                fileUploadArea.classList.add('dragover');
-            });
-
-            fileUploadArea.addEventListener('dragleave', function(e) {
-                e.preventDefault();
-                fileUploadArea.classList.remove('dragover');
-            });
-
-            fileUploadArea.addEventListener('drop', function(e) {
-                e.preventDefault();
-                fileUploadArea.classList.remove('dragover');
-
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    fileInput.files = files;
-                    handleFiles(files);
-                }
-            });
-
-            function handleFiles(files) {
-                if (files.length > 0) {
-                    const file = files[0];
-                    fileName.textContent = file.name;
-                    fileSize.textContent = formatFileSize(file.size);
-                    fileInfo.classList.add('show');
-                    submitBtn.disabled = false;
-
-                    // Vérifier l'extension
-                    const validExtensions = ['yaml', 'yml'];
-                    const extension = file.name.split('.').pop().toLowerCase();
-
-                    if (!validExtensions.includes(extension)) {
-                        alert('Seuls les fichiers .yaml ou .yml sont acceptés');
-                        resetFileInput();
-                    }
-                }
-            }
-
-            function formatFileSize(bytes) {
-                if (bytes === 0) return '0 Bytes';
-                const k = 1024;
-                const sizes = ['Bytes', 'KB', 'MB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-            }
-
-            function resetFileInput() {
-                fileInput.value = '';
-                fileInfo.classList.remove('show');
-                submitBtn.disabled = true;
-            }
-        });
-    </script>
-
-    <style>
-        .upload-container {
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .file-upload-area {
-            border: 2px dashed #dee2e6;
-            border-radius: 8px;
-            padding: 30px;
-            text-align: center;
-            background-color: #f8f9fa;
-            transition: all 0.3s ease;
-        }
-
-        .file-upload-area:hover {
-            border-color: #0d6efd;
-            background-color: #e7f1ff;
-        }
-
-        .file-upload-area.dragover {
-            border-color: #0d6efd;
-            background-color: #cfe2ff;
-        }
-
-        .upload-icon {
-            font-size: 48px;
-            color: #6c757d;
-            margin-bottom: 15px;
-        }
-
-        .file-info {
-            margin-top: 15px;
-            padding: 10px;
-            background-color: #e9ecef;
-            border-radius: 5px;
-            display: none;
-        }
-
-        .file-info.show {
-            display: block;
-        }
-    </style>
 {% endblock %}

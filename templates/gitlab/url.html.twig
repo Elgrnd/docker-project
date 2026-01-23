@@ -2,6 +2,11 @@
 
 {% block title %}<title>Configuration GitLab</title>{% endblock %}
 
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/gitlab/configuration.css') }}">
+{% endblock %}
+
+
 {% block page_content %}
 
     <div class="container mt-4">
@@ -55,18 +60,13 @@
 
                 <div class="mb-3">
                     {{ form_label(form.gitlabUrl) }}
-                    {{ form_widget(form.gitlabUrl, {
-                        'attr': {
-                            'class': 'form-control',
-                            'placeholder': 'https://gitlab.com/mon-groupe/mon-projet/-/tree/main'
-                        }
-                    }) }}
+                    {{ form_widget(form.gitlabUrl) }}
                     {{ form_errors(form.gitlabUrl) }}
                 </div>
 
                 <div class="mb-3">
                     {{ form_label(form.gitlabToken) }}
-                    {{ form_widget(form.gitlabToken, {'attr': {'class':'form-control'}}) }}
+                    {{ form_widget(form.gitlabToken) }}
                     {{ form_errors(form.gitlabToken) }}
                     <small class="form-text text-muted">
                         Si le dépôt est privé, indiquez un token (scope <strong>api</strong>). Il est stocké chiffré.
@@ -87,18 +87,5 @@
             </div>
         </div>
     </div>
-
-    <style>
-        .card {
-            border-radius: 10px;
-        }
-        .card-header {
-            background: #f8f9fa;
-            border-bottom: 1px solid #ddd;
-        }
-        button.btn-primary:hover {
-            opacity: 0.85;
-        }
-    </style>
 
 {% endblock %}

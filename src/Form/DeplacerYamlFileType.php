@@ -32,7 +32,11 @@ class DeplacerYamlFileType extends AbstractType
                 'choices' => $this->repertoireRepository->recupererRepertoireUtilisateurActifs($user),
                 'label' => 'Répertoire de destination',
                 'placeholder' => 'Sélectionnez un répertoire',
-                'attr' => ['class' => 'form-select'],
+                'mapped' => false,
+                'required' => true,
+                'attr' => [
+                    'class' => 'form-select',
+                ],
             ]);
     }
 

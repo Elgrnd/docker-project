@@ -1,0 +1,65 @@
+{% macro render_tree(repertoire, fichiers, mode, groupe = null) %}
+    <div class="tree-item">
+        <div class="tree-folder" data-folder-id="{{ repertoire.id }}">
+            <span class="toggle-icon">▼</span>
+            <i class="bi bi-folder-fill folder-icon"></i>
+            <strong>{{ repertoire.name }}</strong>
+
+            {% if mode == 'perso' %}
+                <i class="bi bi-pencil-square rename-icon ms-2"
+                   title="Renommer"
+                   style="cursor: pointer; color: #6c757d;"
+                   onclick="renameRepertoire({{ repertoire.id }})"></i>
+            {% elseif mode == 'groupe' and groupe is not null and is_granted('REP_EDIT', repertoire) %}
+                <i class="bi bi-pencil-square rename-icon ms-2"
+                   title="Renommer"
+                   style="cursor: pointer; color: #6c757d;"
+                   onclick="renameRepertoire({{ repertoire.id }})"></i>
+            {% endif %}
+
+            <small class="text-muted">
+                {{ repertoire.children|length }} sous-répertoire(s)
+            </small>
+
+            {% if mode == 'perso' and not repertoire.isRoot() %}
+                <div class="file-actions">
+                    <button
+                            class="supprimerRepertoire"
+                            data-repertoire-id="{{ repertoire.id }}"
+                            data-csrf-token="{{ csrf_token('delete_repertoire' ~ repertoire.id) }}"
+                    >
+                        <i class="bi bi-trash bin-icon" title="Supprimer le répertoire"></i>
+                    </button>
+                </div>
+            {% elseif mode == 'groupe' and groupe is not null and is_granted('REP_EDIT', repertoire) %}
+                <div class="file-actions">
+                    <button
+                            class="supprimerRepertoireGroupe"
+                            data-repertoire-id="{{ repertoire.id }}"
+                            data-groupe-id="{{ groupe.id }}"
+                            data-csrf-token="{{ csrf_token('delete_repertoire_groupe_' ~ groupe.id ~ '_' ~ repertoire.id) }}"
+                    >
+                        <i class="bi bi-trash bin-icon" title="Supprimer le répertoire"></i>
+                    </button>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="tree-children" data-children-of="{{ repertoire.id }}">
+            {% for f in fichiers %}
+                {% if f.repertoire.id == repertoire.id %}
+                    {% if mode == 'perso' %}
+                        {{ include('repertoire/components/file.html.twig', {'uyr': f}) }}
+                    {% elseif mode == 'groupe' %}
+                        {{ include('groupe/components/file_groupe.html.twig', {'gyr': f}) }}
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+
+            {# Récursivité sur les sous-répertoires #}
+            {% for child in repertoire.childrenActifs %}
+                {{ _self.render_tree(child, fichiers, mode, groupe) }}
+            {% endfor %}
+        </div>
+    </div>
+{% endmacro %}

@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+
+{% import 'repertoire/components/arborescence.html.twig' as arbre %}
+
+{% block title %}<title>Mes Répertoires</title>{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/repertoire/repertoirePerso.css') }}">
+{% endblock %}
+
+{% block scriptJs %}
+    <script defer type="text/javascript" src="{{ asset('js/gestionEvent.js') }}"></script>
+    <script defer type="text/javascript" src="{{ asset('js/gestionRepertoire.js') }}"></script>
+{% endblock %}
+
+{% block page_content %}
+
+    <div id="overlayBlur" class="overlay-blur" onclick="cacherBlur()"></div>
+
+    <div id="modalContent" class="modal-yaml">
+        <div class="modal-header">
+            <span class="close-modal" onclick="cacherBlur()">&times;</span>
+        </div>
+        <div id="contentDisplay" class="modal-body-yaml"></div>
+    </div>
+
+
+    <div class="container mt-4">
+        <h1>Gestion des répertoires</h1>
+
+
+        {# Bouton pour afficher le formulaire #}
+        <div class="mb-4">
+            <a href="#" id="toggleFormBtn" class="btn btn-success">
+                ➕ Créer un nouveau répertoire
+            </a>
+        </div>
+
+        {# Formulaire de création (masqué par défaut) #}
+        {{ include('repertoire/components/formulaireCreation.html.twig', {'form': formRepertoire}) }}
+
+        <a href="{{ path('repertoire_telecharger_zip', {id: repertoireRacine.id}) }}"
+           class="btn btn-primary mt-3">
+            📦 Télécharger en ZIP
+        </a>
+
+        {% if app.user and app.user.vmStatus == 'ready' %}
+            <a href="{{ path('repertoire_copier_vm', {'id': repertoireRacine.id}) }}"
+               class="btn btn-primary mt-3">
+                ⬆️ Copier mon répertoire dans la VM
+            </a>
+        {% endif %}
+
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">📂 Arborescence</h5>
+        </div>
+        <div class="card-body tree-container">
+            {% if repertoireRacine %}
+                {{ arbre.render_tree(repertoireRacine, listUyr, 'perso') }}
+            {% else %}
+                <p class="text-muted">Aucun répertoire trouvé.</p>
+            {% endif %}
+        </div>
+    </div>
+
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">🗑️ Corbeille</h5>
+        </div>
+        <div class="card-body">
+            <a href="{{ path('repertoire_corbeille') }}" class="btn btn-outline-danger">
+                Voir les éléments supprimés
+            </a>
+        </div>
+    </div>
+
+{% endblock %}

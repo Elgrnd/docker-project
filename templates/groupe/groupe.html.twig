@@ -1,0 +1,33 @@
+<article class="groupe-item">
+    <h3 class="groupe-name">
+        {{ groupe.nom }}
+        {% if isAdmin and groupe.etreChef %}
+            <span class="groupe-chef">({{ groupe.etreChef.login }})</span>
+        {% endif %}
+    </h3>
+
+    <div class="groupe-actions">
+        <a href="{{ path('voir_groupe', {id: groupe.id}) }}" class="btn btn-secondary">
+            Membres
+        </a>
+        <a href="{{ path('fichiers_groupe', {id: groupe.id}) }}" class="btn btn-primary">
+            Fichiers YAML
+        </a>
+        <a href="{{ path('upload_yaml_groupe', {id: groupe.id}) }}" class="btn btn-import">
+            Importer YAML
+        </a>
+        <a href="{{ path('partager_yaml_groupe', {id: groupe.id}) }}" class="btn btn-shared">
+            Partager YAML
+        </a>
+
+        {% if canEdit %}
+            <form method="post"
+                  action="{{ path('supprimer_groupe', {id: groupe.id}) }}"
+                  class="delete-groupe-form"
+                  data-confirm-message="Supprimer ce groupe ?">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete-groupe-' ~ groupe.id) }}">
+                <button type="submit" class="btn btn-danger">Supprimer</button>
+            </form>
+        {% endif %}
+    </div>
+</article>

@@ -178,7 +178,7 @@ final class YamlFileController extends AbstractController
         // Récupérer tous les fichiers de l'utilisateur
         $listUyr = $uyrRepository->recuperertoutYamlfileUtilisateurParRepertoire($utilisateur->getId());
 
-        return $this->render('yaml_file/repertoirePerso.html.twig', [
+        return $this->render('repertoire/repertoirePerso.html.twig', [
             'listUyr' => $listUyr,
             'formRepertoire' => $form,
             'repertoireRacine' => $repertoireRacine,
@@ -416,7 +416,7 @@ final class YamlFileController extends AbstractController
 
         $routeAnnuler = 'bibliotheque';
 
-        return $this->render('yaml_file/ajouterAuRepertoire.html.twig', [
+        return $this->render('gitlab/ajouterAuRepertoire.html.twig', [
             'formulaire' => $form->createView(),
             'yamlFileBiblio' => $yamlFile,
             'routeAnnuler' => $routeAnnuler

@@ -1,0 +1,163 @@
+.tree-container {
+    font-family: monospace;
+}
+
+.tree-item {
+    padding: 8px 0;
+}
+
+.tree-folder {
+    cursor: pointer;
+    user-select: none;
+}
+
+.tree-folder:hover {
+    background-color: #f8f9fa;
+}
+
+.tree-children {
+    margin-left: 25px;
+    border-left: 1px dashed #dee2e6;
+    padding-left: 10px;
+}
+
+.folder-icon {
+    color: #ffc107;
+    margin-right: 5px;
+}
+
+.file-icon {
+    color: #17a2b8;
+    margin-right: 5px;
+}
+
+.toggle-icon {
+    display: inline-block;
+    width: 20px;
+    transition: transform 0.2s;
+}
+
+.toggle-icon.collapsed {
+    transform: rotate(-90deg);
+}
+
+.file-actions {
+    display: inline-flex;
+    gap: 10px;
+    margin-left: 10px;
+}
+
+.file-actions i {
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.view-icon:hover { color: #007bff; }
+.download-icon:hover { color: #28a745; }
+.edit-icon:hover { color: #ffc107; }
+.bin-icon:hover { color: #dc3545; }
+
+.file-item {
+    padding: 5px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.file-info {
+    display: flex;
+    align-items: center;
+}
+
+.deploy-icon-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    color: inherit;
+}
+
+.deploy-icon-btn:hover .deploy-icon {
+    color: #0d6efd;
+}
+
+.supprimerFichier {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.supprimerRepertoire {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+
+/* L’arrière-plan flou */
+.overlay-blur {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(6px);
+    z-index: 1000;
+}
+
+/* La fenêtre modale */
+.modal-yaml {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 70%;
+    max-height: 80%;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+    z-index: 1001;
+    overflow: auto;
+}
+
+/* En-tête de la modale */
+.modal-header {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.close-modal {
+    cursor: pointer;
+    font-size: 24px;
+    color: #666;
+    transition: color 0.2s;
+}
+
+.close-modal:hover {
+    color: #000;
+}
+
+/* Corps de la modale */
+.modal-body-yaml {
+    padding: 20px;
+    font-family: monospace;
+    white-space: pre-wrap;
+    background: #f9f9f9;
+    border-radius: 10px;
+}
+
+
+.supprimerRepertoireGroupe {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+

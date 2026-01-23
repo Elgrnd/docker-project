@@ -1,8 +1,13 @@
 {% extends 'base.html.twig' %}
+
 {% block title %}<title>Modifier {{ yamlfile.nameFile }}</title>{% endblock %}
 
+{% block stylesheets %}
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.29.0/codemirror.css">
+{% endblock %}
+
 {% block scriptJs %}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.29.0/codemirror.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.29.0/codemirror.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.29.0/mode/yaml/yaml.js"></script>
     <script defer src="{{ asset('js/codeMirror.js') }}"></script>
@@ -13,29 +18,15 @@
         <div class="row justify-content-center">
             <div class="col-12 col-lg-8 col-xl-7">
 
-                <h1 class="text-center mb-4 fw-semibold">Modifier {{ yamlfile.nameFile }}</h1>
+                <h1 class="text-center mb-4 fw-semibold">
+                    Modifier {{ yamlfile.nameFile }}
+                </h1>
 
-                <form method="post" id="yaml-form" class="bg-light p-4 rounded shadow-sm">
-                    <div class="mb-3">
-                        <label for="desc" class="form-label fw-semibold">Description</label>
-                        <textarea id="desc"
-                                  name="description"
-                                  class="form-control"
-                                  rows="2">{{ yamlfile.description }}</textarea>
-                    </div>
-                    <div class="mb-3" style="height: 70vh;">
-                        <textarea id="editor" name="yaml_content" class="form-control h-100">{{ yamlfile.bodyFile }}</textarea>
-                    </div>
-
-                    <input type="hidden" name="_token" value="{{ csrf_token('edit-yaml') }}">
-
-                    <input type="hidden" name="content" id="yaml-hidden">
-
-                    <div class="form-actions d-flex gap-2 justify-content-center mt-4">
-                        <button type="submit" class="btn btn-primary px-4">Enregistrer</button>
-                        <a href="{{ path('repertoire') }}" class="btn btn-secondary px-4">Annuler</a>
-                    </div>
-                </form>
+                {{ include('yaml_file/components/edit_yaml_file.html.twig', {
+                    yamlfile: yamlfile,
+                    show_description: true,
+                    cancel_path: path('repertoire')
+                }) }}
 
             </div>
         </div>

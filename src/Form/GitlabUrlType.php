@@ -19,6 +19,7 @@ class GitlabUrlType extends AbstractType
                 'required' => true,
                 'attr' => [
                     'placeholder' => 'https://gitlab.../groupe/projet/-/tree/main',
+                    'class' => 'form-control',
                 ]
             ])
             ->add('gitlabToken', PasswordType::class, [
@@ -28,6 +29,7 @@ class GitlabUrlType extends AbstractType
                 'attr' => [
                     'placeholder' => 'glpat-xxxxxxxxxxxx',
                     'autocomplete' => 'new-password',
+                    'class' => 'form-control'
                 ],
             ]);
     }

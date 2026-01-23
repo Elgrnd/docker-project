@@ -8,7 +8,7 @@
     <h2 class="mb-4">Conteneurs Docker en cours d’exécution</h2>
 
     <div class="mb-3">
-        <input type="text" id="searchInput" class="form-control" placeholder="Rechercher par nom ou ID...">
+        <label for="searchInput"></label><input type="text" id="searchInput" class="form-control" placeholder="Rechercher par nom ou ID...">
     </div>
 
     <table class="table table-striped" id="containersTable">
@@ -24,26 +24,7 @@
 
         <tbody>
         {% for c in containers %}
-            <tr>
-                <td>{{ c.user }}</td>
-                <td>{{ c.name }}</td>
-                <td>{{ c.id }}</td>
-                <td>{{ c.status }}</td>
-                <td>
-                    {% if 'Up' in c.status %}
-                        <a href="{{ path('container_stop', {'vmid': c.vmid, 'id': c.id}) }}" class="btn btn-warning btn-sm">Down</a>
-                    {% else %}
-                        <a href="{{ path('container_start', {'vmid': c.vmid, 'id': c.id}) }}" class="btn btn-success btn-sm">Run</a>
-                    {% endif %}
-
-                    {% if 'Exited' in c.status %}
-                        <a href="{{ path('container_remove', {'vmid': c.vmid, 'id': c.id}) }}"
-                           class="btn btn-danger btn-sm"
-                           onclick="return confirm('Supprimer ce conteneur ?')">Delete</a>
-                    {% endif %}
-                </td>
-            </tr>
-
+            {{ include('docker/container.html.twig', {'container': c}) }}
         {% else %}
             <tr>
                 <td colspan="5" class="text-center">Aucun conteneur trouvé.</td>

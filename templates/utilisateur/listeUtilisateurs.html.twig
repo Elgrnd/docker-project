@@ -1,59 +1,93 @@
 {% extends "base.html.twig" %}
 {% block title %}<title>Liste des utilisateurs</title>{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/utilisateur/listeUtilisateur.css') }}">
+{% endblock %}
+
 {% block scriptJs %}
     <script defer src="{{ asset('js/searchUsers.js') }}"></script>
     <script defer src="{{ asset('js/changeRole.js') }}"></script>
 {% endblock %}
 {% block page_content %}
-    <main>
+    <main class="container mt-4 user-list-wrapper">
+
         <h2 class="mb-4">Liste des utilisateurs</h2>
 
-        <div class="mb-3">
-            <input type="text" id="searchInput" class="form-control" placeholder="Rechercher par login ou par ID...">
+        <div class="card user-list-card">
+            <div class="card-body">
+
+                <div class="mb-3">
+                    <label for="searchInput" class="form-label fw-semibold">
+                        🔍 Rechercher un utilisateur
+                    </label>
+                    <input
+                            type="text"
+                            id="searchInput"
+                            class="form-control"
+                            placeholder="Login ou ID..."
+                    >
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle" id="usersTable">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Login</th>
+                            <th>ID</th>
+                            <th>Rôle</th>
+                            <th>Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for u in utilisateurs %}
+                            <tr>
+                                <td>{{ u.login }}</td>
+                                <td>{{ u.id }}</td>
+                                <td>
+                                    <select
+                                            class="form-select role-select"
+                                            data-utilisateur-login="{{ u.login }}"
+                                    >
+                                        <option value="~"></option>
+                                        {% for roleApp in appRoles|keys %}
+                                            <option
+                                                    value="{{ roleApp }}"
+                                                    {% if roleApp in u.roles %}selected{% endif %}
+                                            >
+                                                {{ roleApp|replace({'ROLE_': ''}) }}
+                                            </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    {% if u.proxmoxVmid is null %}
+                                        <a href="{{ path('creerVmUtilisateur', {'login': u.login}) }}"
+                                           class="btn btn-success btn-sm">
+                                            <i class="bi bi-hdd-network me-1"></i> Créer VM
+                                        </a>
+                                    {% else %}
+                                        <a href="{{ path('supprimerVmUtilisateur', {'login': u.login}) }}"
+                                           class="btn btn-danger btn-sm"
+                                           onclick="return confirm('Supprimer la VM ?')">
+                                            <i class="bi bi-trash me-1"></i> Supprimer VM
+                                        </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">
+                                    Aucun utilisateur trouvé.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
         </div>
 
-        <table class="table table-striped" id="usersTable">
-            <thead>
-            <tr>
-                <th>Login</th>
-                <th>ID</th>
-                <th>Rôles</th>
-                <th>Actions</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for u in utilisateurs %}
-                <tr>
-                    <td>{{ u.login }}</td>
-                    <td>{{ u.id }}</td>
-                    <td>
-                        <select data-utilisateur-login="{{ u.login }}" class="form-select" id="role-select">
-                            <option value="~" selected></option>
-                            {% for roleApp in appRoles|keys %}
-                                <option
-                                        {% if roleApp in u.roles %}
-                                            selected
-                                        {% endif %}
-                                        value="{{ roleApp }}">
-                                    {{ (roleApp|trim('ROLE', 'left'))|trim('_', 'left') }}
-                                </option>
-                            {% endfor %}
-                        </select>
-                    </td>
-                    <td>
-                        {% if u.proxmoxVmid is null %}
-                            <a href="{{ path('creerVmUtilisateur', {'login': u.login}) }}" class="btn btn-success btn-sm">Creer VM</a>
-                        {% else  %}
-                            <a href="{{ path('supprimerVmUtilisateur', {'login': u.login}) }}" class="btn btn-danger btn-sm" onclick="return confirm('Supprimer ce conteneur ?')">Supprimer VM</a>
-                        {% endif %}
-                    </td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="4" class="text-center">Aucun utilisateur trouvé.</td>
-                </tr>
-            {% endfor %}
-            </tbody>
-        </table>
     </main>
 {% endblock %}

@@ -47,6 +47,7 @@ class YamlFileType extends AbstractType
                     ]),
                 ],
                 'attr' => [
+                    'id'  => 'yamlFileUpload',
                     'accept' => '.yaml,.yml',
                     'class' => 'form-control'
                 ],

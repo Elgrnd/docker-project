@@ -34,15 +34,15 @@ class AjouterBiblioRepertoireType extends AbstractType
                     return $repertoire->getFullPath();
                 },
                 'label' => 'Répertoire de destination',
+                'label_attr' => ['class' => 'form-label fw-bold'],
                 'required' => true,
                 'placeholder' => 'Sélectionnez un répertoire',
                 'attr' => [
                     'class' => 'form-select'
                 ],
-                'choices' => $this->repertoireRepository->recupererRepertoireUtilisateur($user),
+                'choices' => $this->repertoireRepository->recupererRepertoireUtilisateurActifs($user),
                 'help' => 'Choisissez le répertoire où sera enregistré votre fichier'
             ]);
-        // Pas de champ submit ici
     }
 
     public function configureOptions(OptionsResolver $resolver): void

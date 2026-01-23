@@ -22,35 +22,56 @@ class UtilisateurType extends AbstractType
     {
         $builder
             ->add('login', TextType::class, [
+                'label' => 'Login',
                 'attr' => [
+                    'class' => 'form-control',
                     'minlength' => 4,
                     'maxlength' => 20,
-                ]
-            ])
-            ->add('adresseMail',  EmailType::class, [
-                'label' => 'Adresse mail',
-            ])
-            ->add('plainPassword', PasswordType::class, [
-                'mapped' => false,
-                'attr' => [
-                    'minlength' => 8,
-                    'maxlength' => 30,
-                    'pattern' => '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d\w\W]{8,30}$'
+                    'autocomplete' => 'username',
                 ],
                 'constraints' => [
                     new NotBlank(),
-                    new NotNull(),
-                    new Length(min: 8,
-                        max: 30,
-                        minMessage: "Votre mot de passe doit faire plus de 8 caractères",
-                        maxMessage: "Votre mot de passe doit faire plus de 30 caractères"),
-                    new Regex("#^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d\w\W]{8,30}$#",
-                        message: "Il faut au moins une minuscule, une majuscule et un chiffre dans votre mot de passe !")
+                    new Length(min: 4, max: 20),
                 ],
-                'label' => "Mot de passe"
+            ])
+            ->add('adresseMail',  EmailType::class, [
+                'label' => 'Adresse mail',
+                'attr' => [
+                    'class' => 'form-control',
+                    'autocomplete' => 'email',
+                ],
+                'constraints' => [
+                    new NotBlank(),
+                ],
+            ])
+            ->add('plainPassword', PasswordType::class, [
+                'label' => 'Mot de passe',
+                'mapped' => false,
+                'attr' => [
+                    'class' => 'form-control',
+                    'minlength' => 8,
+                    'maxlength' => 30,
+                    'autocomplete' => 'new-password',
+                ],
+                'constraints' => [
+                    new NotBlank(),
+                    new Length(
+                        min: 8,
+                        max: 30,
+                        minMessage: 'Votre mot de passe doit faire au moins 8 caractères',
+                        maxMessage: 'Votre mot de passe ne peut pas dépasser 30 caractères'
+                    ),
+                    new Regex(
+                        pattern: '/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/',
+                        message: 'Il faut au moins une minuscule, une majuscule et un chiffre'
+                    ),
+                ],
             ])
             ->add('inscription', SubmitType::class, [
-                'label' => "S'inscrire"
+                'label' => "S'inscrire",
+                'attr' => [
+                    'class' => 'btn btn-primary w-100 fw-semibold',
+                ],
             ])
         ;
     }

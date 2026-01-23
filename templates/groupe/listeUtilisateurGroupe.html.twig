@@ -2,6 +2,10 @@
 
 {% block title %}<title>{{ groupe.nom }}</title>{% endblock %}
 
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/groupe/utilisateur_Groupe.css') }}">
+{% endblock %}
+
 {% block scriptJs %}
     <script defer src="{{ asset('js/changeRoleGroupe.js') }}"></script>
 {% endblock %}

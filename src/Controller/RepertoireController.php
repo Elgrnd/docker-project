@@ -87,7 +87,7 @@ final class RepertoireController extends AbstractController
             $repertoires = $repertoireRepository->findDeletedByGroupe($groupe);
             $yamlFiles   = $yamlFileRepository->findDeletedByGroupe($groupe);
 
-            return $this->render('yaml_file/corbeilleRepertoireGroupe.html.twig', [
+            return $this->render('repertoire/corbeilleRepertoireGroupe.html.twig', [
                 'repertoires' => $repertoires,
                 'yamlFiles'   => $yamlFiles,
                 'groupe'      => $groupe
@@ -99,7 +99,7 @@ final class RepertoireController extends AbstractController
             $repertoires = $repertoireRepository->findDeletedByUser($user);
             $yamlFiles   = $yamlFileRepository->findDeletedByUser($user);
 
-            return $this->render('yaml_file/corbeilleRepertoire.html.twig', [
+            return $this->render('repertoire/corbeilleRepertoire.html.twig', [
                 'repertoires' => $repertoires,
                 'yamlFiles'   => $yamlFiles,
             ]);

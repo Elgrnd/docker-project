@@ -32,6 +32,7 @@ class YamlFileBiblioType extends AbstractType
                     ]),
                 ],
                 'attr' => [
+                    'id' => 'yamlFileUpload',
                     'accept' => '.yaml,.yml',
                     'class' => 'form-control'
                 ],

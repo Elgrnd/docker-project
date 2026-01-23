@@ -1,0 +1,32 @@
+<div id="formContainer" class="card mb-4 d-none">
+    <div class="card-header">
+        <h5 class="mb-0">Nouveau répertoire</h5>
+    </div>
+    <div class="card-body">
+        {{ form_start(form, {'attr': {'class': 'needs-validation'}}) }}
+        <div class="mb-3">
+            {{ form_label(form.name) }}
+            {{ form_widget(form.name) }}
+            {{ form_errors(form.name) }}
+        </div>
+
+        <div class="mb-3">
+            {{ form_label(form.parent) }}
+            {{ form_widget(form.parent) }}
+            {{ form_errors(form.parent) }}
+            <small class="form-text text-muted">
+                Le répertoire personnel est sélectionné par défaut
+            </small>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary">
+                💾 Créer
+            </button>
+            <button type="button" id="cancelBtn" class="btn btn-secondary">
+                ❌ Annuler
+            </button>
+        </div>
+        {{ form_end(form) }}
+    </div>
+</div>

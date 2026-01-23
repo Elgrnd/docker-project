@@ -76,7 +76,7 @@ final class GroupeYamlFileRepertoireController extends AbstractController
         // Récupérer tous les fichiers de l'utilisateur
         $listGyr = $gyrRepository->recuperertoutYamlfileGroupeParRepertoire($groupe->getId());
 
-        return $this->render('yaml_file/listeYamlFileGroupe.html.twig', [
+        return $this->render('groupe/repertoireGroupe.html.twig', [
             'groupe' => $groupe,
             'listGyr' => $listGyr,
             'repertoireRacine' => $repertoireRacine,
@@ -175,7 +175,7 @@ final class GroupeYamlFileRepertoireController extends AbstractController
 
         $flashMessageHelper->addFormErrorsAsFlash($formImport);
 
-        return $this->render('yaml_file/upload_groupe.html.twig', [
+        return $this->render('groupe/upload_groupe.html.twig', [
             'formImport' => $formImport,
             'groupe' => $groupe,
         ]);
@@ -268,7 +268,7 @@ final class GroupeYamlFileRepertoireController extends AbstractController
 
         $flashMessageHelper->addFormErrorsAsFlash($formExistant);
 
-        return $this->render('yaml_file/partagerYamlFileGroupe.html.twig', [
+        return $this->render('groupe/partagerYamlFileGroupe.html.twig', [
             'groupe' => $groupe,
             'formExistant' => $formExistant,
         ]);
@@ -347,7 +347,7 @@ final class GroupeYamlFileRepertoireController extends AbstractController
             }
         }
 
-        return $this->render('yaml_file/edityamlfilegroupe.html.twig', [
+        return $this->render('groupe/edityamlfilegroupe.html.twig', [
             'yamlfile' => $yamlFile,
             'groupe' => $groupe,
         ]);

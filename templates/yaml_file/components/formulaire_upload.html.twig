@@ -1,0 +1,69 @@
+<div class="card shadow-sm mt-4">
+    <div class="card-body p-4">
+
+        {{ form_start(form, {'attr': {'id': 'uploadForm'}}) }}
+
+        {# FICHIER YAML #}
+        <div class="mb-4">
+            <label class="form-label fw-bold">
+                <i class="bi bi-file-earmark-arrow-up"></i>
+                {{ form_label(form.yamlFile) }}
+            </label>
+
+            <div class="file-upload-area" id="fileUploadArea">
+                <div class="upload-icon">
+                    <i class="bi bi-cloud-upload"></i>
+                </div>
+
+                <p class="mb-2">Glissez-déposez votre fichier YAML ici</p>
+                <p class="text-muted small mb-3">ou</p>
+
+                {{ form_widget(form.yamlFile) }}
+
+                <div class="file-info" id="fileInfo">
+                    <i class="bi bi-file-earmark-text"></i>
+                    <strong>Fichier sélectionné :</strong>
+                    <span id="fileName"></span>
+                    <span class="badge bg-secondary" id="fileSize"></span>
+                </div>
+            </div>
+
+            {{ form_errors(form.yamlFile) }}
+        </div>
+
+        {% if form.repertoire is defined %}
+            <div class="mb-4">
+                {{ form_label(form.repertoire) }}
+                {{ form_widget(form.repertoire) }}
+                {{ form_errors(form.repertoire) }}
+            </div>
+        {% endif %}
+
+        {% if form.description is defined %}
+            <div class="mb-4">
+                {{ form_label(form.description) }}
+                {{ form_widget(form.description) }}
+                {{ form_errors(form.description) }}
+            </div>
+        {% endif %}
+
+        {% if form.droit is defined %}
+            <div class="mb-4">
+                {{ form_label(form.droit) }}
+                {{ form_widget(form.droit) }}
+            </div>
+        {% endif %}
+
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="bi bi-upload"></i> Importer
+            </button>
+
+            <a href="{{ cancel_path }}" class="btn btn-outline-secondary">
+                Retour
+            </a>
+        </div>
+
+        {{ form_end(form) }}
+    </div>
+</div>

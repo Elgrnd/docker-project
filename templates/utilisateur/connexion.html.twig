@@ -1,36 +1,69 @@
 {% extends "base.html.twig" %}
+
 {% block title %}<title>Connexion</title>{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/utilisateur/connexion.css') }}">
+{% endblock %}
+
 {% block page_content %}
-    <form action="{{ path('connexion') }}" method="post">
-        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+    <div class="auth-wrapper">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>Connexion</h1>
+                <p class="auth-subtitle">Connectez-vous à votre compte</p>
+            </div>
 
-        <div class="mb-3">
-            <label for="login" class="form-label fw-semibold">Login</label>
-            <input id="login" type="text" name="_username" value="{{ lastUsername }}"
-                   class="form-control rounded-pill" required>
+            <form action="{{ path('connexion') }}" method="post" class="auth-form">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+
+                <div class="mb-3">
+                    <label for="login" class="form-label fw-semibold">Login</label>
+                    <input
+                            id="login"
+                            type="text"
+                            name="_username"
+                            value="{{ lastUsername }}"
+                            class="form-control"
+                            autocomplete="username"
+                            required
+                            autofocus
+                    >
+                </div>
+
+                <div class="mb-4">
+                    <label for="password" class="form-label fw-semibold">Mot de passe</label>
+                    <input
+                            id="password"
+                            type="password"
+                            name="_password"
+                            class="form-control"
+                            autocomplete="current-password"
+                            required
+                    >
+                </div>
+                <div class="form-check mb-4">
+                    <input class="form-check-input" type="checkbox" id="createVm" name="create_vm" value="1">
+                    <label class="form-check-label fw-medium" for="createVm">
+                        Créer une VM après la connexion
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 fw-semibold">
+                    <i class="bi bi-box-arrow-in-right me-1"></i> Se connecter
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                <p class="text-center mt-3 mb-0">
+                    <small class="text-muted">
+                        Pas encore inscrit ?
+                        <a href="{{ path('inscription') }}" class="text-primary fw-medium">Créer un compte</a>
+                    </small>
+                </p>
+            </div>
+
         </div>
-
-        <div class="mb-4">
-            <label for="password" class="form-label fw-semibold">Mot de passe</label>
-            <input id="password" type="password" name="_password"
-                   class="form-control rounded-pill" required>
-        </div>
-
-        <div class="form-check mb-4">
-            <input class="form-check-input" type="checkbox" id="createVm" name="create_vm" value="1">
-            <label class="form-check-label fw-medium" for="createVm">
-                Créer une VM après la connexion
-            </label>
-        </div>
-
-        <button type="submit" class="btn btn-primary w-100 rounded-pill fw-semibold">
-            <i class="bi bi-box-arrow-in-right me-1"></i> Se connecter
-        </button>
-    </form>
-
-    <div class="text-center mt-3">
-        <small class="text-muted">
-            Pas encore inscrit ? <a href="{{ path('inscription') }}" class="text-primary fw-medium">Créer un compte</a>
-        </small>
     </div>
 {% endblock %}

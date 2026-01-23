@@ -1,0 +1,35 @@
+.user-list-wrapper {
+    animation: fadeInUp 0.3s ease;
+}
+
+.user-list-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.user-list-card .form-control,
+.user-list-card .form-select {
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.user-list-card .form-control:focus,
+.user-list-card .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+}
+
+.role-select {
+    min-width: 140px;
+}
+
+.table td,
+.table th {
+    vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+    .user-list-wrapper h2 {
+        font-size: 1.5rem;
+    }
+}

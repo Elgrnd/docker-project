@@ -138,30 +138,36 @@ async function deleteYamlFileGroupe(event) {
 }
 
 // Toggle du formulaire
-if (document.getElementById('toggleFormBtn')) {
-    document.getElementById('toggleFormBtn').addEventListener('click', function (e) {
-        e.preventDefault();
-        const formContainer = document.getElementById('formContainer');
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('toggleFormBtn');
+    const formContainer = document.getElementById('formContainer');
 
-        if (formContainer.style.display === 'none') {
-            formContainer.style.display = 'block';
-            this.style.display = 'none';
-        }
+    if (!btn || !formContainer) return;
+
+    btn.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        formContainer.classList.remove('d-none');
+        btn.classList.add('d-none');
     });
-}
+});
+
 
 // Bouton annuler
-if (document.getElementById('cancelBtn')) {
-    document.getElementById('cancelBtn').addEventListener('click', function () {
+const cancelBtn = document.getElementById('cancelBtn');
+if (cancelBtn) {
+    cancelBtn.addEventListener('click', function () {
         const formContainer = document.getElementById('formContainer');
         const toggleBtn = document.getElementById('toggleFormBtn');
 
-        formContainer.style.display = 'none';
-        toggleBtn.style.display = 'inline-block';
+        formContainer.classList.add('d-none');
+        toggleBtn.classList.remove('d-none');
 
-        document.querySelector('form').reset();
+        const form = formContainer.querySelector('form');
+        if (form) form.reset();
     });
 }
+
 
 
 // Toggle des dossiers dans l'arborescence

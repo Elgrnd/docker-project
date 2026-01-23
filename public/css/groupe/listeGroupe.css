@@ -1,0 +1,60 @@
+.groupes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.groupe-item {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem;
+    background: #fff;
+}
+
+.groupe-name {
+    margin: 0 0 1rem 0;
+    font-size: 1.25rem;
+}
+
+.groupe-chef {
+    color: #666;
+    font-size: 0.9rem;
+    font-weight: normal;
+}
+
+.groupe-actions {
+    display: inline-flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.delete-groupe-form {
+    display: inline;
+}
+
+.btn-import {
+    background-color: #53aa2c;
+    color: white;
+    border: 1px solid #7ed957;
+    transition: all 0.2s ease;
+}
+
+.btn-import:hover {
+    background-color: #418722;
+}
+
+.btn-shared {
+    background-color: #51b5d3;
+    color: white;
+    border: 1px solid #6dc1e0;
+    transition: all 0.2s ease;
+}
+
+.btn-shared:hover {
+    background-color: #459eb8;
+}
+
+.no-groups {
+    font-style: italic;
+    color: #666;
+}

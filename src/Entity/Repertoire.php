@@ -26,7 +26,6 @@ class Repertoire
     #[ORM\OneToMany(targetEntity: self::class, mappedBy: 'parent', cascade: ['persist', 'remove'])]
     private Collection $children;
 
-
     #[ORM\ManyToOne(inversedBy: 'groupe_repertoire')]
     #[ORM\JoinColumn(nullable: true)]
     private ?Groupe $groupe_repertoire = null;
@@ -35,118 +34,88 @@ class Repertoire
     #[ORM\JoinColumn(nullable: true)]
     private ?Utilisateur $utilisateur_repertoire = null;
 
-    #[ORM\OneToMany(targetEntity: UtilisateurYamlFileRepertoire::class, mappedBy: "repertoire", cascade: ['persist', 'remove'])]
-    private Collection $accesYamlFilesUtilisateur;
+    #[ORM\OneToMany(targetEntity: UtilisateurFileRepertoire::class, mappedBy: "repertoire", cascade: ['persist', 'remove'])]
+    private Collection $accesFilesUtilisateur;
 
-    #[ORM\OneToMany(targetEntity: GroupeYamlFileRepertoire::class, mappedBy: "repertoire")]
-    private Collection $accesYamlFilesGroupe;
+    #[ORM\OneToMany(targetEntity: GroupeFileRepertoire::class, mappedBy: "repertoire")]
+    private Collection $accesFilesGroupe;
 
     #[ORM\Column(type: 'datetime', nullable: true)]
     private ?DateTimeInterface $deletedAt = null;
 
-
-
     public function __construct()
     {
         $this->children = new ArrayCollection();
-        $this->accesYamlFilesUtilisateur = new ArrayCollection();
-        $this->accesYamlFilesGroupe = new ArrayCollection();
-
+        $this->accesFilesUtilisateur = new ArrayCollection();
+        $this->accesFilesGroupe = new ArrayCollection();
     }
 
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
+    public function getId(): ?int { return $this->id; }
 
-    public function getName(): ?string
-    {
-        return $this->name;
-    }
+    public function getName(): ?string { return $this->name; }
 
     public function setName(string $name): static
     {
         $this->name = $name;
-
         return $this;
     }
 
-    public function getParent(): ?Repertoire
-    {
-        return $this->parent;
-    }
+    public function getParent(): ?Repertoire { return $this->parent; }
 
-    public function setParent(?Repertoire $parent): void
-    {
-        $this->parent = $parent;
-    }
+    public function setParent(?Repertoire $parent): void { $this->parent = $parent; }
 
-    public function getChildren(): Collection
-    {
-        return $this->children;
-    }
+    public function getChildren(): Collection { return $this->children; }
 
-    public function setChildren(Collection $children): void
-    {
-        $this->children = $children;
-    }
+    public function setChildren(Collection $children): void { $this->children = $children; }
 
-    // NOUVEAU : Méthode pour obtenir le chemin complet
     public function getFullPath(): string
     {
-        if ($this->parent === null) {
-            return $this->name;
-        }
+        if ($this->parent === null) return $this->name;
         return $this->parent->getFullPath() . ' / ' . $this->name;
     }
 
-    public function getGroupeRepertoire(): ?Groupe
-    {
-        return $this->groupe_repertoire;
-    }
+    public function getGroupeRepertoire(): ?Groupe { return $this->groupe_repertoire; }
 
     public function setGroupeRepertoire(?Groupe $groupe_repertoire): static
     {
         $this->groupe_repertoire = $groupe_repertoire;
-
         return $this;
     }
 
-    public function getUtilisateurRepertoire(): ?Utilisateur
-    {
-        return $this->utilisateur_repertoire;
-    }
-
+    public function getUtilisateurRepertoire(): ?Utilisateur { return $this->utilisateur_repertoire; }
 
     public function setUtilisateurRepertoire(?Utilisateur $utilisateur_repertoire): static
     {
         $this->utilisateur_repertoire = $utilisateur_repertoire;
-
         return $this;
     }
 
-    public function getChildrenActifs(): array
+    public function getDeletedAt(): ?DateTimeInterface { return $this->deletedAt; }
+
+    public function setDeletedAt(?DateTimeInterface $deletedAt): void { $this->deletedAt = $deletedAt; }
+
+    public function isDeleted(): bool { return $this->deletedAt !== null; }
+
+    public function getAccesFilesUtilisateur(): Collection { return $this->accesFilesUtilisateur; }
+
+    public function setAccesFilesUtilisateur(Collection $accesFilesUtilisateur): void
     {
-        return array_filter($this->children->toArray(), function (Repertoire $r) {
-            return $r->getDeletedAt() === null;
-        });
+        $this->accesFilesUtilisateur = $accesFilesUtilisateur;
     }
 
-    public function getDeletedAt(): ?DateTimeInterface
-    {
-        return $this->deletedAt;
-    }
+    public function getAccesFilesGroupe(): Collection { return $this->accesFilesGroupe; }
 
-    public function setDeletedAt(?DateTimeInterface $deletedAt): void
+    public function setAccesFilesGroupe(Collection $accesFilesGroupe): void
     {
-        $this->deletedAt = $deletedAt;
+        $this->accesFilesGroupe = $accesFilesGroupe;
     }
 
     public function softDelete(): void
     {
         $this->deletedAt = new DateTime();
-        foreach($this->accesYamlFilesUtilisateur as $utilisateurYamlFile) {
-            $utilisateurYamlFile->getYamlFile()->setDeletedAt($this->deletedAt);
+
+        foreach ($this->accesFilesUtilisateur as $rel) {
+            $rel->getFile()->setDeletedAt($this->deletedAt); // File (Text/Binary)
         }
 
         foreach ($this->children as $child) {
@@ -154,10 +123,20 @@ class Repertoire
         }
     }
 
+    public function getChildrenActifs(): array
+    {
+        return array_filter(
+            $this->children->toArray(),
+            fn (Repertoire $r) => $r->getDeletedAt() === null
+        );
+    }
+
+
     public function softDeleteForGroupe(Groupe $groupe): void
     {
         $this->deletedAt = new DateTime();
-        foreach ($this->accesYamlFilesGroupe as $gyr) {
+
+        foreach ($this->accesFilesGroupe as $gyr) {
             if ($gyr->getGroupe() === $groupe) {
                 $gyr->setDeletedAt($this->deletedAt);
             }
@@ -168,6 +147,19 @@ class Repertoire
         }
     }
 
+    public function restore(): void
+    {
+        $this->deletedAt = null;
+
+        foreach ($this->accesFilesUtilisateur as $rel) {
+            $rel->getFile()->setDeletedAt(null);
+        }
+    }
+
+    public function isRoot()
+    {
+        return $this->parent === null;
+    }
 
     public function canRestore(): bool
     {
@@ -177,64 +169,26 @@ class Repertoire
         return true;
     }
 
-    public function restore(): void
-    {
-        $this->deletedAt = null;
-        foreach($this->accesYamlFilesUtilisateur as $utilisateurYamlFile) {
-            $utilisateurYamlFile->getYamlFile()->setDeletedAt($this->deletedAt);
-        }
-    }
-
-    public function isDeleted(): bool
-    {
-        return $this->deletedAt !== null;
-    }
-
-    public function getAccesYamlFilesUtilisateur(): Collection
-    {
-        return $this->accesYamlFilesUtilisateur;
-    }
-
-    public function setAccesYamlFilesUtilisateur(Collection $accesYamlFilesUtilisateur): void
-    {
-        $this->accesYamlFilesUtilisateur = $accesYamlFilesUtilisateur;
-    }
-
-    public function getAccesYamlFilesGroupe(): Collection
-    {
-        return $this->accesYamlFilesGroupe;
-    }
-
-    public function setAccesYamlFilesGroupe(Collection $accesYamlFilesGroupe): void
-    {
-        $this->accesYamlFilesGroupe = $accesYamlFilesGroupe;
-    }
-
-    public function getDeletedYamlFilesGroupe(): array
+    public function getDeletedFilesGroupe(Groupe $groupe): array
     {
         $files = [];
 
-        foreach ($this->accesYamlFilesGroupe as $rel) {
-            $yaml = $rel->getYamlFile();
-            if ($yaml->getDeletedAt() !== null) {
-                $files[] = $yaml;
+        foreach ($this->accesFilesGroupe as $rel) {
+            if (
+                $rel->getGroupe() === $groupe &&
+                $rel->getDeletedAt() !== null
+            ) {
+                $files[] = $rel->getFile();
             }
         }
 
-        // Parcours récursif des enfants
         foreach ($this->children as $child) {
-            $files = array_merge($files, $child->getDeletedYamlFilesGroupe());
+            $files = array_merge(
+                $files,
+                $child->getDeletedFilesGroupe($groupe)
+            );
         }
 
         return $files;
-    }
-
-
-
-    public function isRoot()
-    {
-        if ($this->parent == null)
-            return true;
-        return false;
     }
 }

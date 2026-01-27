@@ -46,18 +46,35 @@ class AuthentificationSubscriber
     }
 
     #[AsEventListener]
-    public function logout(LogoutEvent $event) {
-        if($event->getResponse()) {
-            if($event->getToken()->getUser()->getProxmoxVmid() !== null) {
-                $this->proxmoxService->deleteVM($event->getToken()->getUser()->getProxmoxVmid());
-                $event->getToken()->getUser()->setProxmoxVmid(null);
-                $event->getToken()->getUser()->setVmStatus('none');
-                $this->entityManager->flush();
-            }
+    public function logout(LogoutEvent $event): void
+    {
+        $token = $event->getToken();
 
-            $flashBag = $this->requestStack->getSession()->getFlashBag();
-            $flashBag->add("success", "Déconnexion réussie !");
+        if (!$token) {
+            return;
+        }
+
+        $user = $token->getUser();
+
+        if (!$user instanceof \App\Entity\Utilisateur) {
+            return;
+        }
+
+        if ($user->getProxmoxVmid() !== null) {
+            $this->proxmoxService->deleteVM($user->getProxmoxVmid());
+            $user->setProxmoxVmid(null);
+            $user->setVmStatus('none');
+            $this->entityManager->flush();
+        }
+
+        $request = $this->requestStack->getCurrentRequest();
+        if ($request && $request->hasSession()) {
+            $request->getSession()->getFlashBag()->add(
+                "success",
+                "Déconnexion réussie !"
+            );
         }
     }
+
 
 }

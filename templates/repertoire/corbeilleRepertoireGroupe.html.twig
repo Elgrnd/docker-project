@@ -37,16 +37,16 @@
                                     Supprimé le : {{ r.deletedAt|date('d/m/Y H:i') }}
                                 </small>
 
-                                {% set yamlFiles = r.accesYamlFilesGroupe
+                                {% set files = r.accesFilesGroupe
                                     |filter(rel => rel.groupe.id == groupe.id and rel.deletedAt is not null)
-                                    |map(rel => rel.yamlFile)
+                                    |map(rel => rel.file)
                                 %}
 
-                                {% if yamlFiles is not empty %}
+                                {% if files is not empty %}
                                     <div class="mt-2 ps-3 border-start">
-                                        <strong>Fichiers YAML supprimés :</strong>
+                                        <strong>Fichiers supprimés :</strong>
                                         <ul class="mb-0 mt-1">
-                                            {% for y in yamlFiles %}
+                                            {% for y in files %}
                                                 <li><i class="bi bi-filetype-yml"></i> {{ y.nameFile }}</li>
                                             {% endfor %}
                                         </ul>

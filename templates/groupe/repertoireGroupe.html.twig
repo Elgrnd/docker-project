@@ -3,7 +3,7 @@
 {% import '/repertoire/components/arborescence.html.twig' as arbre %}
 
 {% block title %}
-    <title>Fichiers YAML - {{ groupe.nom }}</title>
+    <title>Fichiers - {{ groupe.nom }}</title>
 {% endblock %}
 
 {% block stylesheets %}
@@ -17,15 +17,15 @@
 
 {% block page_content %}
     <div id="overlayBlur" class="overlay-blur" onclick="cacherBlur()"></div>
-    <div id="modalContent" class="modal-yaml">
+    <div id="modalContent" class="modal-file">
         <div class="modal-header">
             <span class="close-modal" onclick="cacherBlur()">&times;</span>
         </div>
-        <div id="contentDisplay" class="modal-body-yaml"></div>
+        <div id="contentDisplay" class="modal-body-file"></div>
     </div>
 
     <div class="container mt-4">
-        <h1>📂 Fichiers YAML du groupe {{ groupe.nom }}</h1>
+        <h1>📂 Fichiers du groupe {{ groupe.nom }}</h1>
 
         {% if is_granted('GROUPE_EDIT', groupe) %}
             {# Bouton pour afficher le formulaire #}
@@ -51,7 +51,7 @@
             </div>
             <div class="card-body tree-container">
                 {% if repertoireRacine %}
-                    {{ arbre.render_tree(repertoireRacine, listGyr, 'groupe', groupe) }}
+                    {{ arbre.render_tree(repertoireRacine, listGfr, 'groupe', groupe) }}
                 {% else %}
                     <p class="text-muted">Aucun répertoire trouvé.</p>
                 {% endif %}

@@ -1,0 +1,90 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    <title>Ajouter un fichier existant au groupe {{ groupe.nom }}</title>
+{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/file/partager_file_groupe.css') }}">
+{% endblock %}
+
+{% block page_content %}
+    <div class="container mt-5">
+        <div class="upload-container">
+
+            <h1 class="text-center mb-4">🔁 Ajouter un fichier existant au groupe {{ groupe.nom }}</h1>
+
+            {# Informations supplémentaires #}
+            <div class="card mt-4 border-info">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-lightbulb text-warning"></i> Conseils
+                    </h6>
+                    <ul class="mb-0 small">
+                        <li>Vous ne pouvez partager que vos propres fichiers</li>
+                        <li>Choisissez un répertoire cohérent pour l’organisation du groupe</li>
+                        <li>Les droits déterminent si les autres membres pourront modifier le fichier</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    {{ form_start(formExistant, {'attr': {'id': 'shareExistingForm'}}) }}
+
+                    {# Sélection du fichier existant #}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-file-earmark-text"></i>
+                            {{ form_label(formExistant.fileId) }}
+                        </label>
+                        {{ form_widget(formExistant.fileId) }}
+                        {{ form_errors(formExistant.fileId) }}
+                    </div>
+
+                    {# Sélection du répertoire destination #}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-folder"></i>
+                            {{ form_label(formExistant.repertoire) }}
+                        </label>
+                        {{ form_widget(formExistant.repertoire) }}
+                        {{ form_errors(formExistant.repertoire) }}
+
+                        {% if form_help(formExistant.repertoire) %}
+                            <small class="form-text text-muted d-block mt-2">
+                                {{ form_help(formExistant.repertoire) }}
+                            </small>
+                        {% endif %}
+                    </div>
+
+                    {# Choix des droits #}
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-shield-lock"></i> Droits sur le fichier
+                        </label>
+
+                        <div class="droit-choice-container">
+                            {{ form_widget(formExistant.droit) }}
+                        </div>
+
+                        {{ form_errors(formExistant.droit) }}
+                    </div>
+
+                    {# Boutons d'action #}
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-share"></i> Partager dans le groupe
+                        </button>
+
+                        <a href="{{ path('mes_groupes') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Retour à mes groupes
+                        </a>
+                    </div>
+
+                    {{ form_end(formExistant) }}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

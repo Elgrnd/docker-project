@@ -38,16 +38,6 @@ class RepertoireRepository extends ServiceEntityRepository
             ->getResult();
     }
 
-
-
-    public function recupererRepertoireUtilisateur(UserInterface $utilisateur)
-    {
-        return $this->findBy([
-            'utilisateur_repertoire' => $utilisateur
-        ]);
-
-    }
-
     public function recupererRepertoireGroupe($idGroupe)
     {
         return $this->createQueryBuilder('r')

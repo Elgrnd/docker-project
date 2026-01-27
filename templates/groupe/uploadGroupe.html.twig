@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    <title>Importer un fichier dans le groupe {{ groupe.nom }}</title>
+{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/file/upload.css') }}">
+{% endblock %}
+
+{% block scriptJs %}
+    <script defer type="text/javascript" src="{{ asset('js/gestionEvent.js') }}"></script>
+{% endblock %}
+
+{% block page_content %}
+
+    <div class="container mt-5">
+        <div class="upload-container">
+
+            <h1 class="text-center mb-4">📤 Importer un fichier dans le groupe {{ groupe.nom }}</h1>
+
+            {# --- BLOC CONSEILS --- #}
+            <div class="card mt-3 border-info">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-lightbulb text-warning"></i> Conseils
+                    </h6>
+                    <ul class="mb-0 small">
+                        <li>Utilisez ce formulaire pour importer un nouveau fichier</li>
+                        <li>Le fichier sera directement ajouté au groupe</li>
+                        <li>Les fichiers ne doivent pas dépasser 2MB</li>
+                    </ul>
+                </div>
+            </div>
+
+            {{ include('file/components/formulaireUpload.html.twig', {
+                'form': formImport,
+                'cancel_path': path('mes_groupes')
+            }) }}
+
+        </div>
+    </div>
+
+{% endblock %}

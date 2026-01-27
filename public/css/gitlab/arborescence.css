@@ -55,7 +55,7 @@
     z-index: 1000;
 }
 
-.modal-yaml {
+.modal-file {
     display: none;
     position: fixed;
     top: 50%;
@@ -86,7 +86,7 @@
 
 .close-modal:hover { color: #000; }
 
-.modal-body-yaml {
+.modal-body-file {
     padding: 20px;
     font-family: monospace;
     white-space: pre-wrap;

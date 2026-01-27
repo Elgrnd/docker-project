@@ -1,13 +1,13 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}
-    Versions de {{ yamlFile.nameFile }}
+    <title>Versions de {{ textFile.nameFile }}</title>
 {% endblock %}
 
 {% block page_content %}
     <div class="container mt-4">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>Historique des versions - {{ yamlFile.nameFile }}</h1>
+            <h1>Historique des versions - {{ textFile.nameFile }}</h1>
             <a href="{{ path('repertoire') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Retour à la liste des fichiers
             </a>

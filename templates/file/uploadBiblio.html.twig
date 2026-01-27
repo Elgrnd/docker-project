@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}<title>Upload de fichier</title>{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/file/upload.css') }}">
+{% endblock %}
+
+{% block scriptJs %}
+    <script src="{{ asset('js/file/file.js') }}"></script>
+{% endblock %}
+
+{% block page_content %}
+    <div class="container mt-5">
+        <div class="upload-container">
+            <h1 class="text-center mb-4">📤 Importer un fichier au format textuelle (nom de fichier, contenu textuel) dans la bibliothèque</h1>
+
+            {# Informations supplémentaires #}
+            <div class="card mt-4 border-info">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-lightbulb text-warning"></i> Conseils
+                    </h6>
+                    <ul class="mb-0 small">
+                        <li>Assurez-vous que votre fichier soit valide avant de l'importer</li>
+                        <li>Les fichiers ne doivent pas dépasser 2MB</li>
+                        <li>Le nom du fichier doit être unique dans votre compte</li>
+                    </ul>
+                </div>
+            </div>
+
+            {{ include('file/components/formulaireUpload.html.twig', {
+                form: formulaireFile,
+                cancel_path: path('bibliotheque')
+            }) }}
+        </div>
+    </div>
+{% endblock %}

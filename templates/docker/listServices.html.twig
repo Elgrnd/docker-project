@@ -1,0 +1,52 @@
+{% extends "base.html.twig" %}
+{% block title %}<title>Liste des services</title>{% endblock %}
+{% block scriptJs %}
+    <script defer src="{{ asset('js/searchServices.js') }}"></script>
+{% endblock %}
+{% block page_content %}
+    <main>
+        <h2 class="mb-4">Liste des services</h2>
+
+        <div class="mb-3">
+            <input type="text" id="searchInput" class="form-control" placeholder="Rechercher par ID ou par nom...">
+        </div>
+
+        <table class="table table-striped" id="servicesTable">
+            <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Service</th>
+                <th>Image</th>
+                <th>Status</th>
+                <th>Ports</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for s in services %}
+                <tr>
+                    <td>{{ s.name }}</td>
+                    <td>{{ s.service }}</td>
+                    <td>{{ s.image }}</td>
+                    <td>{{ s.status }}</td>
+                    <td>{{ s.ports }}</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="5" class="text-center">Aucun services trouvé.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="card mt-3 border-info">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-lightbulb text-warning"></i> Conseils
+                </h6>
+                <ul class="mb-0 small">
+                    <li>Il faut impérativement importer votre répertoire personnel dans la VM pour accéder à ce service.</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+{% endblock %}

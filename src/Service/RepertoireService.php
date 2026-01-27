@@ -18,18 +18,24 @@ class RepertoireService
      */
     public function addRepertoireToZip(Repertoire $repertoire, ZipArchive $zip, string $pathInZip): void
     {
-        $currentPath = ($pathInZip !== '' ? $pathInZip . '/' : '') . $repertoire->getName();
+        $currentPath = $pathInZip === ''
+            ? $repertoire->getName()
+            : $pathInZip . '/' . $repertoire->getName();
 
-        $zip->addEmptyDir($currentPath);
-
-        foreach ($repertoire->getAccesYamlFilesUtilisateur() as $uyr) {
-            $yaml = $uyr->getYamlFile();
-            $filepathInZip = $currentPath . '/' . $yaml->getNameFile();
-            $zip->addFromString($filepathInZip, $yaml->getBodyFile());
+        if (!$zip->locateName($currentPath . '/')) {
+            $zip->addEmptyDir($currentPath);
         }
 
         foreach ($repertoire->getChildrenActifs() as $child) {
             $this->addRepertoireToZip($child, $zip, $currentPath);
+        }
+
+        foreach ($repertoire->getAccesYamlFilesUtilisateur() as $uyr) {
+            $yaml = $uyr->getYamlFile();
+            $zip->addFromString(
+                $currentPath . '/' . $yaml->getNameFile(),
+                $yaml->getBodyFile()
+            );
         }
     }
 

@@ -160,6 +160,12 @@ class ProxmoxService
     }
 
     /**
+     * @param string $vmid
+     * @return bool
+     * @throws ClientExceptionInterface
+     * @throws DecodingExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ServerExceptionInterface
      * @throws TransportExceptionInterface
      */
     public function stopVM(string $vmid): bool

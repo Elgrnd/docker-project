@@ -35,7 +35,8 @@ class DockerService
     }
 
 
-    public function runInVm(string $cmd, string $vmIp): string {
+    public function runInVm(string $cmd, string $vmIp): string
+    {
         $sshCommand = sprintf(
             'ssh %s %s %s',
             $this->getSshBaseOptions(),
@@ -46,9 +47,21 @@ class DockerService
         return trim(shell_exec($sshCommand));
     }
 
-    public function sendFileToVm(string $content, string $remotePath, string $vmIp): string
+    public function sendFileToVm(string $localFilePath, string $remotePath, string $vmIp): string
     {
-        $tmpFile = tempnam(sys_get_temp_dir(), 'yaml_');
+        $scpCommand = sprintf(
+            'scp %s %s %s',
+            $this->getSshBaseOptions(),
+            escapeshellarg($localFilePath),
+            escapeshellarg($this->sshUser . '@' . $vmIp . ':' . $remotePath)
+        );
+
+        return trim(shell_exec($scpCommand . ' 2>&1') ?? '');
+    }
+
+    public function sendContentToVm(string $content, string $remotePath, string $vmIp): string
+    {
+        $tmpFile = tempnam(sys_get_temp_dir(), 'vm_');
         file_put_contents($tmpFile, $content);
 
         $scpCommand = sprintf(
@@ -68,7 +81,8 @@ class DockerService
         string $localZipPath,
         string $remoteDir,
         string $vmIp
-    ): void {
+    ): void
+    {
         $remoteZip = $remoteDir . '.zip';
 
         $this->sendFileToVm($localZipPath, $remoteZip, $vmIp);
@@ -99,6 +113,29 @@ class DockerService
             ];
         }
         return $containers;
+    }
+
+    public function listServices(string $vmIp): array
+    {
+        $cmd = $this->dockerPath . ' compose ps --format "{{.Name}}|{{.Service}}|{{.Image}}|{{.Status}}|{{.Ports}}"';
+        $output = $this->runInVm($cmd, $vmIp);
+
+        $services = [];
+
+        $lines = array_filter(array_map('trim', explode("\n", $output)));
+
+        foreach ($lines as $line) {
+            $parts = explode('|', $line);
+            [$name, $service, $image, $status, $ports] = $parts;
+            $services[] = [
+                'name' => $name,
+                'service' => $service,
+                'image' => $image,
+                'status' => $status,
+                'ports' => $ports,
+            ];
+        }
+        return $services;
     }
 
     public function startContainer(string $id, $vmIp): array

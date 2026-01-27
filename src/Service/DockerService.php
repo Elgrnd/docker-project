@@ -81,7 +81,7 @@ class DockerService
 
     public function listContainers(string $vmIp): array
     {
-        $cmd = $this->dockerPath . ' ps -a --format "{{.ID}}|{{.Names}}|{{.Status}}"';
+        $cmd = $this->dockerPath . ' ps -a --format "{{.ID}}|{{.Names}}|{{.Status}}|{{.Ports}}"';
         $output = $this->runInVm($cmd, $vmIp);
 
         $containers = [];
@@ -91,11 +91,12 @@ class DockerService
 
         foreach ($lines as $line) {
             $parts = explode('|', $line);
-            [$id, $name, $status] = $parts;
+            [$id, $name, $status, $ports] = $parts;
             $containers[] = [
                 'id' => $id,
                 'name' => $name,
                 'status' => $status,
+                'ports'  => $ports,
             ];
         }
         return $containers;

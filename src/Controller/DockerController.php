@@ -55,7 +55,7 @@ final class DockerController extends AbstractController
             foreach ($users as $userWithVm) {
                 try {
                     $vmIp = $proxmoxService->getVMIp($userWithVm->getProxmoxVmid());
-                } catch (Exception $e) {
+                } catch (Exception) {
                     $this->addFlash('error', "le QGA n'est pas encore prêt pour la VM");
                     return $this->redirectToRoute("index");
                 }
@@ -72,7 +72,7 @@ final class DockerController extends AbstractController
             if ($user->getProxmoxVmid()) {
                 try {
                     $vmIp = $proxmoxService->getVMIp($user->getProxmoxVmid());
-                } catch (Exception $e) {
+                } catch (Exception) {
                     $this->addFlash('error', "le QGA n'est pas encore prêt pour la VM");
                     return $this->redirectToRoute("index");
                 }
@@ -266,7 +266,7 @@ final class DockerController extends AbstractController
             $baseName = $yaml->getNameFile() ?? 'compose.yaml';
 
             $projectName = preg_replace('/[^a-z0-9_]/', '_', strtolower(pathinfo($baseName, PATHINFO_FILENAME)));
-            $remotePath = $projectName . '_' . uniqid() . '.yaml';
+            $remotePath = '/root/deploy/' . $projectName . '_l' . uniqid() . '.yaml';
 
             $vmId = $this->getUser()->getProxmoxVmid();
             if (!$vmId) {
@@ -339,7 +339,5 @@ final class DockerController extends AbstractController
 
         return new JsonResponse(['status' => 'creating']);
     }
-
-
 
 }

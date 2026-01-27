@@ -2,6 +2,7 @@
     <td>{{ container.user }}</td>
     <td>{{ container.name }}</td>
     <td>{{ container.id }}</td>
+    <td>{{ container.ports }}</td>
     <td>{{ container.status }}</td>
     <td>
         {% if 'Up' in container.status %}
@@ -10,9 +11,6 @@
         {% else %}
             <a href="{{ path('container_start', {'vmid': container.vmid, 'id': container.id}) }}"
                class="btn btn-success btn-sm">Run</a>
-        {% endif %}
-
-        {% if 'Exited' in container.status %}
             <a href="{{ path('container_remove', {'vmid': container.vmid, 'id': container.id}) }}"
                class="btn btn-danger btn-sm"
                onclick="return confirm('Supprimer ce conteneur ?')">Delete</a>

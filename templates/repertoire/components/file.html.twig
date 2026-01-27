@@ -21,10 +21,17 @@
             <i class="bi bi-arrows-move" title="Déplacer"></i>
         </a>
 
+        {% if app.user.vmStatus == 'ready' %}
+            <a href="{{ path('deploy_yaml_file', {id: uyr.yamlFile.id}) }}"
+               onclick="return confirm('Déployer ce fichier sur votre VM ?');">
+                <i class="bi bi-rocket-takeoff deploy-icon" title="Déployer"></i>
+            </a>
+        {% endif %}
+
+
         <button data-fichier-id="{{ uyr.yamlFile.id }}" class="supprimerFichier"
                 data-csrf-token="{{ csrf_token('delete' ~ uyr.yamlFile.id) }}">
             <i class="bi bi-trash bin-icon" title="Supprimer"></i>
         </button>
     </div>
-</div>
 </div>

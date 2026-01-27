@@ -51,7 +51,7 @@
                     {% if mode == 'perso' %}
                         {{ include('repertoire/components/file.html.twig', {'uyr': f}) }}
                     {% elseif mode == 'groupe' %}
-                        {{ include('groupe/components/file_groupe.html.twig', {'gyr': f}) }}
+                        {{ include('groupe/components/textFileGroupe.html.twig', {'gyr': f}) }}
                     {% endif %}
                 {% endif %}
             {% endfor %}

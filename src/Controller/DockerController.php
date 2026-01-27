@@ -2,7 +2,7 @@
 
 namespace App\Controller;
 
-use App\Entity\YamlFile;
+use App\Entity\TextFile;
 use App\Service\DockerService;
 use App\Service\ProxmoxService;
 use App\Service\UtilisateurManagerInterface;
@@ -257,13 +257,16 @@ final class DockerController extends AbstractController
     #[Route('/yaml/deploy/{id}', name: 'deploy_yaml_file', methods: ['GET'])]
     #[IsGranted('ROLE_USER')]
     public function deployYamlInVm(
-        YamlFile $yaml,
-        DockerService $dockerService,
+        TextFile       $idFile,
+        DockerService  $dockerService,
         ProxmoxService $proxmoxService
     ): Response {
+        if (!$idFile->isYaml()) {
+            throw new Exception("Le fichier n'est pas un fichier .yaml/.yml.");
+        }
         try {
-            $content = $yaml->getBodyFile();
-            $baseName = $yaml->getNameFile() ?? 'compose.yaml';
+            $content = $idFile->getBodyFile();
+            $baseName = $idFile->getNameFile() ?? 'compose.yaml';
 
             $projectName = preg_replace('/[^a-z0-9_]/', '_', strtolower(pathinfo($baseName, PATHINFO_FILENAME)));
             $remotePath = $projectName . '_' . uniqid() . '.yaml';

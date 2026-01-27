@@ -4,11 +4,11 @@ namespace App\Controller;
 
 use App\Entity\Groupe;
 use App\Entity\Repertoire;
+use App\Repository\FileRepository;
 use App\Repository\RepertoireRepository;
 use App\Service\DockerService;
 use App\Service\ProxmoxService;
 use App\Service\RepertoireService;
-use App\Repository\YamlFileRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -77,19 +77,19 @@ final class RepertoireController extends AbstractController
     #[Route('/groupe/{id}/repertoire/corbeille', name: 'repertoire_corbeille_groupe')]
     public function corbeille(
         RepertoireRepository $repertoireRepository,
-        YamlFileRepository $yamlFileRepository,
-        ?Groupe $groupe = null
+        FileRepository       $fileRepository,
+        ?Groupe              $groupe = null
     ): Response
     {
         if ($groupe) {
             $this->denyAccessUnlessGranted('GROUPE_EDIT', $groupe);
 
             $repertoires = $repertoireRepository->findDeletedByGroupe($groupe);
-            $yamlFiles   = $yamlFileRepository->findDeletedByGroupe($groupe);
+            $files   = $fileRepository->findDeletedByGroupe($groupe);
 
             return $this->render('repertoire/corbeilleRepertoireGroupe.html.twig', [
                 'repertoires' => $repertoires,
-                'yamlFiles'   => $yamlFiles,
+                'files'   => $files,
                 'groupe'      => $groupe
             ]);
 
@@ -97,11 +97,11 @@ final class RepertoireController extends AbstractController
             $user = $this->getUser();
 
             $repertoires = $repertoireRepository->findDeletedByUser($user);
-            $yamlFiles   = $yamlFileRepository->findDeletedByUser($user);
+            $files   = $fileRepository->findDeletedByUser($user);
 
             return $this->render('repertoire/corbeilleRepertoire.html.twig', [
                 'repertoires' => $repertoires,
-                'yamlFiles'   => $yamlFiles,
+                'files'   => $files,
             ]);
         }
     }
@@ -176,17 +176,24 @@ final class RepertoireController extends AbstractController
 
     #[IsGranted('REP_EDIT', subject: 'repertoire')]
     #[Route('/repertoire/supprimer/{id}', name: 'delete_repertoire_permanent')]
-    #[Route('/groupe/{idGroupe}/repertoire/supprimer/{id}', name: 'delete_repertoire_permanent_groupe')]
-    public function supprime(Repertoire $repertoire, EntityManagerInterface $em, RepertoireService $repertoireService, ?int $idGroupe = null): Response
+    public function supprime(Repertoire $repertoire, EntityManagerInterface $em, RepertoireService $repertoireService): Response
     {
-        $repertoireService->deleteRepertoireWithFiles($repertoire, $em);
+        $repertoireService->deleteRepertoireWithFilesForUser($repertoire, $em);
         $em->flush();
 
         $this->addFlash("success", "Le répertoire à bien été supprimé");
 
-        if ($idGroupe === null) {
-            return $this->redirectToRoute('repertoire_corbeille');
-        }
+        return $this->redirectToRoute('repertoire_corbeille');
+    }
+
+    #[IsGranted('REP_EDIT', subject: 'repertoire')]
+    #[Route('/groupe/{idGroupe}/repertoire/supprimer/{id}', name: 'delete_repertoire_permanent_groupe')]
+    public function supprimeRepGroupe(Repertoire $repertoire, EntityManagerInterface $em, RepertoireService $repertoireService, int $idGroupe): Response
+    {
+        $repertoireService->deleteRepertoireWithFilesForGroup($repertoire, $em);
+        $em->flush();
+
+        $this->addFlash("success", "Le répertoire à bien été supprimé");
 
         $groupe = $em->getRepository(Groupe::class)->find($idGroupe);
 
@@ -196,32 +203,35 @@ final class RepertoireController extends AbstractController
 
     #[IsGranted('ROLE_USER')]
     #[Route('/repertoire/corbeille/delete-all', name: 'delete_repertoire_permanent_all')]
-    #[Route('/groupe/{id}/repertoire/corbeille/delete-all', name: 'delete_repertoire_permanent_all_groupe')]
     public function deleteAll(
         EntityManagerInterface $em,
         RepertoireRepository $repo,
         RepertoireService $repertoireService,
-        ?Groupe $groupe = null
     ): Response {
         $user = $this->getUser();
 
-        if ($groupe === null) {
-            $repertoires = $repo->findDeletedByUser($user);
-            foreach ($repertoires as $rep) {
-                $repertoireService->deleteRepertoireWithFiles($rep, $em);
-            }
-            $em->flush();
-
-            $this->addFlash('success', 'Tous vos répertoires supprimés définitivement !');
-            return $this->redirectToRoute('repertoire_corbeille');
+        $repertoires = $repo->findDeletedByUser($user);
+        foreach ($repertoires as $rep) {
+            $repertoireService->deleteRepertoireWithFilesForUser($rep, $em);
         }
+        $em->flush();
 
-        $this->denyAccessUnlessGranted('GROUPE_EDIT', $groupe);
+        $this->addFlash('success', 'Tous vos répertoires supprimés définitivement !');
+        return $this->redirectToRoute('repertoire_corbeille');
+    }
 
+    #[IsGranted('GROUPE_EDIT', subject: 'groupe')]
+    #[Route('/groupe/{id}/repertoire/corbeille/delete-all', name: 'delete_repertoire_permanent_all_groupe')]
+    public function deleteAllRepGroupe(
+        EntityManagerInterface $em,
+        RepertoireRepository $repo,
+        RepertoireService $repertoireService,
+        Groupe $groupe
+    ): Response {
         $repertoires = $repo->findDeletedByGroupe($groupe);
 
         foreach ($repertoires as $rep) {
-            $repertoireService->deleteRepertoireWithFiles($rep, $em);
+            $repertoireService->deleteRepertoireWithFilesForGroup($rep, $em);
         }
 
         $em->flush();
@@ -230,6 +240,7 @@ final class RepertoireController extends AbstractController
 
         return $this->redirectToRoute('repertoire_corbeille_groupe', ['id' => $groupe->getId()]);
     }
+
 
 
     /**

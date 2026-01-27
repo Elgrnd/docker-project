@@ -110,7 +110,7 @@
 }
 
 /* La fenêtre modale */
-.modal-yaml {
+.modal-file {
     display: none;
     position: fixed;
     top: 50%;
@@ -145,7 +145,7 @@
 }
 
 /* Corps de la modale */
-.modal-body-yaml {
+.modal-body-file {
     padding: 20px;
     font-family: monospace;
     white-space: pre-wrap;

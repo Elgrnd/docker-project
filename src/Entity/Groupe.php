@@ -34,15 +34,11 @@ class Groupe
     #[ORM\OneToMany(targetEntity: UtilisateurGroupe::class, mappedBy: "groupe", cascade: ['persist'], orphanRemoval: true)]
     private Collection $utilisateur_groupe;
 
-    #[ORM\OneToMany(mappedBy: "groupe", targetEntity: GroupeYamlFileRepertoire::class)]
-    private Collection $yamlfilesParRepertoire;
-
 
     public function __construct()
     {
         $this->groupe_repertoire = new ArrayCollection();
         $this->utilisateur_groupe = new ArrayCollection();
-        $this->yamlfilesParRepertoire = new ArrayCollection();
     }
 
     public function getId(): ?int

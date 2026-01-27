@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}<title>Déplacer fichier</title>{% endblock %}
+
+{% block page_content %}
+    <div class="container mt-5">
+        <h1>Déplacer : {{ file.nameFile }}</h1>
+
+        <div class="card p-4 mt-4">
+            {{ form_start(form) }}
+            <div class="mb-3">
+                {{ form_label(form.repertoire) }}
+                {{ form_widget(form.repertoire) }}
+                {{ form_errors(form.repertoire) }}
+            </div>
+            <button class="btn btn-primary">💾 Déplacer</button>
+            <a href="{{ path('repertoire') }}" class="btn btn-secondary">↩ Retour</a>
+            {{ form_end(form) }}
+        </div>
+    </div>
+{% endblock %}

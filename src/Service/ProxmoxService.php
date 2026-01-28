@@ -37,17 +37,6 @@ class ProxmoxService
         exec($command);
     }
 
-    public function deleteVmAfterDelay(int $idUser): void
-    {
-        $command = sprintf(
-            'sleep 600 && php %s/bin/console app:delete-vm %d > /dev/null 2>&1 &',
-            $this->projectDir,
-            $idUser
-        );
-
-        exec($command);
-    }
-
 
     /**
      * @throws TransportExceptionInterface

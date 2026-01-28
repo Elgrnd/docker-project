@@ -2,10 +2,14 @@
 
 namespace App\EventSubscriber;
 
+use App\Message\DeleteVmMessage;
 use App\Service\ProxmoxService;
+use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Messenger\Stamp\DelayStamp;
 use Symfony\Component\Security\Http\Event\LoginFailureEvent;
 use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
 use Symfony\Component\Security\Http\Event\LogoutEvent;
@@ -14,21 +18,29 @@ class AuthentificationSubscriber
 {
     public function __construct(private RequestStack $requestStack,
                                 private ProxmoxService $proxmoxService,
-                                private EntityManagerInterface $entityManager)
+                                private EntityManagerInterface $entityManager,
+                                private MessageBusInterface $bus
+    )
     {
     }
 
     #[AsEventListener]
     public function loginSuccess(LoginSuccessEvent $event) {
         if($event->getAuthenticator()) {
+            $user = $event->getUser();
+
+            if ($user->getDeleteVmAt() !== null) {
+                $user->setDeleteVmAt(null);
+                $this->entityManager->flush();
+            }
             $request = $this->requestStack->getCurrentRequest();
 
-            $createVm = $request?->request->get('create_vm');
+            $createVm = $request->request->get('create_vm');
             if($createVm) {
-                if ($event->getUser()->getProxmoxVmid() === null) {
-                    $event->getUser()->setVmStatus('creating');
+                if ($user->getProxmoxVmid() === null) {
+                    $user->setVmStatus('creating');
                     $this->entityManager->flush();
-                    $this->proxmoxService->cloneUserVmAsynchrone($event->getUser()->getLogin());
+                    $this->proxmoxService->cloneUserVmAsynchrone($user->getLogin());
                 }
             }
 
@@ -48,15 +60,22 @@ class AuthentificationSubscriber
     #[AsEventListener]
     public function logout(LogoutEvent $event) {
         if($event->getResponse()) {
-            if($event->getToken()->getUser()->getProxmoxVmid() !== null) {
-                $this->proxmoxService->deleteVM($event->getToken()->getUser()->getProxmoxVmid());
-                $event->getToken()->getUser()->setProxmoxVmid(null);
-                $event->getToken()->getUser()->setVmStatus('none');
+            $user = $event->getToken()->getUser();
+            if ($user->getProxmoxVmid() !== null) {
+                $user->setDeleteVmAt(new DateTimeImmutable('+10 minutes'));
+                $user->setVmStatus('pending_delete');
                 $this->entityManager->flush();
+
+                $this->bus->dispatch(
+                    new DeleteVmMessage($user->getId()),
+                    [new DelayStamp(600000)]
+                );
             }
 
             $flashBag = $this->requestStack->getSession()->getFlashBag();
-            $flashBag->add("success", "Déconnexion réussie !");
+            $flashBag->add('success',
+                'Déconnexion réussie. Votre VM sera supprimée dans 10 minutes si vous ne vous reconnectez pas.'
+            );
         }
     }
 

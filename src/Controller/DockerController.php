@@ -278,7 +278,7 @@ final class DockerController extends AbstractController
                 throw new Exception("Impossible de récupérer l'IP de la VM.");
             }
 
-            $uploadError = $dockerService->sendFileToVm($content, $remotePath, $vmIp);
+            $uploadError = $dockerService->sendContentToVm($content, $remotePath, $vmIp);
             if (str_contains($uploadError, 'Permanently added')) {
                 $uploadError = '';
             }

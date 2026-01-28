@@ -46,9 +46,22 @@ class DockerService
         return trim(shell_exec($sshCommand));
     }
 
-    public function sendFileToVm(string $content, string $remotePath, string $vmIp): string
+    public function sendFileToVm(string $localFilePath, string $remotePath, string $vmIp): string
     {
-        $tmpFile = tempnam(sys_get_temp_dir(), 'yaml_');
+        $scpCommand = sprintf(
+            'scp %s %s %s',
+            $this->getSshBaseOptions(),
+            escapeshellarg($localFilePath),
+            escapeshellarg($this->sshUser . '@' . $vmIp . ':' . $remotePath)
+        );
+
+        return trim(shell_exec($scpCommand . ' 2>&1') ?? '');
+    }
+
+
+    public function sendContentToVm(string $content, string $remotePath, string $vmIp): string
+    {
+        $tmpFile = tempnam(sys_get_temp_dir(), 'vm_');
         file_put_contents($tmpFile, $content);
 
         $scpCommand = sprintf(
@@ -63,6 +76,7 @@ class DockerService
 
         return trim($output ?? '');
     }
+
 
     public function deployZipInVm(
         string $localZipPath,

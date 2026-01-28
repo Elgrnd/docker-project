@@ -8,6 +8,12 @@
     <main>
         <h2 class="mb-4">Liste des utilisateurs</h2>
 
+        <div>
+            <a href="{{ path('admin_ldap_preview') }}" class="btn btn-primary btn-lg">
+                🔄 Synchroniser LDAP
+            </a>
+        </div>
+
         <div class="mb-3">
             <input type="text" id="searchInput" class="form-control" placeholder="Rechercher par login ou par ID...">
         </div>

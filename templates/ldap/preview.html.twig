@@ -1,0 +1,290 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}<title>Import LDAP - Prévisualisation</title>{% endblock %}
+
+
+{% block page_content %}
+    <style>
+        .summary-card {
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .summary-card.create { background: #d4edda; border-left: 5px solid #28a745; }
+        .summary-card.update { background: #fff3cd; border-left: 5px solid #ffc107; }
+        .summary-card.skip { background: #f8d7da; border-left: 5px solid #dc3545; }
+        .summary-card.unchanged { background: #e7f3ff; border-left: 5px solid #0056b3; }
+
+        .summary-number {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 0;
+            line-height: 1;
+        }
+
+        .user-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+        .user-card:hover {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transform: translateX(5px);
+        }
+
+        .changes-list {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 8px;
+            padding-left: 20px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 30px 0 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.3s;
+        }
+
+        .section-header:hover {
+            background: #e9ecef;
+        }
+
+        .section-header h3 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-icon {
+            font-size: 1.2em;
+            transition: transform 0.3s;
+        }
+
+        .toggle-icon.open {
+            transform: rotate(90deg);
+        }
+
+        .btn-toggle {
+            background: white;
+            border: 1px solid #dee2e6;
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .btn-confirm {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 15px 50px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s;
+        }
+        .btn-confirm:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+            color: white;
+        }
+
+        .collapsible-content {
+            display: none;
+            animation: slideDown 0.3s ease-in-out;
+            overflow: hidden;
+        }
+
+        .collapsible-content.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                max-height: 0;
+            }
+            to {
+                opacity: 1;
+                max-height: 5000px;
+            }
+        }
+    </style>
+    <div class="container mt-4 mb-5">
+        <h1 class="mb-4">🔄 Synchronisation LDAP</h1>
+        <p class="lead text-muted">Prévisualisation des modifications avant import</p>
+
+        <!-- Résumé -->
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="summary-card create">
+                    <div class="summary-number text-success">{{ toCreate|length }}</div>
+                    <div class="mt-2">Nouveaux</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="summary-card update">
+                    <div class="summary-number text-warning">{{ toUpdate|length }}</div>
+                    <div class="mt-2">Mises à jour</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="summary-card skip">
+                    <div class="summary-number text-danger">{{ skipped|length }}</div>
+                    <div class="mt-2">Ignorés</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="summary-card unchanged">
+                    <div class="summary-number text-info">{{ unchanged|length }}</div>
+                    <div class="mt-2">Inchangés</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-4">
+            📊 <strong>Total :</strong> {{ totalLdap }} utilisateur(s) dans l'annuaire LDAP
+        </div>
+
+        <!-- Nouveaux utilisateurs -->
+        {% if toCreate|length > 0 %}
+            <div class="section-header" onclick="toggleSection('create-section')">
+                <h3>
+                    <span class="toggle-icon">▶</span>
+                    ✅ Nouveaux utilisateurs ({{ toCreate|length }})
+                </h3>
+                <span class="btn-toggle">Afficher/Masquer</span>
+            </div>
+            <div id="create-section" class="collapsible-content">
+                {% for user in toCreate %}
+                    <div class="user-card">
+                        <strong>{{ user.login }}</strong>
+                        <span class="badge bg-success ms-2">Nouveau</span>
+                        <div class="text-muted mt-1">
+                            {{ user.prenom }} {{ user.nom }}
+                            {% if user.email %} | {{ user.email }}{% endif %}
+                            {% if user.promotion %} | <span class="badge bg-primary">{{ user.promotion }}</span>{% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Mises à jour -->
+        {% if toUpdate|length > 0 %}
+            <div class="section-header" onclick="toggleSection('update-section')">
+                <h3>
+                    <span class="toggle-icon">▶</span>
+                    🔄 Utilisateurs à mettre à jour ({{ toUpdate|length }})
+                </h3>
+                <span class="btn-toggle">Afficher/Masquer</span>
+            </div>
+            <div id="update-section" class="collapsible-content">
+                {% for item in toUpdate %}
+                    <div class="user-card">
+                        <strong>{{ item.user.login }}</strong>
+                        <span class="badge bg-warning text-dark ms-2">Mise à jour</span>
+                        <div class="text-muted">{{ item.user.prenom }} {{ item.user.nom }}</div>
+                        <ul class="changes-list">
+                            {% for change in item.changes %}
+                                <li>{{ change }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Ignorés -->
+        {% if skipped|length > 0 %}
+            <div class="section-header" onclick="toggleSection('skip-section')">
+                <h3>
+                    <span class="toggle-icon">▶</span>
+                    ⚠️ Utilisateurs ignorés ({{ skipped|length }})
+                </h3>
+                <span class="btn-toggle">Afficher/Masquer</span>
+            </div>
+            <div id="skip-section" class="collapsible-content">
+                {% for skip in skipped %}
+                    <div class="user-card">
+                        <strong>{{ skip.login }}</strong>
+                        <span class="badge bg-danger ms-2">Ignoré</span>
+                        <div class="text-muted">{{ skip.reason }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Inchangés -->
+        {% if unchanged|length > 0 %}
+            <div class="section-header" onclick="toggleSection('unchanged-section')">
+                <h3>
+                    <span class="toggle-icon">▶</span>
+                    ℹ️ Utilisateurs inchangés ({{ unchanged|length }})
+                </h3>
+                <span class="btn-toggle">Afficher/Masquer</span>
+            </div>
+            <div id="unchanged-section" class="collapsible-content">
+                {% for user in unchanged %}
+                    <div class="user-card">
+                        <strong>{{ user.login }}</strong>
+                        <span class="badge bg-info ms-2">Inchangé</span>
+                        <div class="text-muted">
+                            {{ user.prenom }} {{ user.nom }}
+                            {% if user.promotion %} | <span class="badge bg-secondary">{{ user.promotion }}</span>{% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Boutons d'action -->
+        <div class="mt-5 text-center">
+            {% if toCreate|length > 0 or toUpdate|length > 0 %}
+                <form method="post" action="{{ path('admin_ldap_import') }}"
+                      onsubmit="return confirm('Confirmer l\'import de {{ toCreate|length }} création(s) et {{ toUpdate|length }} mise(s) à jour ?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('ldap-import') }}">
+                    <button type="submit" class="btn btn-confirm">
+                        ✓ Confirmer l'import ({{ toCreate|length + toUpdate|length }} modifications)
+                    </button>
+                </form>
+            {% else %}
+                <div class="alert alert-success">
+                    ✅ Aucune modification nécessaire. Base de données à jour !
+                </div>
+            {% endif %}
+
+            <a href="{{ path('listeUtilisateurs') }}" class="btn btn-secondary btn-lg mt-3">
+                ← Annuler
+            </a>
+        </div>
+    </div>
+
+    {% block scriptJs %}
+    <script>
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            const header = section.previousElementSibling;
+            const icon = header.querySelector('.toggle-icon');
+
+            // Toggle display
+            section.classList.toggle('show');
+
+            // Rotation de l'icône
+            icon.classList.toggle('open');
+        }
+    </script>
+    {% endblock %}
+{% endblock %}

@@ -92,6 +92,9 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $gitlabTokenNonce = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $deleteVmAt = null;
+
 
     public function __construct()
     {
@@ -368,6 +371,18 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     public function setGitlabTokenNonce(?string $gitlabTokenNonce): self
     {
         $this->gitlabTokenNonce = $gitlabTokenNonce;
+        return $this;
+    }
+
+    public function getDeleteVmAt(): ?\DateTimeImmutable
+    {
+        return $this->deleteVmAt;
+    }
+
+    public function setDeleteVmAt(?\DateTimeImmutable $deleteVmAt): static
+    {
+        $this->deleteVmAt = $deleteVmAt;
+
         return $this;
     }
 

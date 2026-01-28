@@ -26,12 +26,23 @@ class ProxmoxService
         $this->secret = $_ENV['PROXMOX_TOKEN_SECRET'];
     }
 
-    public function cloneUserVmAsynchrone(string $login)
+    public function cloneUserVmAsynchrone(string $login): void
     {
         $command = sprintf(
             'php %s/bin/console app:create-vm %s > /dev/null 2>&1 &',
             $this->projectDir,
             $login
+        );
+
+        exec($command);
+    }
+
+    public function deleteVmAfterDelay(int $idUser): void
+    {
+        $command = sprintf(
+            'sleep 600 && php %s/bin/console app:delete-vm %d > /dev/null 2>&1 &',
+            $this->projectDir,
+            $idUser
         );
 
         exec($command);

@@ -117,7 +117,8 @@ class DockerService
 
     public function listServices(string $vmIp): array
     {
-        $cmd = $this->dockerPath . ' compose ps --format "{{.Name}}|{{.Service}}|{{.Image}}|{{.Status}}|{{.Ports}}"';
+        $cmd = '/usr/bin/docker inspect $(/usr/bin/docker ps -q) --format \'{{json .}}\'';
+
         $output = $this->runInVm($cmd, $vmIp);
 
         $services = [];
@@ -125,18 +126,25 @@ class DockerService
         $lines = array_filter(array_map('trim', explode("\n", $output)));
 
         foreach ($lines as $line) {
-            $parts = explode('|', $line);
-            [$name, $service, $image, $status, $ports] = $parts;
+            $data = json_decode($line, true);
+
+            if (!$data) {
+                continue;
+            }
+
             $services[] = [
-                'name' => $name,
-                'service' => $service,
-                'image' => $image,
-                'status' => $status,
-                'ports' => $ports,
+                'name' => ltrim($data['Name'] ?? '', '/'),
+                'service' => $data['Config']['Labels']['com.docker.compose.service'] ?? '',
+                'image' => $data['Config']['Image'] ?? '',
+                'status' => $data['State']['Status'] ?? '',
+                'ports' => $data['NetworkSettings']['Ports'] ?? [],
             ];
         }
+
         return $services;
     }
+
+
 
     public function startContainer(string $id, $vmIp): array
     {

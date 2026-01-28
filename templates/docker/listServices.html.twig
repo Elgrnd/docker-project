@@ -22,31 +22,30 @@
             </tr>
             </thead>
             <tbody>
-            {% for s in services %}
+            {% for service in services %}
                 <tr>
-                    <td>{{ s.name }}</td>
-                    <td>{{ s.service }}</td>
-                    <td>{{ s.image }}</td>
-                    <td>{{ s.status }}</td>
-                    <td>{{ s.ports }}</td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="5" class="text-center">Aucun services trouvé.</td>
+                    <td>{{ service.name }}</td>
+                    <td>{{ service.service }}</td>
+                    <td>{{ service.image }}</td>
+                    <td>{{ service.status }}</td>
+                    <td>
+                        {% if service.ports %}
+                            {% for port, mappings in service.ports %}
+                                {% if mappings %}
+                                    {% for mapping in mappings %}
+                                        {{ mapping.HostIp }}:{{ mapping.HostPort }}<br>
+                                    {% endfor %}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
                 </tr>
             {% endfor %}
             </tbody>
         </table>
-
-        <div class="card mt-3 border-info">
-            <div class="card-body">
-                <h6 class="card-title">
-                    <i class="bi bi-lightbulb text-warning"></i> Conseils
-                </h6>
-                <ul class="mb-0 small">
-                    <li>Il faut impérativement importer votre répertoire personnel dans la VM pour accéder à ce service.</li>
-                </ul>
-            </div>
-        </div>
     </main>
 {% endblock %}

@@ -1,0 +1,51 @@
+{% extends "base.html.twig" %}
+{% block title %}<title>Liste des services</title>{% endblock %}
+{% block scriptJs %}
+    <script defer src="{{ asset('js/searchServices.js') }}"></script>
+{% endblock %}
+{% block page_content %}
+    <main>
+        <h2 class="mb-4">Liste des services</h2>
+
+        <div class="mb-3">
+            <input type="text" id="searchInput" class="form-control" placeholder="Rechercher par ID ou par nom...">
+        </div>
+
+        <table class="table table-striped" id="servicesTable">
+            <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Service</th>
+                <th>Image</th>
+                <th>Status</th>
+                <th>Ports</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for service in services %}
+                <tr>
+                    <td>{{ service.name }}</td>
+                    <td>{{ service.service }}</td>
+                    <td>{{ service.image }}</td>
+                    <td>{{ service.status }}</td>
+                    <td>
+                        {% if service.ports %}
+                            {% for port, mappings in service.ports %}
+                                {% if mappings %}
+                                    {% for mapping in mappings %}
+                                        {{ mapping.HostIp }}:{{ mapping.HostPort }}<br>
+                                    {% endfor %}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </main>
+{% endblock %}

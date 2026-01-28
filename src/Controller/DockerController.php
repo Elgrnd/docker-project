@@ -35,9 +35,10 @@ final class DockerController extends AbstractController
         DockerService               $dockerService,
         ProxmoxService              $proxmoxService,
         UtilisateurManagerInterface $utilisateurManager,
-    ): Response {
+    ): Response
+    {
 
-        if($this->getUser()->getVmStatus() == "none") {
+        if ($this->getUser()->getVmStatus() == "none") {
             $this->addFlash("error", "Vous n'avez pas encore créer de VM");
             return $this->redirectToRoute('index');
         }
@@ -95,19 +96,19 @@ final class DockerController extends AbstractController
                 // Utilisateur normal : seulement sa VM
                 $vmid = $user->getProxmoxVmid();
                 if ($vmid) {
-                    $runtime = $proxmoxService->getVMRuntimeStatus((int) $vmid);
+                    $runtime = $proxmoxService->getVMRuntimeStatus((int)$vmid);
 
                     $vms = [[
-                        'vmid'    => $vmid,
-                        'name'    => 'VM ' . $user->getLogin(),
-                        'status'  => $runtime['status']  ?? 'unknown',
-                        'cpu'     => $runtime['cpu']     ?? null,
-                        'maxcpu'  => $runtime['maxcpu']  ?? null,
-                        'mem'     => $runtime['mem']     ?? null,
-                        'maxmem'  => $runtime['maxmem']  ?? null,
-                        'disk'    => $runtime['disk']    ?? null,
+                        'vmid' => $vmid,
+                        'name' => 'VM ' . $user->getLogin(),
+                        'status' => $runtime['status'] ?? 'unknown',
+                        'cpu' => $runtime['cpu'] ?? null,
+                        'maxcpu' => $runtime['maxcpu'] ?? null,
+                        'mem' => $runtime['mem'] ?? null,
+                        'maxmem' => $runtime['maxmem'] ?? null,
+                        'disk' => $runtime['disk'] ?? null,
                         'maxdisk' => $runtime['maxdisk'] ?? null,
-                        'uptime'  => $runtime['uptime']  ?? null,
+                        'uptime' => $runtime['uptime'] ?? null,
                     ]];
                 } else {
                     $vms = [];
@@ -119,9 +120,9 @@ final class DockerController extends AbstractController
         }
 
         return $this->render('docker/listContainers.html.twig', [
-            'containers'       => $containers,
-            'vms'              => $vms,
-            'controller_name'  => 'DockerController',
+            'containers' => $containers,
+            'vms' => $vms,
+            'controller_name' => 'DockerController',
         ]);
     }
 
@@ -281,7 +282,7 @@ final class DockerController extends AbstractController
                 throw new Exception("Impossible de récupérer l'IP de la VM.");
             }
 
-            $uploadError = $dockerService->sendFileToVm($content, $remotePath, $vmIp);
+            $uploadError = $dockerService->sendContentToVm($content, $remotePath, $vmIp);
             if (str_contains($uploadError, 'Permanently added')) {
                 $uploadError = '';
             }
@@ -301,8 +302,20 @@ final class DockerController extends AbstractController
             );
 
             if (!empty($important)) {
-                $msg = implode("\n", $important);
-                throw new Exception("Erreur détectée pendant le déploiement :\n" . $msg);
+                throw new Exception("Erreur détectée pendant le déploiement :\n" . implode("\n", $important));
+            }
+
+            $fileExists = $dockerService->runInVm(
+                "test -f " . escapeshellarg($remotePath) . " && echo 'OK' || echo 'KO'",
+                $vmIp
+            );
+            if ($fileExists !== 'OK') {
+                throw new Exception("Le fichier YAML n'a pas été transféré correctement.");
+            }
+
+            $containers = $dockerService->listContainers($vmIp);
+            if (empty($containers)) {
+                throw new Exception("Aucun conteneur n'a été créé après le déploiement.");
             }
 
             $this->addFlash('success', "Déploiement OK : " . $baseName);
@@ -342,5 +355,18 @@ final class DockerController extends AbstractController
 
         return new JsonResponse(['status' => 'creating']);
     }
+
+    #[IsGranted('ROLE_USER')]
+    #[Route('/services', name: 'services_list', methods: ['GET'])]
+    public function listServices(DockerService $dockerService, ProxmoxService $proxmoxService): Response
+    {
+        $user = $this->getUser();
+        $vmip = $proxmoxService->getVMIp($user->getProxmoxVmid());
+        $services = $dockerService->listServices($vmip);
+        return $this->render('docker/listServices.html.twig', [
+            'services' => $services
+        ]);
+    }
+
 
 }

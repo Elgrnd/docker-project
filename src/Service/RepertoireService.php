@@ -25,18 +25,22 @@ class RepertoireService
      */
     public function addRepertoireToZip(Repertoire $repertoire, ZipArchive $zip, string $pathInZip): void
     {
-        $currentPath = ($pathInZip !== '' ? $pathInZip . '/' : '') . $repertoire->getName();
+        $currentPath = $pathInZip === ''
+            ? $repertoire->getName()
+            : $pathInZip . '/' . $repertoire->getName();
 
-        $zip->addEmptyDir($currentPath);
+        if (!$zip->locateName($currentPath . '/')) {
+            $zip->addEmptyDir($currentPath);
+        }
+
+        foreach ($repertoire->getChildrenActifs() as $child) {
+            $this->addRepertoireToZip($child, $zip, $currentPath);
+        }
 
         foreach ($repertoire->getAccesFilesUtilisateur() as $ufr) {
             $file = $ufr->getFile();
             $filepathInZip = $currentPath . '/' . $file->getNameFile();
             $zip->addFromString($filepathInZip, $file->getBodyFile());
-        }
-
-        foreach ($repertoire->getChildrenActifs() as $child) {
-            $this->addRepertoireToZip($child, $zip, $currentPath);
         }
     }
 

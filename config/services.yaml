@@ -40,3 +40,8 @@ services:
     App\Service\RepertoireService:
         arguments:
             $storageDir: '%app.file_storage_dir%'
+
+    App\Service\GitlabSyncService:
+        arguments:
+            $storageDir: '%app.file_storage_dir%'
+

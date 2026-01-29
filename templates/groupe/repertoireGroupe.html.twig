@@ -28,7 +28,6 @@
         <h1>📂 Fichiers du groupe {{ groupe.nom }}</h1>
 
         {% if is_granted('GROUPE_EDIT', groupe) %}
-            {# Bouton pour afficher le formulaire #}
             <div class="mb-4">
                 <a href="#" id="toggleFormBtn" class="btn btn-success">
                     ➕ Créer un nouveau répertoire
@@ -44,7 +43,6 @@
             📦 Télécharger en ZIP
         </a>
 
-        {# Arborescence des répertoires et fichiers #}
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">📂 Arborescence</h5>

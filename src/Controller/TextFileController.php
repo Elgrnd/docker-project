@@ -207,7 +207,7 @@ final class TextFileController extends AbstractController
             return $this->redirectToRoute('bibliotheque');
         }
 
-        return $this->render('gitlab/ajouterAuRepertoire.html.twig', [
+        return $this->render('file/ajouterAuRepertoire.html.twig', [
             'formulaire' => $form->createView(),
             'fileBiblio' => $textFile,
             'routeAnnuler' => 'bibliotheque'

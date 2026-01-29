@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="{{ asset('css/ldap/preview.css') }}">
 {% endblock %}
 
+{% block scriptJs %}
+    <script src="{{ asset("js/ldap/preview.js") }}" defer></script>
+{% endblock %}
+
 {% block page_content %}
     <div class="container mt-4 mb-5">
         <h1 class="mb-4">🔄 Synchronisation LDAP</h1>
@@ -158,19 +162,5 @@
         </div>
     </div>
 
-    {% block scriptJs %}
-    <script>
-        function toggleSection(sectionId) {
-            const section = document.getElementById(sectionId);
-            const header = section.previousElementSibling;
-            const icon = header.querySelector('.toggle-icon');
 
-            // Toggle display
-            section.classList.toggle('show');
-
-            // Rotation de l'icône
-            icon.classList.toggle('open');
-        }
-    </script>
-    {% endblock %}
 {% endblock %}

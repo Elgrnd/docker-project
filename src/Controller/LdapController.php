@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Repertoire;
 use App\Entity\Utilisateur;
 use App\Repository\UtilisateurRepository;
 use App\Service\ConfigurationLdap;
@@ -165,11 +166,10 @@ class LdapController extends AbstractController
                         }
                     }
 
-                    // ✅ Récupère ou crée l'utilisateur
+                    //Récupère ou crée l'utilisateur
                     $user = $this->utilisateurRepository->findOneBy(['login' => $login]);
 
                     if (!$user) {
-                        // Création
                         $user = new Utilisateur();
                         $user->setLogin($login);
 
@@ -184,17 +184,20 @@ class LdapController extends AbstractController
                     } else {
                         // Mise à jour
                         $updated++;
-                        $this->logger->info("🔄 Utilisateur mis à jour: $login");
                     }
 
-                    // ✅ MAJ des données (toujours, même si doublons d'email)
                     $user->setNom($userLdap['nom'] ?? '');
                     $user->setPrenom($userLdap['prenom'] ?? '');
                     $user->setAdresseMail($email);  // ✅ null accepté, doublons acceptés
                     $user->setPromotion($userLdap['promotion'] ?? '');
                     $user->setPassword(null);
 
+                    $repertoire = new Repertoire();
+                    $repertoire->setUtilisateurRepertoire($user);
+                    $repertoire->setName('Répertoire personnel');
+
                     $this->entityManager->persist($user);
+                    $this->entityManager->persist($repertoire);
 
                     // Flush par batch de 50
                     if (($imported + $updated) % 50 === 0) {
@@ -280,34 +283,5 @@ class LdapController extends AbstractController
             return $this->redirectToRoute('admin_ldap_preview');
         }
     }
-
-    #[Route('/debug-users', name: 'admin_ldap_debug')]
-    public function debugUsers(): Response
-    {
-        ConfigurationLDAP::connecterServeur();
-        $utilisateursLdap = ConfigurationLDAP::getAll();
-        ConfigurationLDAP::deconnecterServeur();
-
-        // Filtre sur les 3 users problématiques
-        $problematicUsers = ['demontchalin', 'palleja', 'nobody'];
-
-        $debug = [];
-        foreach ($utilisateursLdap as $user) {
-            if (in_array($user['login'], $problematicUsers)) {
-                $debug[] = [
-                    'login' => $user['login'],
-                    'nom' => $user['nom'],
-                    'prenom' => $user['prenom'],
-                    'email' => $user['email'],
-                    'promotion' => $user['promotion'],
-                    'dn' => $user['dn']
-                ];
-            }
-        }
-
-        dump($debug);
-        die('Voir dump ci-dessus');
-    }
-
 
 }

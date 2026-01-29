@@ -1,0 +1,38 @@
+<div class="file-item">
+    <div class="file-info">
+        <i class="bi bi-file-earmark-text file-icon"></i>
+        <span class="file-name">{{ gyr.file.nameFile }}</span>
+    </div>
+    <div class="file-actions">
+        {% if gyr.file.isText %}
+            <i class="bi bi-eye view-icon" title="Afficher"
+               onclick="afficherContenuTextFile('{{ gyr.file.bodyFile|escape('js') }}')"></i>
+            {% if is_granted('GROUPE_FILE_EDIT', gyr) %}
+                <a href="{{ path('modifier_text_file_groupe', {"id":gyr.groupe.id,"textFileId": gyr.file.id}) }}">
+                    <i class="bi bi-pencil edit-icon" title="Modifier"></i>
+                </a>
+            {% endif %}
+            {% if app.user.vmStatus == 'ready' and gyr.file.isYaml %}
+                <a href="{{ path('deploy_yaml_file', {id: gyr.file.id}) }}"
+                   onclick="return confirm('Déployer ce fichier sur votre VM ?');">
+                    <i class="bi bi-rocket-takeoff deploy-icon" title="Déployer"></i>
+                </a>
+            {% endif %}
+        {% endif %}
+        {% if is_granted('FILE_DOWNLOAD', gyr.file) %}
+            <i class="bi bi-download download-icon" title="Télécharger"
+               onclick="downloadFileById('{{ gyr.file.id }}')"></i>
+        {% endif %}
+        {% if is_granted('GROUPE_EDIT', gyr.groupe) %}
+            <a href="{{ path('file_deplacer_groupe', {'id': gyr.groupe.id, 'idFile': gyr.file.id}) }}">
+                <i class="bi bi-arrows-move" title="Déplacer"></i>
+            </a>
+        {% endif %}
+        {% if is_granted('GROUPE_FILE_DELETE', gyr) %}
+            <button data-groupe-id="{{ gyr.groupe.id }}" data-fichier-id="{{ gyr.file.id }}" class="supprimerFichierGroupe"
+                    data-csrf-token="{{ csrf_token('delete' ~ gyr.groupe.id ~ gyr.file.id) }}">
+                <i class="bi bi-trash bin-icon" title="Supprimer"></i>
+            </button>
+        {% endif %}
+    </div>
+</div>

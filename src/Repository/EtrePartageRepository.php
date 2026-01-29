@@ -3,8 +3,8 @@
 namespace App\Repository;
 
 use App\Entity\EtrePartage;
+use App\Entity\File;
 use App\Entity\Utilisateur;
-use App\Entity\YamlFile;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -18,26 +18,14 @@ class EtrePartageRepository extends ServiceEntityRepository
         parent::__construct($registry, EtrePartage::class);
     }
 
-    public function existeDeja(Utilisateur $utilisateur, YamlFile $yamlFile): bool
-    {
-        return $this->createQueryBuilder('ep')
-                ->andWhere('ep.utilisateur = :utilisateur')
-                ->andWhere('ep.yamlFile = :yamlFile')
-                ->setParameter('utilisateur', $utilisateur)
-                ->setParameter('yamlFile', $yamlFile)
-                ->getQuery()
-                ->getOneOrNullResult() !== null;
-    }
-
-
-    public function existsPartage(Utilisateur $utilisateur, YamlFile $yamlFile): bool
+    public function existsPartage(Utilisateur $utilisateur, File $file): bool
     {
         return (bool) $this->createQueryBuilder('e')
             ->select('COUNT(e.id)')
             ->where('e.utilisateur = :utilisateur')
-            ->andWhere('e.yamlFile = :yamlFile')
+            ->andWhere('e.file = :file')
             ->setParameter('utilisateur', $utilisateur)
-            ->setParameter('yamlFile', $yamlFile)
+            ->setParameter('file', $file)
             ->getQuery()
             ->getSingleScalarResult();
     }

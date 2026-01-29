@@ -37,15 +37,15 @@
                                     Supprimé le : {{ r.deletedAt|date('d/m/Y H:i') }}
                                 </small>
 
-                                {% set yamlFiles = r.accesYamlFilesUtilisateur
-                                    |map(u => u.getYamlFile())
+                                {% set files = r.accesFilesUtilisateur
+                                    |map(u => u.getFile())
                                     |filter(y => y.deletedAt is not null) %}
-                                {% if yamlFiles is not empty %}
+                                {% if files is not empty %}
                                     <div class="mt-2 ps-3 border-start">
-                                        <strong>Fichiers YAML supprimés :</strong>
+                                        <strong>Fichiers supprimés :</strong>
                                         <ul class="mb-0 mt-1">
-                                            {% for y in yamlFiles %}
-                                                <li><i class="bi bi-filetype-yml"></i> {{ y.nameFile }}</li>
+                                            {% for f in files %}
+                                                <li><i class="bi bi-filetype-yml"></i> {{ f.nameFile }}</li>
                                             {% endfor %}
                                         </ul>
                                     </div>

@@ -1,0 +1,49 @@
+{% extends "base.html.twig" %}
+
+{% block title %}
+    <title>Partager un fichier</title>
+{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/etre_partage/partager_file.css') }}">
+{% endblock %}
+
+{% block page_content %}
+    <main class="share-container">
+        <div class="card-share">
+            <h2 class="title text-center mb-3">📤 Partager un fichier</h2>
+            <p class="subtitle text-muted mb-4 text-center">
+                {% if is_granted('ROLE_ADMIN') %}
+                    Vous êtes en mode administrateur — vous pouvez partager n’importe quel fichier.
+                {% else %}
+                    Vous pouvez partager vos fichiers avec d’autres utilisateurs.
+                {% endif %}
+            </p>
+
+            {{ form_start(formulairePartage) }}
+
+            <div class="mb-3">
+                {{ form_label(formulairePartage.fileId, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+                {{ form_widget(formulairePartage.fileId, {'attr': {'class': 'form-select'}}) }}
+                {{ form_errors(formulairePartage.fileId) }}
+            </div>
+
+            <div class="mb-3">
+                {{ form_label(formulairePartage.utilisateur, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+                {{ form_widget(formulairePartage.utilisateur, {'attr': {'class': 'form-select'}}) }}
+                {{ form_errors(formulairePartage.utilisateur) }}
+            </div>
+
+            {# optionnel: affiche les erreurs globales du form #}
+            {{ form_errors(formulairePartage) }}
+
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="bi bi-share"></i> Partager
+                </button>
+            </div>
+
+            {{ form_end(formulairePartage) }}
+        </div>
+    </main>
+{% endblock %}

@@ -35,7 +35,8 @@ class DockerService
     }
 
 
-    public function runInVm(string $cmd, string $vmIp): string {
+    public function runInVm(string $cmd, string $vmIp): string
+    {
         $sshCommand = sprintf(
             'ssh %s %s %s',
             $this->getSshBaseOptions(),
@@ -57,7 +58,6 @@ class DockerService
 
         return trim(shell_exec($scpCommand . ' 2>&1') ?? '');
     }
-
 
     public function sendContentToVm(string $content, string $remotePath, string $vmIp): string
     {
@@ -82,7 +82,8 @@ class DockerService
         string $localZipPath,
         string $remoteDir,
         string $vmIp
-    ): void {
+    ): void
+    {
         $remoteZip = $remoteDir . '.zip';
 
         $this->sendFileToVm($localZipPath, $remoteZip, $vmIp);
@@ -115,6 +116,37 @@ class DockerService
         }
         return $containers;
     }
+
+    public function listServices(string $vmIp): array
+    {
+        $cmd = '/usr/bin/docker inspect $(/usr/bin/docker ps -q) --format \'{{json .}}\'';
+
+        $output = $this->runInVm($cmd, $vmIp);
+
+        $services = [];
+
+        $lines = array_filter(array_map('trim', explode("\n", $output)));
+
+        foreach ($lines as $line) {
+            $data = json_decode($line, true);
+
+            if (!$data) {
+                continue;
+            }
+
+            $services[] = [
+                'name' => ltrim($data['Name'] ?? '', '/'),
+                'service' => $data['Config']['Labels']['com.docker.compose.service'] ?? '',
+                'image' => $data['Config']['Image'] ?? '',
+                'status' => $data['State']['Status'] ?? '',
+                'ports' => $data['NetworkSettings']['Ports'] ?? [],
+            ];
+        }
+
+        return $services;
+    }
+
+
 
     public function startContainer(string $id, $vmIp): array
     {

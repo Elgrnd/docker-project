@@ -1,23 +1,22 @@
-function afficherContenuYamlFile(contenu) {
+function afficherContenuTextFile(contenu) {
     const overlay = document.getElementById("overlayBlur");
     const modal = document.getElementById("modalContent");
     const contentDisplay = document.getElementById("contentDisplay");
 
-    contentDisplay.textContent = contenu; // affiche le contenu YAML
+    contentDisplay.textContent = contenu;
     overlay.style.display = "block";
     modal.style.display = "block";
 }
 
-function afficherContenuYamlFileGitlab(url) {
+function afficherContenuTextFileGitlab(url) {
     const overlay = document.getElementById("overlayBlur");
     const modal = document.getElementById("modalContent");
     const contentDisplay = document.getElementById("contentDisplay");
 
-    // Appel AJAX pour récupérer le YAML
     fetch(url)
         .then(response => response.text())
         .then(data => {
-            contentDisplay.textContent = data; // Affiche contenu YAML
+            contentDisplay.textContent = data;
             overlay.style.display = "block";
             modal.style.display = "block";
         })
@@ -28,7 +27,7 @@ function afficherContenuYamlFileGitlab(url) {
         });
 }
 
-function downloadYamlFileGitlab(url, filename) {
+function downloadFileGitlab(url, filename) {
     fetch(url)
         .then(response => response.text())
         .then(content => {
@@ -118,21 +117,21 @@ async function response(event, url, csrfToken) {
     }
 }
 
-async function deleteYamlFile(event) {
+async function deleteFile(event) {
     const fichierId = event.currentTarget.dataset.fichierId;
     const csrfToken = event.currentTarget.dataset.csrfToken;
 
-    let url = Routing.generate("deleteYamlFile",  {"id": fichierId});
+    let url = Routing.generate("deleteFile",  {"id": fichierId});
 
     await responseDelete(url, csrfToken, event);
 }
 
-async function deleteYamlFileGroupe(event) {
+async function deleteFileGroupe(event) {
     const fichierId = event.currentTarget.dataset.fichierId;
     const groupeId = event.currentTarget.dataset.groupeId;
     const csrfToken = event.currentTarget.dataset.csrfToken;
 
-    let url = Routing.generate("deleteYamlFileGroupe",  {"id": groupeId, "yamlId": fichierId});
+    let url = Routing.generate("deleteFileGroupe",  {"id": groupeId, "fileId": fichierId});
 
     await responseDelete(url, csrfToken, event);
 }
@@ -191,22 +190,18 @@ if (foldersWithData) {
 }
 
 Array.from(document.getElementsByClassName("supprimerFichier")).forEach(function (button) {
-    button.addEventListener("click", deleteYamlFile);
+    button.addEventListener("click", deleteFile);
 });
 
 Array.from(document.getElementsByClassName("supprimerFichierGroupe")).forEach(function (button) {
-    button.addEventListener("click", deleteYamlFileGroupe);
+    button.addEventListener("click", deleteFileGroupe);
 });
 
-function downloadYamlFile(content, filename) {
-    const blob = new Blob([content], { type: 'text/yaml' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    window.URL.revokeObjectURL(url); // libère la mémoire
+function downloadFileById(fileId) {
+    const url = Routing.generate("file_download", { id: fileId });
+    window.location.href = url;
 }
+
 
 // Toggle des dossiers dans l'arborescence
 document.querySelectorAll('.repertoire-gitlab').forEach(folder => {

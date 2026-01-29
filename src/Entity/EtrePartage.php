@@ -18,9 +18,9 @@ class EtrePartage
     #[ORM\JoinColumn(nullable: false)]
     private ?Utilisateur $utilisateur = null;
 
-    #[ORM\ManyToOne(targetEntity: YamlFile::class)]
+    #[ORM\ManyToOne(targetEntity: File::class)]
     #[ORM\JoinColumn(nullable: false)]
-    private ?YamlFile $yamlFile = null;
+    private ?File $file = null;
 
     #[ORM\Column(type: 'datetime_immutable')]
     private ?\DateTimeImmutable $datePartage = null;
@@ -41,14 +41,14 @@ class EtrePartage
         return $this;
     }
 
-    public function getYamlFile(): ?YamlFile
+    public function getFile(): ?File
     {
-        return $this->yamlFile;
+        return $this->file;
     }
 
-    public function setYamlFile(?YamlFile $yamlFile): static
+    public function setFile(?File $file): static
     {
-        $this->yamlFile = $yamlFile;
+        $this->file = $file;
         return $this;
     }
 
@@ -76,6 +76,4 @@ class EtrePartage
             throw new DomainException("Ce fichier est déjà partagé avec cet utilisateur.");
         }
     }
-
-
 }

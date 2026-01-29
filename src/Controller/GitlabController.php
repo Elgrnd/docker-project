@@ -2,8 +2,8 @@
 
 namespace App\Controller;
 
-use App\Entity\UtilisateurYamlFileRepertoire;
-use App\Entity\YamlFile;
+use App\Entity\UtilisateurFileRepertoire;
+use App\Entity\TextFile;
 use App\Form\AjouterBiblioRepertoireType;
 use App\Form\GitlabUrlType;
 use App\Service\GitlabApiException;
@@ -15,9 +15,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Yaml\Exception\ParseException;
-use Symfony\Component\Yaml\Yaml;
-use function Symfony\Component\DependencyInjection\Loader\Configurator\param;
 
 class GitlabController extends AbstractController
 {
@@ -185,7 +182,7 @@ class GitlabController extends AbstractController
             return new Response("Erreur lors de la récupération depuis GitLab", 500);
         }
 
-        $files = $gitlab->filterValidYamlFiles($files, $host, $projectId, $branch, $token);
+        //$files = $gitlab->filterValidYamlFiles($files, $host, $projectId, $branch, $token);
 
         $tree = $gitlab->buildTree($files);
 
@@ -293,10 +290,10 @@ class GitlabController extends AbstractController
             return $this->redirectToRoute('gitlab_fichiers');
         }
 
-        $yamlFile = new YamlFile();
-        $yamlFile->setNameFile($nameFile);
-        $yamlFile->setBodyFile($bodyFile);
-        $yamlFile->setUtilisateurYamlfile($utilisateur);
+        $File = new TextFile();
+        $File->setNameFile($nameFile);
+        $File->setBodyFile($bodyFile);
+        $File->setUtilisateurFile($utilisateur);
 
         $form = $this->createForm(AjouterBiblioRepertoireType::class, null, [
             'method' => 'POST',
@@ -309,24 +306,24 @@ class GitlabController extends AbstractController
             $data = $form->getData();
             $repertoire = $data['repertoire'];
 
-            $uyr = new UtilisateurYamlFileRepertoire();
-            $uyr->setYamlFile($yamlFile);
-            $uyr->setRepertoire($repertoire);
-            $uyr->setUtilisateur($utilisateur);
+            $ufr = new UtilisateurFileRepertoire();
+            $ufr->setFile($File);
+            $ufr->setRepertoire($repertoire);
+            $ufr->setUtilisateur($utilisateur);
 
 
-            $repo = $entityManager->getRepository(UtilisateurYamlFileRepertoire::class);
+            $repo = $entityManager->getRepository(UtilisateurFileRepertoire::class);
 
-            if ($repo->existsYamlFileUtilisateur($utilisateur->getId(), $yamlFile->getNameFile(), $repertoire)) {
+            if ($repo->existsFileUtilisateur($utilisateur->getId(), $File->getNameFile(), $repertoire->getId())) {
                 $this->addFlash('error', sprintf(
                     'Un fichier nommé "%s" existe déjà dans ce répertoire.',
-                    $yamlFile->getNameFile()
+                    $File->getNameFile()
                 ));
                 return $this->redirectToRoute('gitlab_fichiers');
             }
 
-            $entityManager->persist($yamlFile);
-            $entityManager->persist($uyr);
+            $entityManager->persist($File);
+            $entityManager->persist($ufr);
             $entityManager->flush();
 
             $this->addFlash('success', 'Fichier ajouté à votre répertoire avec succès');
@@ -338,7 +335,7 @@ class GitlabController extends AbstractController
 
         return $this->render('gitlab/ajouterAuRepertoire.html.twig', [
             'formulaire' => $form->createView(),
-            'yamlFileBiblio' => $yamlFile,
+            'fileBiblio' => $File,
             'routeAnnuler' => $routeAnnuler,
         ]);
     }

@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}<title>Bibliothèque</title>{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/file/bibliotheque.css') }}">
+{% endblock %}
+
+{% block scriptJs %}
+    <script defer type="text/javascript" src="{{ asset('js/gestionEvent.js') }}"></script>
+{% endblock %}
+
+{% block page_content %}
+
+    <div id="overlayBlur" class="overlay-blur" onclick="cacherBlur()"></div>
+
+    <div id="modalContent" class="modal-file">
+        <div class="modal-header">
+            <span class="close-modal" onclick="cacherBlur()">&times;</span>
+        </div>
+        <div id="contentDisplay" class="modal-body-file"></div>
+    </div>
+
+    {% if is_granted("ROLE_PROFESSEUR") %}
+        <div>
+            <a href="{{ path("biblio_upload") }}">Importer un fichier</a>
+        </div>
+    {% endif %}
+
+    <div class="file-list">
+        {% for file in fichiers %}
+            <div class="file-item">
+                <div class="file-info">
+                    <i class="bi bi-file-earmark-text file-icon"></i>
+                    <span class="file-name">{{ file.nameFile }}</span>
+                </div>
+                <div class="file-actions">
+                    <i class="bi bi-eye view-icon" title="Afficher"
+                       onclick="afficherContenuTextFile('{{ file.bodyFile|escape('js') }}')"></i>
+                    {% if is_granted('FILE_DOWNLOAD', file) %}
+                        <i class="bi bi-download download-icon" title="Télécharger"
+                           onclick="downloadFileById('{{ file.id }}')"></i>
+                    {% endif %}
+                    <a href="{{ path("ajouterAuRepertoire", {"id": file.id}) }}">
+                        <i class="bi bi-plus-circle" title="Ajouter au répertoire"></i>
+                    </a>
+
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+{% endblock %}
+

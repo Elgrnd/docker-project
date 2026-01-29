@@ -19,11 +19,11 @@ class RepertoireService
     /**
      * Ajoute un répertoire (et tout son contenu) dans un ZIP.
      *
-     * @param Repertoire $repertoire  Le dossier qu’on est en train d'ajouter
-     * @param ZipArchive $zip         L’archive ZIP dans laquelle on écrit
-     * @param string $pathInZip       Le chemin actuel dans le ZIP (genre 'monDossier/sousDossier')
+     * @param Repertoire $repertoire   Le dossier qu’on est en train d’ajouter
+     * @param ZipArchive $archiveZip   L’archive ZIP dans laquelle on écrit
+     * @param string $cheminDansZip    Le chemin actuel dans le ZIP (ex : 'monDossier/sousDossier')
      */
-    public function addRepertoireToZip(Repertoire $repertoire, ZipArchive $zip, string $pathInZip): void
+    public function ajouterRepertoireDansZip(Repertoire $repertoire, ZipArchive $archiveZip, string $cheminDansZip): void
     {
         $currentPath = $pathInZip === ''
             ? $repertoire->getName()
@@ -33,8 +33,16 @@ class RepertoireService
             $zip->addEmptyDir($currentPath);
         }
 
-        foreach ($repertoire->getChildrenActifs() as $child) {
-            $this->addRepertoireToZip($child, $zip, $currentPath);
+        foreach ($repertoire->getChildrenActifs() as $enfant) {
+            $this->ajouterRepertoireDansZip($enfant, $archiveZip, $cheminActuel);
+        }
+
+        foreach ($repertoire->getAccesYamlFilesUtilisateur() as $accesYaml) {
+            $fichierYaml = $accesYaml->getFichierYaml();
+            $archiveZip->addFromString(
+                $cheminActuel . '/' . $fichierYaml->getNomFichier(),
+                $fichierYaml->getContenuFichier()
+            );
         }
 
         foreach ($repertoire->getAccesFilesUtilisateur() as $ufr) {

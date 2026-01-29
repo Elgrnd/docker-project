@@ -26,7 +26,7 @@ class ProxmoxService
         $this->secret = $_ENV['PROXMOX_TOKEN_SECRET'];
     }
 
-    public function cloneUserVmAsynchrone(string $login)
+    public function cloneUserVmAsynchrone(string $login): void
     {
         $command = sprintf(
             'php %s/bin/console app:create-vm %s > /dev/null 2>&1 &',

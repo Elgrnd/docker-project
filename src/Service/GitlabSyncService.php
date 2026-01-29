@@ -118,10 +118,6 @@ final class GitlabSyncService
             $rawSize = strlen($raw);
             if ($rawSize > $maxBytes) { $ignoredTooBig++; continue; }
 
-            $guessedMime = $mimeTypes->getMimeTypes($ext)[0] ?? 'application/octet-stream';
-
-            $file = null;
-
             if (in_array($ext, TextFile::allowedExtensions(), true)) {
                 $tf = new TextFile();
                 $tf->setBodyFile($raw);
@@ -138,6 +134,8 @@ final class GitlabSyncService
                 $ignoredNotAllowed++;
                 continue;
             }
+
+            $guessedMime = $this->guessAllowedMimeType($file, $ext, $mimeTypes);
 
             $file->setNameFile($nameFile);
             $file->setExtension($ext);
@@ -172,6 +170,24 @@ final class GitlabSyncService
             'sha' => $sha,
         ];
     }
+
+    private function guessAllowedMimeType(File $file, string $ext, MimeTypes $mimeTypes): string
+    {
+        $candidates = $mimeTypes->getMimeTypes($ext);
+
+        foreach ($candidates as $candidate) {
+            $candidate = strtolower($candidate);
+            try {
+                $file->assertValidMimeType($candidate);
+                return $candidate;
+            } catch (\DomainException) {
+            }
+        }
+
+        return $file instanceof TextFile ? 'text/plain' : 'application/octet-stream';
+    }
+
+
 
     public function deleteAllFromGitlabFiles(Utilisateur $u): void
     {

@@ -206,7 +206,12 @@ abstract class File
         $aliases = [
             'image/jpg' => 'image/jpeg',
             'application/yaml' => 'application/x-yaml',
+
+            'application/x-httpd-php' => 'text/x-php',
+            'application/php' => 'text/x-php',
+            'application/x-php' => 'text/x-php',
         ];
+
         $mimeType = $aliases[$mimeType] ?? $mimeType;
 
         if (!in_array($mimeType, static::allowedMimeTypes(), true)) {

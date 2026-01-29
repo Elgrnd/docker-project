@@ -103,7 +103,6 @@ final class VersionController extends AbstractController
 
         $textFile = $version->getTextFileId();
 
-        // Vérifier que l'utilisateur est le propriétaire du fichier
         if ($textFile->getUtilisateurFile() !== $utilisateur) {
             throw $this->createAccessDeniedException('Vous n\'êtes pas autorisé à voir cette version.');
         }

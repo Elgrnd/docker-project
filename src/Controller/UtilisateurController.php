@@ -4,9 +4,14 @@ namespace App\Controller;
 
 use App\Entity\Repertoire;
 use App\Entity\Utilisateur;
+use App\Form\GitlabUrlType;
 use App\Form\UtilisateurType;
 use App\Repository\UtilisateurRepository;
 use App\Service\FlashMessageHelperInterface;
+use App\Service\GitlabApiException;
+use App\Service\GitlabApiService;
+use App\Service\GitlabSyncService;
+use App\Service\GitlabTokenCryptoService;
 use App\Service\ProxmoxService;
 use App\Service\UtilisateurManagerInterface;
 use Doctrine\ORM\EntityManagerInterface;
@@ -165,4 +170,115 @@ final class UtilisateurController extends AbstractController
         }
     }
 
+    #[IsGranted("ROLE_USER")]
+    #[Route('/gitlab/url', name: 'gitlab_url')]
+    public function gitlabUrl(
+        Request $request,
+        EntityManagerInterface $em,
+        GitlabApiService $gitlab,
+        GitlabTokenCryptoService $crypto,
+        GitlabSyncService $sync
+    ): Response {
+        $utilisateur = $this->getUser();
+
+        $form = $this->createForm(GitlabUrlType::class, $utilisateur);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $url = $utilisateur->getGitlabUrl();
+            $plainToken = $form->get('gitlabToken')->getData();
+
+            if ($url === null || !$gitlab->isValidGitlabUrl($url)) {
+                $this->addFlash('error', "URL GitLab invalide.");
+                return $this->redirectToRoute('gitlab_url');
+            }
+
+            if ($plainToken) {
+                try {
+                    $gitlab->assertProjectReachable($url, $plainToken);
+                } catch (GitlabApiException $e) {
+                    $code = $e->getStatusCode();
+                    if ($code === 401) $this->addFlash('error', "Token GitLab invalide ou expiré.");
+                    elseif ($code === 403) $this->addFlash('error', "Token valide mais accès refusé au dépôt (droits insuffisants).");
+                    elseif ($code === 404) $this->addFlash('error', "Projet introuvable : vérifiez l’URL GitLab.");
+                    elseif ($code >= 500) $this->addFlash('error', "GitLab indisponible (HTTP $code).");
+                    else $this->addFlash('error', "Erreur GitLab (HTTP $code).");
+
+                    return $this->redirectToRoute('gitlab_url');
+
+                } catch (\RuntimeException $e) {
+                    $this->addFlash('error', "Impossible de joindre GitLab (réseau/SSL/timeout).");
+                    return $this->redirectToRoute('gitlab_url');
+                }
+
+                $enc = $crypto->encrypt($plainToken);
+                $utilisateur->setGitlabTokenCipher($enc['cipher']);
+                $utilisateur->setGitlabTokenNonce($enc['nonce']);
+            } else {
+                if ($gitlab->isPrivateProjectUrl($url)) {
+                    $this->addFlash('error', "Ce dépôt est privé. Ajoutez un token GitLab.");
+                    return $this->redirectToRoute('gitlab_url');
+                }
+
+                try {
+                    $gitlab->assertProjectReachable($url, null);
+                } catch (\Throwable $e) {
+                    $this->addFlash('error', "Aucun dépôt GitLab connu à cette adresse.");
+                    return $this->redirectToRoute('gitlab_url');
+                }
+
+                $utilisateur->setGitlabTokenCipher(null);
+                $utilisateur->setGitlabTokenNonce(null);
+            }
+
+            $em->persist($utilisateur);
+            $em->flush();
+
+            try {
+                $res = $sync->syncUtilisateur($utilisateur, maxBytes: 10 * 1024 * 1024);
+
+                $this->addFlash('success', 'URL GitLab enregistrée et fichiers mis en cache !');
+                $this->addFlash('success', "Cache GitLab : {$res['imported']} fichier(s) importé(s).");
+
+                if ($res['ignoredTooBig'] > 0) {
+                    $this->addFlash('warning', "{$res['ignoredTooBig']} fichier(s) ignoré(s) (> 10 Mo).");
+                }
+                if ($res['ignoredNotAllowed'] > 0) {
+                    $this->addFlash('warning', "{$res['ignoredNotAllowed']} fichier(s) ignoré(s) (extension/MIME non autorisés).");
+                }
+
+            } catch (\Throwable $e) {
+                $this->addFlash('warning', "URL GitLab enregistrée, mais la mise en cache a échoué : " . $e->getMessage());
+                $this->addFlash('warning', "Vous pouvez réessayer avec le bouton “Actualiser (cache)”.");
+            }
+
+            return $this->redirectToRoute('repertoire');
+        }
+
+        return $this->render('utilisateur/url.html.twig', [
+            'form' => $form,
+        ]);
+    }
+
+    #[IsGranted("ROLE_USER")]
+    #[Route('/gitlab/supprimer-url', name: 'gitlab_supprimer_url')]
+    public function supprimerUrl(
+        EntityManagerInterface $em,
+        GitlabSyncService $sync,
+    ): Response {
+        $u = $this->getUser();
+
+        $sync->deleteAllFromGitlabFiles($u);
+
+        $u->setGitlabUrl(null);
+        $u->setGitlabTokenCipher(null);
+        $u->setGitlabTokenNonce(null);
+        $u->setGitlabLastCommitSha(null);
+
+        $em->persist($u);
+        $em->flush();
+
+        $this->addFlash('success', 'URL GitLab supprimée.');
+        return $this->redirectToRoute('repertoire');
+    }
 }

@@ -75,42 +75,6 @@ class GitlabApiService
     }
 
     /**
-     * Vérifie que le token (PRIVATE-TOKEN) est valide via /api/v4/user.
-     * @throws GitlabApiException
-     */
-    public function assertTokenValid(string $host, string $privateToken): void
-    {
-        $url = "https://$host/api/v4/user";
-        $this->request($url, $privateToken);
-    }
-
-    private function projectExists(string $host, string $projectId): bool
-    {
-        // Détermination de la base API GitLab selon l'hôte
-        $apiBase = match ($host) {
-            'gitlab.com' => 'https://gitlab.com/api/v4/projects/',
-            'gitlabinfo.iutmontp.univ-montp2.fr' => 'https://gitlabinfo.iutmontp.univ-montp2.fr/api/v4/projects/',
-            default => null
-        };
-
-        if (!$apiBase) {
-            return false;
-        }
-
-        $url = $apiBase . $projectId;
-
-        try {
-            $response = $this->request($url);
-
-            // Si request() ne throw pas → HTTP < 400 → OK
-            return true;
-
-        } catch (RuntimeException $e) {
-            return false;
-        }
-    }
-
-    /**
      * Vérifie que le projet est atteignable via /api/v4/projects/:id
      * @throws GitlabApiException|RuntimeException
      */
@@ -224,113 +188,34 @@ class GitlabApiService
         return $decoded === null ? $result : $decoded;
     }
 
-
-    public function buildTree(array $items): array
+    public function getLatestCommitSha(string $host, string $projectId, string $branch, ?string $token): ?string
     {
-        $tree = [];
+        $url = "https://$host/api/v4/projects/$projectId/repository/commits?ref_name=" . rawurlencode($branch) . "&per_page=1";
+        $res = $this->request($url, $token);
 
-        foreach ($items as $item) {
-            if (!isset($item['path']) || !isset($item['type'])) {
-                continue;
-            }
-
-            $parts = explode('/', $item['path']);
-            $current = &$tree;
-
-            foreach ($parts as $index => $part) {
-                $isLast = ($index === count($parts) - 1);
-
-                if ($isLast) {
-                    // Si déjà existant et contient des enfants, on doit MERGER intelligemment
-                    if (isset($current[$part]) && isset($current[$part]['children'])) {
-                        $current[$part]['type'] = $item['type'];
-                        $current[$part]['path'] = $item['path'];
-                    } else {
-                        $current[$part] = [
-                            'type' => $item['type'],
-                            'path' => $item['path']
-                        ];
-                    }
-                } else {
-                    if (!isset($current[$part])) {
-                        $current[$part] = [
-                            'type' => 'tree',
-                            'children' => []
-                        ];
-                    } elseif (!isset($current[$part]['children'])) {
-                        $existing = $current[$part];
-                        $current[$part] = [
-                            'type' => 'tree',
-                            'path' => $existing['path'] ?? null,
-                            'children' => []
-                        ];
-                    }
-
-                    $current = &$current[$part]['children'];
-                }
-            }
-
-            unset($current);
-        }
-
-        $this->sortTree($tree);
-
-        return $tree;
+        if (!is_array($res) || count($res) === 0) return null;
+        return is_array($res[0]) ? ($res[0]['id'] ?? null) : null;
     }
 
-    private function sortTree(array &$nodes): void
+    /** @return array<int, array<string,mixed>> */
+    public function listRepositoryTree(string $host, string $projectId, string $branch, ?string $token): array
     {
-        foreach ($nodes as $key => &$node) {
-            if (isset($node['children']) && is_array($node['children'])) {
-                $this->sortTree($node['children']);
-            }
-        }
-        unset($node);
+        $items = [];
+        $page = 1;
 
-        uasort($nodes, function ($a, $b) {
-            $isTreeA = ($a['type'] ?? '') === 'tree';
-            $isTreeB = ($b['type'] ?? '') === 'tree';
+        do {
+            $apiUrl = "https://$host/api/v4/projects/$projectId/repository/tree?recursive=true&ref="
+                . rawurlencode($branch)
+                . "&per_page=100&page=$page";
 
-            if ($isTreeA !== $isTreeB) {
-                return $isTreeA ? -1 : 1;
-            }
+            $result = $this->request($apiUrl, $token);
 
-            return 0;
-        });
-    }
+            if (!is_array($result) || count($result) === 0) break;
 
-    /**
-     * Filtre une liste d'items GitLab "tree API" pour ne garder que les YAML
-     * non vides et parseables.
-     *
-     * @return array filtered items
-     */
-    public function filterValidYamlFiles(array $items, string $host, string $projectId, string $branch, ?string $token): array
-    {
-        return array_values(array_filter($items, function ($item) use ($host, $projectId, $branch, $token) {
-            if (!isset($item['path'])) return false;
-            if (($item['type'] ?? null) !== 'blob') return false;
+            $items = array_merge($items, $result);
+            $page++;
+        } while (true);
 
-            $filename = basename($item['path']);
-            if (!preg_match('/^[^.].*\.ya?ml$/i', $filename)) return false;
-
-            $rawUrl = "https://$host/api/v4/projects/$projectId/repository/files/" . rawurlencode($item['path']) . "/raw?ref=$branch";
-
-            try {
-                $content = $this->request($rawUrl, $token);
-            } catch (\Throwable $e) {
-                return false;
-            }
-
-            if (!is_string($content) || trim($content) === '') return false;
-
-            try {
-                Yaml::parse($content);
-            } catch (ParseException $e) {
-                return false;
-            }
-
-            return true;
-        }));
+        return $items;
     }
 }

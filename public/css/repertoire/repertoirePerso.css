@@ -2,13 +2,15 @@
     font-family: monospace;
 }
 
+/* Espacement uniforme pour tous les items (perso + gitlab) */
 .tree-item {
-    padding: 8px 0;
+    padding: 4px 0; /* au lieu de 8 */
 }
 
+/* même respiration que les dossiers */
 .tree-folder {
-    cursor: pointer;
-    user-select: none;
+    padding: 4px;
+    border-radius: 4px;
 }
 
 .tree-folder:hover {
@@ -58,7 +60,7 @@
 .bin-icon:hover { color: #dc3545; }
 
 .file-item {
-    padding: 5px 0;
+    padding: 4px 0;
     display: flex;
     justify-content: space-between;
     align-items: center;

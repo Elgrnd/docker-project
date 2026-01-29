@@ -3,7 +3,7 @@
 {% block title %}<title>Configuration GitLab</title>{% endblock %}
 
 {% block stylesheets %}
-    <link rel="stylesheet" href="{{ asset('css/gitlab/configuration.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/utilisateur/configuration.css') }}">
 {% endblock %}
 
 
@@ -15,7 +15,6 @@
             🔧 Configuration de l’URL GitLab
         </h1>
 
-        {# --- BLOC CONSEILS (comme sur l'arborescence) --- #}
         <div class="card mt-3 border-info mb-4">
             <div class="card-body">
                 <h6 class="card-title">
@@ -43,7 +42,7 @@
                     <li class="mt-2">
                         <strong>Droits minimum sur le projet</strong> :
                         votre compte doit être membre du projet avec le rôle
-                        <strong>Reporter</strong> (ou plus).
+                        <strong>Developer</strong> (ou plus).
                     </li>
                 </ul>
             </div>
@@ -78,7 +77,7 @@
                         💾 Enregistrer
                     </button>
 
-                    <a href="{{ path('index') }}" class="btn btn-secondary">
+                    <a href="{{ path('repertoire') }}" class="btn btn-secondary">
                         ↩️ Retour
                     </a>
                 </div>

@@ -8,43 +8,6 @@ function afficherContenuTextFile(contenu) {
     modal.style.display = "block";
 }
 
-function afficherContenuTextFileGitlab(url) {
-    const overlay = document.getElementById("overlayBlur");
-    const modal = document.getElementById("modalContent");
-    const contentDisplay = document.getElementById("contentDisplay");
-
-    fetch(url)
-        .then(response => response.text())
-        .then(data => {
-            contentDisplay.textContent = data;
-            overlay.style.display = "block";
-            modal.style.display = "block";
-        })
-        .catch(err => {
-            contentDisplay.textContent = "Erreur lors du chargement du fichier.";
-            overlay.style.display = "block";
-            modal.style.display = "block";
-        });
-}
-
-function downloadFileGitlab(url, filename) {
-    fetch(url)
-        .then(response => response.text())
-        .then(content => {
-            const blob = new Blob([content], { type: 'text/yaml' });
-            const fileUrl = window.URL.createObjectURL(blob);
-
-            const a = document.createElement('a');
-            a.href = fileUrl;
-            a.download = filename;
-            a.click();
-
-            window.URL.revokeObjectURL(fileUrl);
-        })
-        .catch(() => alert("Erreur lors du téléchargement du fichier."));
-}
-
-
 function cacherBlur() {
     document.getElementById("overlayBlur").style.display = "none";
     document.getElementById("modalContent").style.display = "none";
@@ -63,7 +26,6 @@ async function responseDelete(url, csrfToken, event) {
         fichier.remove();
         const fileList = document.querySelector('.file-list ul');
         if (fileList && fileList.children.length === 0) {
-            // Remplacer la liste vide par le message
             fileList.remove();
             const fileListContainer = document.querySelector('.file-list');
             fileListContainer.innerHTML = '<p class="empty-msg">Aucun fichier dans le répertoire</p>';
@@ -136,7 +98,6 @@ async function deleteFileGroupe(event) {
     await responseDelete(url, csrfToken, event);
 }
 
-// Toggle du formulaire
 document.addEventListener('DOMContentLoaded', () => {
     const btn = document.getElementById('toggleFormBtn');
     const formContainer = document.getElementById('formContainer');
@@ -152,7 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-// Bouton annuler
 const cancelBtn = document.getElementById('cancelBtn');
 if (cancelBtn) {
     cancelBtn.addEventListener('click', function () {
@@ -168,8 +128,6 @@ if (cancelBtn) {
 }
 
 
-
-// Toggle des dossiers dans l'arborescence
 const foldersWithData = document.querySelectorAll('.tree-folder[data-folder-id]');
 if (foldersWithData) {
     foldersWithData.forEach(folder => {
@@ -202,28 +160,6 @@ function downloadFileById(fileId) {
     window.location.href = url;
 }
 
-
-// Toggle des dossiers dans l'arborescence
-document.querySelectorAll('.repertoire-gitlab').forEach(folder => {
-    folder.addEventListener('click', function () {
-        const children = this.nextElementSibling; // <ul class="tree-children">
-        const toggle = this.querySelector('.toggle-icon');
-
-        if (!children) return;
-
-        // Toggle affichage
-        if (children.style.display === 'none') {
-            children.style.display = 'block';
-            toggle.classList.remove('collapsed');
-        } else {
-            children.style.display = 'none';
-            toggle.classList.add('collapsed');
-        }
-    });
-});
-
-
-
 const buttonsRepertoires = document.getElementsByClassName("supprimerRepertoire")
 Array.from(buttonsRepertoires).forEach(function (button) {
     button.addEventListener("click", deleteRepertoire);
@@ -234,3 +170,26 @@ Array.from(buttonsRepertoiresGroupe).forEach(function (button) {
     button.addEventListener("click", deleteRepertoireGroupe);
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+    const gitlabFolders = document.querySelectorAll('.tree-folder[data-gitlab-folder]');
+    if (!gitlabFolders) return;
+
+    gitlabFolders.forEach(folder => {
+        folder.addEventListener('click', function (e) {
+            if (e.target.closest('a, button, form')) return;
+
+            const children = this.nextElementSibling;
+            const toggle = this.querySelector('.toggle-icon');
+
+            if (!children || !children.classList.contains('tree-children')) return;
+
+            if (children.style.display === 'none') {
+                children.style.display = 'block';
+                if (toggle) toggle.classList.remove('collapsed');
+            } else {
+                children.style.display = 'none';
+                if (toggle) toggle.classList.add('collapsed');
+            }
+        });
+    });
+});

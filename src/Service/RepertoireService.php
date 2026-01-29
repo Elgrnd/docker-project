@@ -25,20 +25,20 @@ class RepertoireService
      */
     public function ajouterRepertoireDansZip(Repertoire $repertoire, ZipArchive $archiveZip, string $cheminDansZip): void
     {
-        $currentPath = $pathInZip === ''
+        $cheminActuel = $cheminDansZip === ''
             ? $repertoire->getName()
-            : $pathInZip . '/' . $repertoire->getName();
+            : $cheminDansZip . '/' . $repertoire->getName();
 
-        if (!$zip->locateName($currentPath . '/')) {
-            $zip->addEmptyDir($currentPath);
+        if (!$archiveZip->locateName($cheminActuel . '/')) {
+            $archiveZip->addEmptyDir($cheminActuel);
         }
 
         foreach ($repertoire->getChildrenActifs() as $enfant) {
             $this->ajouterRepertoireDansZip($enfant, $archiveZip, $cheminActuel);
         }
 
-        foreach ($repertoire->getAccesYamlFilesUtilisateur() as $accesYaml) {
-            $fichierYaml = $accesYaml->getFichierYaml();
+        foreach ($repertoire->getAccesFilesUtilisateur() as $accesFile) {
+            $fichierYaml = $accesFile->getFichierYaml();
             $archiveZip->addFromString(
                 $cheminActuel . '/' . $fichierYaml->getNomFichier(),
                 $fichierYaml->getContenuFichier()
@@ -47,8 +47,8 @@ class RepertoireService
 
         foreach ($repertoire->getAccesFilesUtilisateur() as $ufr) {
             $file = $ufr->getFile();
-            $filepathInZip = $currentPath . '/' . $file->getNameFile();
-            $zip->addFromString($filepathInZip, $file->getBodyFile());
+            $filepathInZip = $cheminActuel . '/' . $file->getNameFile();
+            $archiveZip->addFromString($filepathInZip, $file->getBodyFile());
         }
     }
 

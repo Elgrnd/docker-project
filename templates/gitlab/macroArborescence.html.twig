@@ -17,17 +17,22 @@
                     <i class="bi bi-file-earmark-text file-icon"></i>
                     {{ name }}
                     <div class="file-actions">
-                        <i class="bi bi-eye view-icon" title="Afficher"
-                           onclick="afficherContenuTextFileGitlab('{{ path('gitlab_fichier', { path: item.path }) }}')"></i>
+                        {% if item.isText %}
+                            <i class="bi bi-eye view-icon" title="Afficher"
+                               onclick="afficherContenuTextFile('{{ (item.body ?? '')|escape('js') }}')"></i>
+                        {% endif %}
+
                         <i class="bi bi-download download-icon" title="Télécharger"
-                           onclick="downloadFileGitlab('{{ path('gitlab_fichier', { path: item.path }) }}', '{{ name }}')"></i>
-                        <a href="{{ path('ajouterAuRepertoireGitlab', { path: item.path }) }}"
+                           onclick="downloadFileById('{{ item.id }}')"></i>
+
+                        <a href="{{ path('gitlab_importer', { id: item.id }) }}"
                            class="text-success ms-2 icon-action">
                             <i class="bi bi-plus-circle" title="Ajouter au répertoire"></i>
                         </a>
                     </div>
                 </div>
             {% endif %}
+
         </li>
     {% endfor %}
 {% endmacro %}

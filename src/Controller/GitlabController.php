@@ -2,12 +2,13 @@
 
 namespace App\Controller;
 
+use App\Entity\File;
 use App\Entity\UtilisateurFileRepertoire;
-use App\Entity\TextFile;
 use App\Form\AjouterBiblioRepertoireType;
 use App\Form\GitlabUrlType;
 use App\Service\GitlabApiException;
 use App\Service\GitlabApiService;
+use App\Service\GitlabSyncService;
 use App\Service\GitlabTokenCryptoService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -16,7 +17,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-class GitlabController extends AbstractController
+final class GitlabController extends AbstractController
 {
     #[IsGranted("ROLE_USER")]
     #[Route('/gitlab/url', name: 'gitlab_url')]
@@ -24,16 +25,15 @@ class GitlabController extends AbstractController
         Request $request,
         EntityManagerInterface $em,
         GitlabApiService $gitlab,
-        GitlabTokenCryptoService $crypto
+        GitlabTokenCryptoService $crypto,
+        GitlabSyncService $sync
     ): Response {
-
         $utilisateur = $this->getUser();
 
         $form = $this->createForm(GitlabUrlType::class, $utilisateur);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-
             $url = $utilisateur->getGitlabUrl();
             $plainToken = $form->get('gitlabToken')->getData();
 
@@ -41,44 +41,29 @@ class GitlabController extends AbstractController
                 $this->addFlash('error', "URL GitLab invalide.");
                 return $this->redirectToRoute('gitlab_url');
             }
+
             if ($plainToken) {
                 try {
                     $gitlab->assertProjectReachable($url, $plainToken);
                 } catch (GitlabApiException $e) {
                     $code = $e->getStatusCode();
+                    if ($code === 401) $this->addFlash('error', "Token GitLab invalide ou expiré.");
+                    elseif ($code === 403) $this->addFlash('error', "Token valide mais accès refusé au dépôt (droits insuffisants).");
+                    elseif ($code === 404) $this->addFlash('error', "Projet introuvable : vérifiez l’URL GitLab.");
+                    elseif ($code >= 500) $this->addFlash('error', "GitLab indisponible (HTTP $code).");
+                    else $this->addFlash('error', "Erreur GitLab (HTTP $code).");
 
-                    if ($code === 401) {
-                        $this->addFlash('error', "❌ Token GitLab invalide ou expiré.");
-                        return $this->redirectToRoute('gitlab_url');
-                    }
-                    if ($code === 403) {
-                        $this->addFlash('error', "⛔ Token valide mais accès refusé au dépôt (droits insuffisants).");
-                        return $this->redirectToRoute('gitlab_url');
-                    }
-                    if ($code === 404) {
-                        $this->addFlash('error', "❌ Projet introuvable : vérifiez l’URL GitLab.");
-                        return $this->redirectToRoute('gitlab_url');
-                    }
-                    if ($code >= 500) {
-                        $this->addFlash('error', "⚠️ GitLab est indisponible pour le moment (HTTP $code).");
-                        return $this->redirectToRoute('gitlab_url');
-                    }
-
-                    $this->addFlash('error', "⚠️ Erreur GitLab (HTTP $code).");
                     return $this->redirectToRoute('gitlab_url');
 
                 } catch (\RuntimeException $e) {
-                    // Erreur réseau cURL (code 0)
-                    $this->addFlash('error', "⚠️ Impossible de joindre GitLab (réseau/SSL/timeout).");
+                    $this->addFlash('error', "Impossible de joindre GitLab (réseau/SSL/timeout).");
                     return $this->redirectToRoute('gitlab_url');
                 }
 
                 $enc = $crypto->encrypt($plainToken);
                 $utilisateur->setGitlabTokenCipher($enc['cipher']);
                 $utilisateur->setGitlabTokenNonce($enc['nonce']);
-            }
-            else {
-
+            } else {
                 if ($gitlab->isPrivateProjectUrl($url)) {
                     $this->addFlash('error', "Ce dépôt est privé. Ajoutez un token GitLab.");
                     return $this->redirectToRoute('gitlab_url');
@@ -98,7 +83,24 @@ class GitlabController extends AbstractController
             $em->persist($utilisateur);
             $em->flush();
 
-            $this->addFlash('success', 'URL GitLab enregistrée !');
+            try {
+                $res = $sync->syncUtilisateur($utilisateur, maxBytes: 10 * 1024 * 1024);
+
+                $this->addFlash('success', 'URL GitLab enregistrée et fichiers mis en cache !');
+                $this->addFlash('success', "Cache GitLab : {$res['imported']} fichier(s) importé(s).");
+
+                if ($res['ignoredTooBig'] > 0) {
+                    $this->addFlash('warning', "{$res['ignoredTooBig']} fichier(s) ignoré(s) (> 10 Mo).");
+                }
+                if ($res['ignoredNotAllowed'] > 0) {
+                    $this->addFlash('warning', "{$res['ignoredNotAllowed']} fichier(s) ignoré(s) (extension/MIME non autorisés).");
+                }
+
+            } catch (\Throwable $e) {
+                $this->addFlash('warning', "URL GitLab enregistrée, mais la mise en cache a échoué : " . $e->getMessage());
+                $this->addFlash('warning', "Vous pouvez réessayer avec le bouton “Actualiser (cache)”.");
+            }
+
             return $this->redirectToRoute('gitlab_fichiers');
         }
 
@@ -108,258 +110,198 @@ class GitlabController extends AbstractController
     }
 
 
-
     #[IsGranted("ROLE_USER")]
     #[Route('/gitlab/fichiers', name: 'gitlab_fichiers')]
-    public function liste(GitlabApiService $gitlab, GitlabTokenCryptoService $crypto): Response
-    {
-        $utilisateur = $this->getUser();
+    public function liste(
+        EntityManagerInterface $em,
+        GitlabApiService $gitlab,
+        GitlabSyncService $sync,
+    ): Response {
+        $u = $this->getUser();
 
-        if ($utilisateur->getGitlabUrl() === null) {
+        if ($u->getGitlabUrl() === null) {
             return $this->redirectToRoute('gitlab_url');
         }
 
-        $url = $utilisateur->getGitlabUrl();
-        $parsed = $gitlab->parseGitlabUrl($url);
-
+        $parsed = $gitlab->parseGitlabUrl($u->getGitlabUrl());
         if (!$parsed) {
             $this->addFlash('error', "URL GitLab invalide.");
             return $this->redirectToRoute('gitlab_url');
         }
 
-        $host = $parsed['host'];
-        $projectId = $parsed['projectId'];
-        $branch = $parsed['branch'];
-        $namespace = $parsed['namespace'];
-        $project = $parsed['project'];
-
-        $token = $crypto->decrypt($utilisateur->getGitlabTokenCipher(), $utilisateur->getGitlabTokenNonce());
-
-        $files = [];
-        $page = 1;
-
-        do {
-            $apiUrl = "https://$host/api/v4/projects/$projectId/repository/tree?recursive=true&ref=$branch&per_page=100&page=$page";
-
-            try {
-                $result = $gitlab->request($apiUrl, $token);
-            } catch (GitlabApiException $e) {
-                $code = $e->getStatusCode();
-
-                if ($code === 401) {
-                    $this->addFlash('error', "❌ Votre token GitLab est invalide ou expiré. Merci de le reconfigurer.");
-                    return $this->redirectToRoute('gitlab_url');
-                }
-
-                if ($code === 403) {
-                    $this->addFlash('error', "⛔ Accès refusé au dépôt (droits insuffisants). Vérifiez que votre compte est membre du projet.");
-                    return $this->redirectToRoute('gitlab_url');
-                }
-
-                if ($code === 404) {
-                    $this->addFlash('error', "❌ Projet introuvable : l’URL ne pointe vers aucun dépôt.");
-                    return $this->redirectToRoute('gitlab_url');
-                }
-
-                $this->addFlash('error', "⚠️ Erreur GitLab (HTTP $code).");
-                return $this->redirectToRoute('gitlab_url');
-
-            } catch (\RuntimeException $e) {
-                $this->addFlash('error', "⚠️ Impossible de joindre GitLab (réseau/SSL/timeout).");
-                return $this->redirectToRoute('gitlab_url');
-            }
-
-
-
-            if (!is_array($result) || count($result) === 0) break;
-
-            $files = array_merge($files, $result);
-            $page++;
-
-        } while (true);
-
-        if ($files === null) {
-            return new Response("Erreur lors de la récupération depuis GitLab", 500);
+        $latestSha = null;
+        try {
+            $latestSha = $sync->getLatestShaForUser($u);
+        } catch (\Throwable $e) {
+            // GitLab down => on affiche quand même la BD
         }
 
-        //$files = $gitlab->filterValidYamlFiles($files, $host, $projectId, $branch, $token);
+        if ($u->getGitlabLastCommitSha() === null) {
+            $this->addFlash('info', "Aucune mise en cache GitLab effectuée. Cliquez sur Actualiser pour importer.");
+        } elseif ($latestSha !== null && $latestSha !== $u->getGitlabLastCommitSha()) {
+            $this->addFlash('warning', "Votre dépôt GitLab a changé depuis la dernière mise en cache. Cliquez sur Actualiser.");
+        }
 
-        $tree = $gitlab->buildTree($files);
+        $tree = $sync->buildTreeFromDatabase($u);
 
-        return $this->render("gitlab/arborescence.html.twig", [
-            "tree" => $tree,
-            "namespace" => $namespace,
-            "project" => $project,
-            "branch" => $branch,
-            "host" => $host
+        return $this->render('gitlab/arborescence.html.twig', [
+            'tree' => $tree,
+            'namespace' => $parsed['namespace'],
+            'project' => $parsed['project'],
+            'branch' => $parsed['branch'],
+            'host' => $parsed['host'],
         ]);
     }
 
     #[IsGranted("ROLE_USER")]
-    #[Route('/gitlab/fichier/{path}', name: 'gitlab_fichier', requirements: ['path' => '.+'])]
-    public function fichier(string $path, GitlabApiService $gitlab, GitlabTokenCryptoService $crypto): Response
-    {
-        $utilisateur = $this->getUser();
-
-        if ($utilisateur->getGitlabUrl() === null) {
-            return $this->redirectToRoute('gitlab_url');
+    #[Route('/gitlab/sync', name: 'gitlab_sync', methods: ['POST'])]
+    public function sync(
+        Request $request,
+        GitlabSyncService $sync
+    ): Response {
+        if (!$this->isCsrfTokenValid('gitlab_sync', (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('gitlab_fichiers');
         }
 
-        $parsed = $gitlab->parseGitlabUrl($utilisateur->getGitlabUrl());
-
-        if (!$parsed) {
-            $this->addFlash('error', "URL GitLab invalide.");
+        $u = $this->getUser();
+        if ($u->getGitlabUrl() === null) {
             return $this->redirectToRoute('gitlab_url');
         }
-
-        $host = $parsed['host'];
-        $projectId = $parsed['projectId'];
-        $branch = $parsed['branch'];
-
-        $token = $crypto->decrypt($utilisateur->getGitlabTokenCipher(), $utilisateur->getGitlabTokenNonce());
-
-        $encodedPath = rawurlencode($path);
-
-        // URL GitLab RAW file API
-        $rawUrl = "https://$host/api/v4/projects/$projectId/repository/files/$encodedPath/raw?ref=$branch";
 
         try {
-            $content = $gitlab->request($rawUrl, $token);
+            $res = $sync->syncUtilisateur($u, maxBytes: 10 * 1024 * 1024);
+
         } catch (GitlabApiException $e) {
             $code = $e->getStatusCode();
-            if (in_array($code, [401, 403], true)) {
-                return new Response("Accès GitLab refusé (token manquant/incorrect ou droits insuffisants).", 403);
+
+            if ($code === 401) {
+                $this->addFlash('error', "Votre token GitLab est invalide ou expiré. Merci de le reconfigurer.");
+                return $this->redirectToRoute('gitlab_url');
             }
-            return new Response("Erreur GitLab (HTTP $code).", 500);
+
+            if ($code === 403) {
+                $this->addFlash('error', "Accès refusé au dépôt (droits insuffisants). Vérifiez que votre compte est membre du projet.");
+                return $this->redirectToRoute('gitlab_url');
+            }
+
+            if ($code === 404) {
+                $this->addFlash('error', "Projet introuvable : l’URL ne pointe vers aucun dépôt. Merci de corriger l’URL.");
+                return $this->redirectToRoute('gitlab_url');
+            }
+
+            if ($code >= 500) {
+                $this->addFlash('error', "GitLab est indisponible pour le moment (HTTP $code). Réessayez plus tard.");
+                return $this->redirectToRoute('gitlab_fichiers');
+            }
+
+            $this->addFlash('error', "Erreur GitLab (HTTP $code).");
+            return $this->redirectToRoute('gitlab_fichiers');
+
+        } catch (\RuntimeException $e) {
+            $this->addFlash('error', "Impossible de joindre GitLab (réseau/SSL/timeout). Réessayez plus tard.");
+            return $this->redirectToRoute('gitlab_fichiers');
+
+        } catch (\Throwable $e) {
+            $this->addFlash('error', "Erreur inattendue lors de la synchronisation.");
+            return $this->redirectToRoute('gitlab_fichiers');
         }
 
-        if (!is_string($content)) {
-            return new Response("Impossible de récupérer le fichier.", 500);
+        $this->addFlash('success', "Cache GitLab mis à jour : {$res['imported']} fichier(s) importé(s).");
+
+        if ($res['ignoredTooBig'] > 0) {
+            $this->addFlash('warning', "{$res['ignoredTooBig']} fichier(s) ignoré(s) (> 10 Mo).");
+        }
+        if ($res['ignoredNotAllowed'] > 0) {
+            $this->addFlash('warning', "{$res['ignoredNotAllowed']} fichier(s) ignoré(s) (extension/MIME non autorisés).");
         }
 
-        return new Response($content);
+        return $this->redirectToRoute('gitlab_fichiers');
     }
 
     #[IsGranted("ROLE_USER")]
-    #[\Symfony\Component\Routing\Attribute\Route("/gitlab/ajouter_gitlab_file", name: 'ajouterAuRepertoireGitlab', methods: ['GET', 'POST'])]
-    public function ajouterAuRepertoire(Request $request, EntityManagerInterface $entityManager, GitlabApiService $gitlab, GitlabTokenCryptoService $crypto): Response
-    {
-        $pathFile = $request->query->get('path');
-        $nameFile = basename($pathFile);
+    #[Route('/gitlab/importer/{id}', name: 'gitlab_importer', methods: ['GET', 'POST'])]
+    public function importer(
+        ?File $fileGitlab,
+        Request $request,
+        EntityManagerInterface $em,
+        GitlabSyncService $sync,
+    ): Response {
+        $u = $this->getUser();
 
-        if (!$pathFile) {
-            $this->addFlash('error', 'Fichier GitLab non précisé.');
+        if (!$fileGitlab) {
+            $this->addFlash('error', 'Fichier introuvable.');
             return $this->redirectToRoute('gitlab_fichiers');
         }
 
-        $utilisateur = $this->getUser();
-
-        if ($utilisateur->getGitlabUrl() === null) {
-            return $this->redirectToRoute('gitlab_url');
-        }
-
-        $parsed = $gitlab->parseGitlabUrl($utilisateur->getGitlabUrl());
-
-        if (!$parsed) {
-            $this->addFlash('error', "URL GitLab invalide.");
-            return $this->redirectToRoute('gitlab_url');
-        }
-
-        $host = $parsed['host'];
-        $projectId = $parsed['projectId'];
-        $branch = $parsed['branch'];
-
-        $token = $crypto->decrypt($utilisateur->getGitlabTokenCipher(), $utilisateur->getGitlabTokenNonce());
-
-        $rawUrl = "https://$host/api/v4/projects/$projectId/repository/files/".rawurlencode($pathFile)."/raw?ref=$branch";
-
-        try {
-            $bodyFile = $gitlab->request($rawUrl, $token);
-        } catch (GitlabApiException $e) {
-            $code = $e->getStatusCode();
-            if (in_array($code, [401, 403], true)) {
-                $this->addFlash('error', "Accès GitLab refusé (token manquant/incorrect ou droits insuffisants).");
-                return $this->redirectToRoute('gitlab_url');
-            }
-            $this->addFlash('error', "Erreur GitLab (HTTP $code).");
+        if ($fileGitlab->getUtilisateurFile() !== $u || !$fileGitlab->isFromGitlab()) {
+            $this->addFlash('error', 'Accès interdit.');
             return $this->redirectToRoute('gitlab_fichiers');
         }
-
-        if (!is_string($bodyFile) || trim($bodyFile) === '') {
-            $this->addFlash('error', 'Impossible de récupérer le contenu du fichier.');
-            return $this->redirectToRoute('gitlab_fichiers');
-        }
-
-        $File = new TextFile();
-        $File->setNameFile($nameFile);
-        $File->setBodyFile($bodyFile);
-        $File->setUtilisateurFile($utilisateur);
 
         $form = $this->createForm(AjouterBiblioRepertoireType::class, null, [
             'method' => 'POST',
-            'action' => $this->generateUrl('ajouterAuRepertoireGitlab', ['path' => $pathFile]),
+            'action' => $this->generateUrl('gitlab_importer', ['id' => $fileGitlab->getId()]),
         ]);
-
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
             $repertoire = $data['repertoire'];
 
-            $ufr = new UtilisateurFileRepertoire();
-            $ufr->setFile($File);
-            $ufr->setRepertoire($repertoire);
-            $ufr->setUtilisateur($utilisateur);
+            $repo = $em->getRepository(UtilisateurFileRepertoire::class);
 
-
-            $repo = $entityManager->getRepository(UtilisateurFileRepertoire::class);
-
-            if ($repo->existsFileUtilisateur($utilisateur->getId(), $File->getNameFile(), $repertoire->getId())) {
+            // ✅ CHECK AVANT CLONE (zéro écriture disque si doublon)
+            if ($repo->existsFileUtilisateur($u->getId(), $fileGitlab->getNameFile(), $repertoire->getId())) {
                 $this->addFlash('error', sprintf(
                     'Un fichier nommé "%s" existe déjà dans ce répertoire.',
-                    $File->getNameFile()
+                    $fileGitlab->getNameFile()
                 ));
-                return $this->redirectToRoute('gitlab_fichiers');
+                return $this->redirectToRoute('gitlab_importer', ['id' => $fileGitlab->getId()]);
             }
 
-            $entityManager->persist($File);
-            $entityManager->persist($ufr);
-            $entityManager->flush();
+            $newFile = $sync->cloneFromGitlabToUserSpace($fileGitlab, $u);
 
-            $this->addFlash('success', 'Fichier ajouté à votre répertoire avec succès');
+            $ufr = new UtilisateurFileRepertoire();
+            $ufr->setUtilisateur($u);
+            $ufr->setRepertoire($repertoire);
+            $ufr->setFile($newFile);
 
+            $em->persist($newFile);
+            $em->persist($ufr);
+            $em->flush();
+
+            $this->addFlash('success', 'Fichier importé dans votre espace personnel.');
             return $this->redirectToRoute('gitlab_fichiers');
         }
 
-        $routeAnnuler = 'gitlab_fichiers';
-
         return $this->render('gitlab/ajouterAuRepertoire.html.twig', [
             'formulaire' => $form->createView(),
-            'fileBiblio' => $File,
-            'routeAnnuler' => $routeAnnuler,
+            'fileBiblio' => $fileGitlab,
+            'routeAnnuler' => 'gitlab_fichiers',
         ]);
     }
 
     #[IsGranted("ROLE_USER")]
     #[Route('/gitlab/supprimer-url', name: 'gitlab_supprimer_url')]
-    public function supprimerUrl(EntityManagerInterface $em): Response
-    {
-        $utilisateur = $this->getUser();
+    public function supprimerUrl(
+        EntityManagerInterface $em,
+        GitlabSyncService $sync,
+    ): Response {
+        $u = $this->getUser();
+        if ($u === null) return $this->redirectToRoute('gitlab_url');
 
-        if ($utilisateur === null) {
-            return $this->redirectToRoute('gitlab_url');
-        }
+        $sync->deleteAllFromGitlabFiles($u);
 
-        $utilisateur->setGitlabUrl(null);
-        $utilisateur->setGitlabTokenCipher(null);
-        $utilisateur->setGitlabTokenNonce(null);
+        $u->setGitlabUrl(null);
+        $u->setGitlabTokenCipher(null);
+        $u->setGitlabTokenNonce(null);
+        $u->setGitlabLastCommitSha(null);
 
-        $em->persist($utilisateur);
+        $em->persist($u);
         $em->flush();
 
         $this->addFlash('success', 'URL GitLab supprimée.');
-
         return $this->redirectToRoute('gitlab_url');
     }
-
 }

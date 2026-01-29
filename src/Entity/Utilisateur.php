@@ -42,6 +42,9 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\Email(message: "Cette adresse email n'est pas valide !")]
     private ?string $adresseMail = null;
 
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $gitlabLastCommitSha = null;
+
     /**
      * @var Collection<int, Groupe>
      */
@@ -212,6 +215,17 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     public function setGitlabUrl(?string $gitlabUrl): self
     {
         $this->gitlabUrl = $gitlabUrl;
+        return $this;
+    }
+
+    public function getGitlabLastCommitSha(): ?string
+    {
+        return $this->gitlabLastCommitSha;
+    }
+
+    public function setGitlabLastCommitSha(?string $sha): self
+    {
+        $this->gitlabLastCommitSha = $sha;
         return $this;
     }
 

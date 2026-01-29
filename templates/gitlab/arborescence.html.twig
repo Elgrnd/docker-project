@@ -36,6 +36,12 @@
                onclick="return confirm('Voulez-vous vraiment supprimer votre URL GitLab ?')">
                 <i class="bi bi-trash me-1"></i> Supprimer l’URL GitLab
             </a>
+            <form method="post" action="{{ path('gitlab_sync') }}" class="d-inline">
+                <input type="hidden" name="_token" value="{{ csrf_token('gitlab_sync') }}">
+                <button type="submit" class="btn btn-warning">
+                    <i class="bi bi-arrow-repeat me-1"></i> Actualiser (cache)
+                </button>
+            </form>
         </div>
 
 
@@ -43,18 +49,30 @@
         <div class="card mt-3 border-info">
             <div class="card-body">
                 <h6 class="card-title">
-                    <i class="bi bi-lightbulb text-warning"></i> Conseils
+                    Conseils d’utilisation
                 </h6>
                 <ul class="mb-0 small">
-                    <li>Seuls les répertoires contenant au moins un fichier sont affichés.</li>
-                    <li>Seuls les fichiers <strong>.yml</strong> et <strong>.yaml</strong> sont pris en compte.</li>
-                    <li>Les fichiers vides ou sans nom sont ignorés automatiquement.</li>
-                    <li>Cliquez sur une icône <i class="bi bi-eye"></i> pour afficher le contenu du fichier.</li>
-                    <li>Utilisez <i class="bi bi-download"></i> pour télécharger le fichier.</li>
                     <li>
-                        Cliquez sur <i class="bi bi-plus-circle text-success"></i> pour
-                        <strong>ajouter le fichier à votre espace personnel</strong> dans l’application.
-                        Il sera alors accessible dans votre liste privée de fichiers YAML.
+                        Le cache est mis à jour automatiquement lors de l’enregistrement de l’URL GitLab
+                        ou manuellement via <strong>Actualiser (cache)</strong>.
+                    </li>
+                    <li>
+                        Les fichiers trop volumineux ou non autorisés sont ignorés lors de la synchronisation
+                        (un message explicatif est affiché).
+                    </li>
+                    <li>
+                        Cliquez sur l’icône <i class="bi bi-eye"></i> pour afficher le contenu d’un fichier texte.
+                    </li>
+                    <li>
+                        L’icône <i class="bi bi-download"></i> permet de télécharger le fichier tel qu’il est stocké.
+                    </li>
+                    <li>
+                        En cliquant sur <i class="bi bi-plus-circle text-success"></i>, vous pouvez
+                        <strong>importer un fichier GitLab dans votre espace personnel</strong>.
+                    </li>
+                    <li>
+                        Si un fichier portant le même nom existe déjà dans le répertoire choisi,
+                        l’import est bloqué.
                     </li>
                 </ul>
             </div>

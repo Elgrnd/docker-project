@@ -8,43 +8,6 @@ function afficherContenuTextFile(contenu) {
     modal.style.display = "block";
 }
 
-function afficherContenuTextFileGitlab(url) {
-    const overlay = document.getElementById("overlayBlur");
-    const modal = document.getElementById("modalContent");
-    const contentDisplay = document.getElementById("contentDisplay");
-
-    fetch(url)
-        .then(response => response.text())
-        .then(data => {
-            contentDisplay.textContent = data;
-            overlay.style.display = "block";
-            modal.style.display = "block";
-        })
-        .catch(err => {
-            contentDisplay.textContent = "Erreur lors du chargement du fichier.";
-            overlay.style.display = "block";
-            modal.style.display = "block";
-        });
-}
-
-function downloadFileGitlab(url, filename) {
-    fetch(url)
-        .then(response => response.text())
-        .then(content => {
-            const blob = new Blob([content], { type: 'text/yaml' });
-            const fileUrl = window.URL.createObjectURL(blob);
-
-            const a = document.createElement('a');
-            a.href = fileUrl;
-            a.download = filename;
-            a.click();
-
-            window.URL.revokeObjectURL(fileUrl);
-        })
-        .catch(() => alert("Erreur lors du téléchargement du fichier."));
-}
-
-
 function cacherBlur() {
     document.getElementById("overlayBlur").style.display = "none";
     document.getElementById("modalContent").style.display = "none";

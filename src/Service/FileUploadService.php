@@ -14,7 +14,7 @@ class FileUploadService
     private const SAMPLE_BYTES = 8192;
 
     public function __construct(
-        private readonly string $storageDir, // -> %kernel.project_dir%/var/storage
+        private readonly string $storageDir,
     ) {}
 
     /**
@@ -53,7 +53,6 @@ class FileUploadService
             $file->setExtension($extension);
             $file->setMimeType($detectedMimeType);
 
-            // Whitelists
             $file->assertValidExtension($extension);
             $file->assertValidMimeType($detectedMimeType);
 
@@ -69,7 +68,7 @@ class FileUploadService
             $file->assertNotEmpty($content);
 
             if ($validateYamlWhenYaml && $file->isYaml()) {
-                Yaml::parse($content); // throw ParseException si invalide
+                Yaml::parse($content);
             }
 
             $file->setNameFile($nameFile);
@@ -79,7 +78,6 @@ class FileUploadService
             return $file;
         }
 
-        // Binary
         $file = new BinaryFile();
 
         $file->setExtension($extension);

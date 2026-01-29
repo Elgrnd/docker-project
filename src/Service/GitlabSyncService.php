@@ -42,7 +42,8 @@ final class GitlabSyncService
         $parsed = $this->gitlab->parseGitlabUrl((string) $u->getGitlabUrl());
         $project = $parsed['project'] ?? 'GitLab';
 
-        $rootPrefix = $project . '@' . ($parsed['branch'] ?? 'HEAD');
+        $branch = $parsed['branch'] ?? 'HEAD';
+        $rootPrefix = sprintf('Dépôt GitLab : %s (branche : %s)', $project, $branch);
 
         $leafs = [];
         foreach ($files as $f) {
@@ -58,6 +59,7 @@ final class GitlabSyncService
                 'id' => $f->getId(),
                 'name' => basename($path),
                 'isText' => $f->isText(),
+                'isYaml' => $f->isYaml(),
                 'body' => null,
             ];
 
@@ -84,7 +86,6 @@ final class GitlabSyncService
 
         $items = $this->gitlab->listRepositoryTree($parsed['host'], $parsed['projectId'], $parsed['branch'], $token);
 
-        // supprime cache (avec cleanup disque)
         $this->deleteAllFromGitlabFiles($u);
 
         $mimeTypes = MimeTypes::getDefault();
@@ -121,7 +122,6 @@ final class GitlabSyncService
 
             $file = null;
 
-            // Choix type selon whitelist extension
             if (in_array($ext, TextFile::allowedExtensions(), true)) {
                 $tf = new TextFile();
                 $tf->setBodyFile($raw);
@@ -146,7 +146,6 @@ final class GitlabSyncService
             $file->setFromGitlab(true);
             $file->setGitlabPath($path);
 
-            // Whitelist sécurité (extension + mime)
             try {
                 $file->assertValidExtension($ext);
                 $file->assertValidMimeType($guessedMime);
@@ -293,6 +292,7 @@ final class GitlabSyncService
                         'id' => $leaf['id'],
                         'name' => $leaf['name'],
                         'isText' => $leaf['isText'],
+                        'isYaml' => $leaf['isYaml'] ?? false,
                         'body' => $leaf['body'],
                     ];
                 } else {

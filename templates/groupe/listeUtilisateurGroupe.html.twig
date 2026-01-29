@@ -32,7 +32,6 @@
                 <tr>
                     <td>{{ membre.login }}</td>
 
-                    {# ====== SELECT ROLE ====== #}
                     <td>
                         {% set pivot = membre.getUtilisateurGroupeRelation(groupe) %}
                         {# pivot.role contient GROUPE_UTILISATEUR / GROUPE_MODERATEUR / GROUPE_CHEF #}
@@ -52,7 +51,6 @@
                         {% endif %}
                     </td>
 
-                    {# ====== BOUTON RETIRER ====== #}
                     {% if is_granted('GROUPE_MODERATE', groupe) %}
                         <td>
                             {% if membre != groupe.etreChef %}

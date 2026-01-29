@@ -115,7 +115,7 @@ class Repertoire
         $this->deletedAt = new DateTime();
 
         foreach ($this->accesFilesUtilisateur as $rel) {
-            $rel->getFile()->setDeletedAt($this->deletedAt); // File (Text/Binary)
+            $rel->getFile()->setDeletedAt($this->deletedAt);
         }
 
         foreach ($this->children as $child) {

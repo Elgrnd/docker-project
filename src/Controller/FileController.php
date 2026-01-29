@@ -7,10 +7,14 @@ use App\Entity\File;
 use App\Entity\GroupeFileRepertoire;
 use App\Entity\Repertoire;
 use App\Entity\UtilisateurFileRepertoire;
+use App\Form\AjouterBiblioRepertoireType;
 use App\Form\DeplacerFileType;
 use App\Form\DirectoryType;
 use App\Form\UploadFileType;
 use App\Service\FileUploadService;
+use App\Service\GitlabApiException;
+use App\Service\GitlabApiService;
+use App\Service\GitlabSyncService;
 use App\Service\FlashMessageHelperInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use DomainException;
@@ -254,10 +258,11 @@ final class FileController extends AbstractController
     #[IsGranted('ROLE_USER')]
     #[Route('/repertoire', name: 'repertoire', methods: ['GET', 'POST'])]
     public function afficherRepertoire(
-        Request                $request,
+        Request $request,
         EntityManagerInterface $entityManager,
-    ): Response
-    {
+        GitlabApiService $gitlab,
+        GitlabSyncService $gitlabSync,
+    ): Response {
         $utilisateur = $this->getUser();
 
         $repertoire = new Repertoire();
@@ -272,17 +277,15 @@ final class FileController extends AbstractController
 
             if ($repertoire->getParent() === null) {
                 $repertoireRacine = $repertoireRepository->recupererRepertoireRacineUtilisateur($utilisateur->getId());
-
                 if ($repertoireRacine) {
                     $repertoire->setParent($repertoireRacine);
                 }
             }
 
-            if($repertoireRepository->verifierNomDejaExistant($repertoire->getName(), $repertoire->getParent(), $utilisateur->getId()) != null){
+            if ($repertoireRepository->verifierNomDejaExistant($repertoire->getName(), $repertoire->getParent(), $utilisateur->getId()) !== null) {
                 $this->addFlash('error', 'Un répertoire avec ce nom existe déjà à cet emplacement');
                 return $this->redirectToRoute('repertoire');
             }
-
 
             $entityManager->persist($repertoire);
             $entityManager->flush();
@@ -292,13 +295,170 @@ final class FileController extends AbstractController
         }
 
         $repertoireRacine = $repertoireRepository->recupererRepertoireRacineUtilisateur($utilisateur->getId());
-
         $listUyr = $uyrRepository->recuperertoutFileUtilisateurParRepertoire($utilisateur->getId());
+
+        $gitlabTree = null;
+        $gitlabProject = null;
+        $gitlabBranch = null;
+
+        if ($utilisateur->getGitlabUrl()) {
+            $parsed = $gitlab->parseGitlabUrl($utilisateur->getGitlabUrl());
+
+            if ($parsed) {
+                $gitlabProject = $parsed['project'] ?? null;
+                $gitlabBranch  = $parsed['branch'] ?? null;
+
+                $latestSha = null;
+                try {
+                    $latestSha = $gitlabSync->getLatestShaForUser($utilisateur);
+                } catch (\Throwable $e) {
+                    // GitLab down => on ne bloque pas, on affiche quand même la BD
+                }
+
+                if ($latestSha !== null && $latestSha !== $utilisateur->getGitlabLastCommitSha()) {
+                    $this->addFlash('warning', "Votre dépôt GitLab a changé depuis la dernière mise en cache. Cliquez sur Actualiser.");
+                }
+
+                $gitlabTree = $gitlabSync->buildTreeFromDatabase($utilisateur);
+            }
+        }
 
         return $this->render('repertoire/repertoirePerso.html.twig', [
             'listUyr' => $listUyr,
             'formRepertoire' => $form,
             'repertoireRacine' => $repertoireRacine,
+
+            'gitlabTree' => $gitlabTree,
+            'gitlabProject' => $gitlabProject,
+            'gitlabBranch' => $gitlabBranch,
+        ]);
+    }
+
+    #[IsGranted("ROLE_USER")]
+    #[Route('/gitlab/actualiser', name: 'actualiserGitlab', methods: ['POST'])]
+    public function actualiserGitlab(
+        Request $request,
+        GitlabSyncService $sync
+    ): Response {
+        if (!$this->isCsrfTokenValid('actualiserGitlab', (string) $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('repertoire');
+        }
+
+        $u = $this->getUser();
+        if ($u->getGitlabUrl() === null) {
+            return $this->redirectToRoute('gitlab_url');
+        }
+
+        try {
+            $res = $sync->syncUtilisateur($u, maxBytes: 10 * 1024 * 1024);
+
+        } catch (GitlabApiException $e) {
+            $code = $e->getStatusCode();
+
+            if ($code === 401) {
+                $this->addFlash('error', "Votre token GitLab est invalide ou expiré. Merci de le reconfigurer.");
+                return $this->redirectToRoute('gitlab_url');
+            }
+
+            if ($code === 403) {
+                $this->addFlash('error', "Accès refusé au dépôt (droits insuffisants). Vérifiez que votre compte est membre du projet.");
+                return $this->redirectToRoute('gitlab_url');
+            }
+
+            if ($code === 404) {
+                $this->addFlash('error', "Projet introuvable : l’URL ne pointe vers aucun dépôt. Merci de corriger l’URL.");
+                return $this->redirectToRoute('gitlab_url');
+            }
+
+            if ($code >= 500) {
+                $this->addFlash('error', "GitLab est indisponible pour le moment (HTTP $code). Réessayez plus tard.");
+                return $this->redirectToRoute('repertoire');
+            }
+
+            $this->addFlash('error', "Erreur GitLab (HTTP $code).");
+            return $this->redirectToRoute('repertoire');
+
+        } catch (\RuntimeException $e) {
+            $this->addFlash('error', "Impossible de joindre GitLab (réseau/SSL/timeout). Réessayez plus tard.");
+            return $this->redirectToRoute('repertoire');
+
+        } catch (\Throwable $e) {
+            $this->addFlash('error', "Erreur inattendue lors de la synchronisation.");
+            return $this->redirectToRoute('repertoire');
+        }
+
+        $this->addFlash('success', "Cache GitLab mis à jour : {$res['imported']} fichier(s) importé(s).");
+
+        if ($res['ignoredTooBig'] > 0) {
+            $this->addFlash('warning', "{$res['ignoredTooBig']} fichier(s) ignoré(s) (> 10 Mo).");
+        }
+        if ($res['ignoredNotAllowed'] > 0) {
+            $this->addFlash('warning', "{$res['ignoredNotAllowed']} fichier(s) ignoré(s) (extension/MIME non autorisés).");
+        }
+
+        return $this->redirectToRoute('repertoire');
+    }
+
+    #[IsGranted("ROLE_USER")]
+    #[Route('/gitlab/ajouterAuRepertoire/{id}', name: 'ajouterAuRepertoireGitlab', methods: ['GET', 'POST'])]
+    public function importer(
+        ?File $fileGitlab,
+        Request $request,
+        EntityManagerInterface $em,
+        GitlabSyncService $sync,
+    ): Response {
+        $u = $this->getUser();
+
+        if (!$fileGitlab) {
+            $this->addFlash('error', 'Fichier introuvable.');
+            return $this->redirectToRoute('repertoire');
+        }
+
+        if ($fileGitlab->getUtilisateurFile() !== $u || !$fileGitlab->isFromGitlab()) {
+            $this->addFlash('error', 'Accès interdit.');
+            return $this->redirectToRoute('repertoire');
+        }
+
+        $form = $this->createForm(AjouterBiblioRepertoireType::class, null, [
+            'method' => 'POST',
+            'action' => $this->generateUrl('ajouterAuRepertoireGitlab', ['id' => $fileGitlab->getId()]),
+        ]);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $data = $form->getData();
+            $repertoire = $data['repertoire'];
+
+            $repo = $em->getRepository(UtilisateurFileRepertoire::class);
+
+            if ($repo->existsFileUtilisateur($u->getId(), $fileGitlab->getNameFile(), $repertoire->getId())) {
+                $this->addFlash('error', sprintf(
+                    'Un fichier nommé "%s" existe déjà dans ce répertoire.',
+                    $fileGitlab->getNameFile()
+                ));
+                return $this->redirectToRoute('ajouterAuRepertoireGitlab', ['id' => $fileGitlab->getId()]);
+            }
+
+            $newFile = $sync->cloneFromGitlabToUserSpace($fileGitlab, $u);
+
+            $ufr = new UtilisateurFileRepertoire();
+            $ufr->setUtilisateur($u);
+            $ufr->setRepertoire($repertoire);
+            $ufr->setFile($newFile);
+
+            $em->persist($newFile);
+            $em->persist($ufr);
+            $em->flush();
+
+            $this->addFlash('success', 'Fichier importé dans votre espace personnel.');
+            return $this->redirectToRoute('repertoire');
+        }
+
+        return $this->render('file/ajouterAuRepertoire.html.twig', [
+            'formulaire' => $form->createView(),
+            'fileBiblio' => $fileGitlab,
+            'routeAnnuler' => 'repertoire',
         ]);
     }
 }

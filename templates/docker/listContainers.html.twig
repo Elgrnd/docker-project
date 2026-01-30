@@ -1,14 +1,28 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}<title>Liste des conteneurs</title> {% endblock %}
+{% block title %}
+    <title>Liste des conteneurs</title>
+{% endblock %}
+
 {% block scriptJs %}
-    <script src="{{ asset('js/searchContainers.js') }}"></script>{% endblock %}
+    <script src="{{ asset('js/searchContainers.js') }}"></script>
+    <script src="{{ asset('js/monitoringVm.js') }}"></script>
+
+    <script>
+        window.MONITORING_VM_URL = "{{ path('monitoring_vms') }}";
+    </script>
+{% endblock %}
 
 {% block page_content %}
     <h2 class="mb-4">Conteneurs Docker en cours d’exécution</h2>
 
     <div class="mb-3">
-        <label for="searchInput"></label><input type="text" id="searchInput" class="form-control" placeholder="Rechercher par nom ou ID...">
+        <input
+                type="text"
+                id="searchInput"
+                class="form-control"
+                placeholder="Rechercher par nom ou ID..."
+        >
     </div>
 
     <table class="table table-striped" id="containersTable">
@@ -28,7 +42,9 @@
             {{ include('docker/container.html.twig', {'container': c}) }}
         {% else %}
             <tr>
-                <td colspan="5" class="text-center">Aucun conteneur trouvé.</td>
+                <td colspan="5" class="text-center">
+                    Aucun conteneur trouvé.
+                </td>
             </tr>
         {% endfor %}
         </tbody>
@@ -41,7 +57,7 @@
     {% if vms is empty %}
         <p class="text-center text-muted">Aucune VM détectée.</p>
     {% else %}
-        <table class="table table-bordered table-hover">
+        <table class="table table-bordered table-hover" id="vmMonitoringTable">
             <thead class="table-dark">
             <tr>
                 <th>VMID</th>
@@ -88,18 +104,16 @@
                             -
                         {% endif %}
                     </td>
+
                     <td>
-                        {% set diskUsedBytes = (vm.disk ?? 0) + (vm.diskread ?? 0) + (vm.diskwrite ?? 0) %}
+                        {% set diskUsedBytes = (vm.disk ?? 0) %}
                         {% set diskTotalBytes = vm.maxdisk ?? 0 %}
 
                         {% if diskTotalBytes > 0 %}
                             {% set diskUsedMb = (diskUsedBytes / 1024 / 1024) %}
-
-                            {# Valeur minimale forcée : 0.6 Mo #}
                             {% if diskUsedMb < 0.6 %}
                                 {% set diskUsedMb = 0.6 %}
                             {% endif %}
-
                             {% set diskTotalMb = diskTotalBytes / 1024 / 1024 %}
 
                             {{ diskUsedMb|number_format(1, '.', ' ') }}
@@ -122,15 +136,17 @@
                         {% endif %}
                     </td>
 
-
                     {% if is_granted('ROLE_ADMIN') %}
                         <td>
                             <a href="{{ path('admin_vm_start', {'vmid': vm.vmid}) }}"
                                class="btn btn-success btn-sm">Start</a>
                             <a href="{{ path('admin_vm_stop', {'vmid': vm.vmid}) }}"
                                class="btn btn-warning btn-sm">Stop</a>
-                            <a href="{{ path('admin_vm_delete', {'vmid': vm.vmid}) }}" class="btn btn-danger btn-sm"
-                               onclick="return confirm('Supprimer cette VM ?')">Delete</a>
+                            <a href="{{ path('admin_vm_delete', {'vmid': vm.vmid}) }}"
+                               class="btn btn-danger btn-sm"
+                               onclick="return confirm('Supprimer cette VM ?')">
+                                Delete
+                            </a>
                         </td>
                     {% endif %}
                 </tr>
@@ -138,5 +154,4 @@
             </tbody>
         </table>
     {% endif %}
-
 {% endblock %}

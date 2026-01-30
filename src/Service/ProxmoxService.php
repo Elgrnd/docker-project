@@ -345,4 +345,74 @@ class ProxmoxService
         return $result;
     }
 
+    public function listClusterVmResources(): array
+    {
+        $response = $this->client->request(
+            'GET',
+            "{$this->apiUrl}/cluster/resources",
+            [
+                'headers' => [
+                    'Authorization' => "PVEAPIToken={$this->tokenId}={$this->secret}",
+                ],
+                'query' => [
+                    'type' => 'vm',
+                ],
+                'verify_peer' => false,
+                'verify_host' => false,
+            ]
+        );
+
+        $data = $response->toArray();
+
+        return $data['data'] ?? [];
+    }
+
+    /**
+     * Monitoring admin global: toutes les VM visibles par le token (tous nodes, qemu + lxc)
+     * Retour formaté comme ton Twig attend.
+     */
+    public function getAdminVmOverviewAllCluster(): array
+    {
+        $resources = $this->listClusterVmResources();
+        $result = [];
+
+        foreach ($resources as $r) {
+            // id ressemble à "qemu/100" ou "lxc/101"
+            $id = $r['id'] ?? '';
+            $node = $r['node'] ?? 'proxmox';
+
+            if ($id === '' || strpos($id, '/') === false) {
+                continue;
+            }
+
+            [$type, $vmidStr] = explode('/', $id, 2);
+            $vmid = (int) $vmidStr;
+            if ($vmid <= 0) {
+                continue;
+            }
+
+            // métriques déjà présentes dans /cluster/resources:
+            // cpu, mem, maxmem, disk, maxdisk, uptime, status, name...
+            $result[] = [
+                'vmid'    => $vmid,
+                'name'    => $r['name'] ?? $id,
+                'status'  => $r['status'] ?? 'unknown',
+                'cpu'     => $r['cpu'] ?? null,
+                'maxcpu'  => $r['maxcpu'] ?? null,
+                'mem'     => $r['mem'] ?? null,
+                'maxmem'  => $r['maxmem'] ?? null,
+                'disk'    => $r['disk'] ?? null,
+                'maxdisk' => $r['maxdisk'] ?? null,
+                'uptime'  => $r['uptime'] ?? null,
+
+                // bonus utile au debug (facultatif)
+                'node'    => $node,
+                'type'    => $type,
+            ];
+        }
+
+        return $result;
+    }
+
+
 }

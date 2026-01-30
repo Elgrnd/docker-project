@@ -12,8 +12,8 @@
                     <i class="bi bi-pencil edit-icon" title="Modifier"></i>
                 </a>
             {% endif %}
-            {% if app.user.vmStatus == 'ready' and gyr.file.isYaml %}
-                <a href="{{ path('deploy_yaml_file', {id: gyr.file.id}) }}"
+            {% if groupe.vmStatus == 'ready' and gyr.file.isYaml %}
+                <a href="{{ path('deploy_yaml_file_groupe', {idFile: gyr.file.id, groupe: groupe.id}) }}"
                    onclick="return confirm('Déployer ce fichier sur votre VM ?');">
                     <i class="bi bi-rocket-takeoff deploy-icon" title="Déployer"></i>
                 </a>

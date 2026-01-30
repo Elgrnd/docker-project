@@ -32,9 +32,10 @@ final class DockerController extends AbstractController
      * @throws ClientExceptionInterface
      */
     #[IsGranted('ROLE_USER')]
-    #[Route('/containers', name: 'listContainers')]
+    #[Route('/containers/{vmId}', name: 'listContainers')]
     public function list(
         DockerService               $dockerService,
+        int $vmId,
         ProxmoxService              $proxmoxService,
         UtilisateurManagerInterface $utilisateurManager,
     ): Response

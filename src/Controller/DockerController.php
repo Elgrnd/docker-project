@@ -91,6 +91,15 @@ final class DockerController extends AbstractController
             if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
                 // Admin : vue globale de toutes les VM
                 $vms = $proxmoxService->getAdminVmOverview();
+
+                // garder seulement les VM en cours d'exécution
+                $running = [];
+                foreach ($vms as $vm) {
+                    if (($vm['status'] ?? '') === 'running') {
+                        $running[] = $vm;
+                    }
+                }
+                $vms = $running;
             } else {
                 // Utilisateur normal : seulement sa VM
                 $vmid = $user->getProxmoxVmid();
@@ -124,6 +133,46 @@ final class DockerController extends AbstractController
             'controller_name'  => 'DockerController',
         ]);
     }
+
+    #[Route('/monitoring/vms', name: 'monitoring_vms', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
+    public function monitoringVms(ProxmoxService $proxmoxService): JsonResponse
+    {
+        $user = $this->getUser();
+
+        try {
+            if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+                // Admin : toutes les VM du Proxmox
+                $vms = $proxmoxService->getAdminVmOverviewAllCluster();
+            } else {
+                // User : seulement sa VM
+                $vmid = $user->getProxmoxVmid();
+                if (!$vmid) {
+                    return new JsonResponse([]);
+                }
+
+                $runtime = $proxmoxService->getVMRuntimeStatus((int) $vmid);
+
+                $vms = [[
+                    'vmid'    => $vmid,
+                    'name'    => 'VM ' . $user->getLogin(),
+                    'status'  => $runtime['status']  ?? 'unknown',
+                    'cpu'     => $runtime['cpu']     ?? null,
+                    'mem'     => $runtime['mem']     ?? null,
+                    'maxmem'  => $runtime['maxmem']  ?? null,
+                    'disk'    => max($runtime['disk'] ?? 0, 600000), // min 0.6 Mo
+                    'maxdisk' => $runtime['maxdisk'] ?? null,
+                    'uptime'  => $runtime['uptime']  ?? null,
+                ]];
+            }
+
+            return new JsonResponse($vms);
+
+        } catch (\Throwable $e) {
+            return new JsonResponse(['error' => $e->getMessage()], 500);
+        }
+    }
+
 
 
 

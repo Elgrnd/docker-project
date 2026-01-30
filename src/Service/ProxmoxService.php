@@ -45,12 +45,12 @@ class ProxmoxService
      * @throws ClientExceptionInterface
      * @throws DecodingExceptionInterface
      */
-    public function cloneUserVM(string $username): ?int
+    public function cloneVm(string $name): ?int
     {
         $vmid = rand(200, 999);
         $data = [
             'newid' => $vmid,
-            'name' => "vm-$username",
+            'name' => "vm-$name",
             'full' => 1,
             'target' => 'proxmox',
             'storage' => 'local-lvm',

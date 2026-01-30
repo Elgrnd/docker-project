@@ -2,7 +2,7 @@
 
 namespace App\Command;
 
-use App\Repository\UtilisateurRepository;
+use App\Repository\GroupeRepository;
 use App\Service\ProxmoxService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -18,14 +18,14 @@ use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 
 #[AsCommand(
-    name: 'app:create-vm',
-    description: "Create a virtual machine for the user login in parameter",
+    name: 'app:create-vm-group',
+    description: "Create a virtual machine for a group, with id of the group in parameter",
 )]
-class CreateVmCommand extends Command
+class CreateVmGroupCommand extends Command
 {
     public function __construct(
         private ProxmoxService $proxmoxService,
-        private UtilisateurRepository $utilisateurRepository,
+        private GroupeRepository $groupeRepository,
         private EntityManagerInterface $entityManager
     )
     {
@@ -35,7 +35,7 @@ class CreateVmCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addArgument('user', InputArgument::REQUIRED, 'Argument description')
+            ->addArgument('idGroup', InputArgument::REQUIRED, 'Argument description')
         ;
     }
 
@@ -49,18 +49,18 @@ class CreateVmCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        $login = $input->getArgument('user');
-        $user = $this->utilisateurRepository->findOneBy(["login" => $login]);
-        if($user === null) {
-            $io->error("User not found.");
+        $idGroup = $input->getArgument('idGroup');
+        $groupe = $this->groupeRepository->findOneBy(["idGroupe" => $idGroup]);
+        if($groupe === null) {
+            $io->error("Group not found.");
             return Command::FAILURE;
         }
-        $vmId = $this->proxmoxService->cloneVm($user->getLogin());
-        $user->setProxmoxVmid($vmId);
-        $user->setVmStatus('ready');
+        $vmId = $this->proxmoxService->cloneVm($groupe->getNom());
+        $groupe->setVmId($vmId);
+        $groupe->setVmStatus('ready');
         $this->entityManager->flush();
 
-        $io->success("The user has been created !");
+        $io->success("The group has been created !");
         return Command::SUCCESS;
     }
 }

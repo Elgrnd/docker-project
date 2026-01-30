@@ -20,6 +20,10 @@
             Partager un fichier
         </a>
 
+        <a href="{{ path('create_vm_groupe', {id: groupe.id}) }}" class="btn btn-shared">
+            Creer une VM
+        </a>
+
         {% if canEdit %}
             <form method="post"
                   action="{{ path('supprimer_groupe', {id: groupe.id}) }}"

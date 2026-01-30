@@ -10,6 +10,7 @@ use App\Form\AjouterMembreGroupeType;
 use App\Form\GroupeType;
 use App\Repository\GroupeRepository;
 use App\Repository\UtilisateurRepository;
+use App\Service\ProxmoxService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -162,7 +163,7 @@ final class GroupeController extends AbstractController
             return new JsonResponse(['error' => 'Utilisateur introuvable'], Response::HTTP_NOT_FOUND);
         }
 
-        $ug = $em->getRepository(\App\Entity\UtilisateurGroupe::class)
+        $ug = $em->getRepository(UtilisateurGroupe::class)
             ->findOneBy(['groupe' => $groupe, 'utilisateur' => $utilisateur]);
 
         if (!$ug) {

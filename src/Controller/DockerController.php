@@ -56,8 +56,8 @@ final class DockerController extends AbstractController
             foreach ($users as $userWithVm) {
                 try {
                     $vmIp = $proxmoxService->getVMIp($userWithVm->getProxmoxVmid());
-                } catch (Exception) {
-                    $this->addFlash('error', "le QGA n'est pas encore prêt pour la VM");
+                } catch (Exception $exception) {
+                    $this->addFlash('error', $exception->getMessage() . "for user " .  $userWithVm->getlogin());
                     return $this->redirectToRoute("index");
                 }
                 if ($vmIp) {

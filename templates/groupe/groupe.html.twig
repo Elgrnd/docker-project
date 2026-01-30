@@ -20,10 +20,6 @@
             Partager un fichier
         </a>
 
-        <a href="{{ path('create_vm_groupe', {id: groupe.id}) }}" class="btn btn-shared">
-            Creer une VM
-        </a>
-
         {% if canEdit %}
             <form method="post"
                   action="{{ path('supprimer_groupe', {id: groupe.id}) }}"
@@ -32,6 +28,24 @@
                 <input type="hidden" name="_token" value="{{ csrf_token('delete-groupe-' ~ groupe.id) }}">
                 <button type="submit" class="btn btn-danger">Supprimer</button>
             </form>
+        {% endif %}
+
+
+        {% if is_granted('ROLE_PROFESSEUR') %}
+            {% if not groupe.vmStatus or groupe.vmStatus == 'none' %}
+                <form method="post"
+                      action="{{ path('create_vm_groupe', {id: groupe.id}) }}"
+                      class="create-groupe-form">
+                    <button type="submit" class="btn btn-shared">Créer une VM</button>
+                </form>
+            {% else %}
+                <form method="post"
+                      action="{{ path('delete_vm_groupe', {id: groupe.id}) }}"
+                      class="delete-groupe-form"
+                      data-confirm-message="Supprimer la VM de ce groupe ?">
+                    <button type="submit" class="btn btn-danger">Supprimer la VM</button>
+                </form>
+            {% endif %}
         {% endif %}
     </div>
 </article>

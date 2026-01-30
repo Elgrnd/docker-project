@@ -50,7 +50,7 @@ class CreateVmGroupCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $idGroup = $input->getArgument('idGroup');
-        $groupe = $this->groupeRepository->findOneBy(["idGroupe" => $idGroup]);
+        $groupe = $this->groupeRepository->findOneBy(["id" => $idGroup]);
         if($groupe === null) {
             $io->error("Group not found.");
             return Command::FAILURE;

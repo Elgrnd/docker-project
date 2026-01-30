@@ -12,6 +12,7 @@ use App\Repository\GroupeRepository;
 use App\Repository\UtilisateurRepository;
 use App\Service\ProxmoxService;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

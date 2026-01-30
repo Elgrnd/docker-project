@@ -34,6 +34,9 @@ class Groupe
     #[ORM\OneToMany(targetEntity: UtilisateurGroupe::class, mappedBy: "groupe", cascade: ['persist'], orphanRemoval: true)]
     private Collection $utilisateur_groupe;
 
+    #[ORM\Column(nullable: true)]
+    private ?int $vmId = null;
+
 
     public function __construct()
     {
@@ -159,5 +162,17 @@ class Groupe
             }
         }
         return null;
+    }
+
+    public function getVmId(): ?int
+    {
+        return $this->vmId;
+    }
+
+    public function setVmId(?int $vmId): static
+    {
+        $this->vmId = $vmId;
+
+        return $this;
     }
 }

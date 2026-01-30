@@ -34,8 +34,8 @@ class Groupe
     #[ORM\OneToMany(targetEntity: UtilisateurGroupe::class, mappedBy: "groupe", cascade: ['persist'], orphanRemoval: true)]
     private Collection $utilisateur_groupe;
 
-    #[ORM\Column(nullable: true)]
-    private ?int $vmId = null;
+    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    private ?VirtualMachine $vm = null;
 
 
     public function __construct()
@@ -131,8 +131,6 @@ class Groupe
     }
 
 
-
-
     public function removeUtilisateurGroupe(Utilisateur $u): static
     {
         foreach ($this->utilisateur_groupe as $ug) {
@@ -164,14 +162,14 @@ class Groupe
         return null;
     }
 
-    public function getVmId(): ?int
+    public function getVm(): ?VirtualMachine
     {
-        return $this->vmId;
+        return $this->vm;
     }
 
-    public function setVmId(?int $vmId): static
+    public function setVm(?VirtualMachine $vm): static
     {
-        $this->vmId = $vmId;
+        $this->vm = $vm;
 
         return $this;
     }

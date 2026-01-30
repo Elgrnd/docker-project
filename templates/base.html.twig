@@ -78,10 +78,12 @@
                                 bord</a>
                         </li>
                     {% endif %}
-                    <li class="nav-item mx-2">
-                        <a class="nav-link text-white fw-medium" href="{{ path('listContainers') }}">Liste des
-                            conteneurs</a>
-                    </li>
+                    {% if app.user.vm %}
+                        <li class="nav-item mx-2">
+                            <a class="nav-link text-white fw-medium" href="{{ path('listContainers', {'vmId': app.user.vm.id}) }}">Liste des
+                                conteneurs</a>
+                        </li>
+                    {% endif %}
                     <li class="nav-item mx-2">
                         <form method="post" action="{{ path('_logout_main') }}" class="d-inline" onsubmit="return confirmLogoutVm()">
                             <button class="btn btn-light btn-sm fw-semibold rounded-pill px-3 ms-lg-2" type="submit">

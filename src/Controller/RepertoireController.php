@@ -291,7 +291,7 @@ final class RepertoireController extends AbstractController
             $this->addFlash('error', 'VM non disponible.');
             return $this->redirectToRoute('repertoire');
         }
-        $this->copyRepertory($repertoire, $repertoireService, $dockerService, $proxmoxService, $this->getUser()->getProxmoxVmid());
+        $this->copyRepertory($repertoire, $repertoireService, $dockerService, $proxmoxService, $this->getUser()->getVm()->getVmId()());
         return $this->redirectToRoute("repertoire");
     }
 
@@ -346,7 +346,7 @@ final class RepertoireController extends AbstractController
             $dockerService->deployZipInVm(
                 $zipPath,
                 '/root/' . str_replace(' ', '_', $repertoire->getName()),
-                $proxmoxService->getVMIp($vmId)
+                $proxmoxService->verifVMIp($vmId)
             );
 
             $this->addFlash('success', 'Répertoire copié dans la VM avec succès.');

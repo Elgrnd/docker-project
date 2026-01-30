@@ -56,8 +56,8 @@ class CreateVmGroupCommand extends Command
             return Command::FAILURE;
         }
         $vmId = $this->proxmoxService->cloneVm($groupe->getNom());
-        $groupe->setVmId($vmId);
-        $groupe->setVmStatus('ready');
+        $groupe->getVm()->setVmId($vmId);
+        $groupe->getVm()->setVmStatus('ready');
         $this->entityManager->flush();
 
         $io->success("The group has been created !");

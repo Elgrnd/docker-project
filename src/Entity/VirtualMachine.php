@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\VirtualMachineRepository;
+use DateTimeImmutable;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: VirtualMachineRepository::class)]
@@ -23,7 +24,7 @@ class VirtualMachine
     private ?string $vmStatus = null;
 
     #[ORM\Column(nullable: true)]
-    private ?\DateTimeImmutable $deleteVmAt = null;
+    private ?DateTimeImmutable $deleteVmAt = null;
 
     public function getId(): ?int
     {
@@ -66,12 +67,12 @@ class VirtualMachine
         return $this;
     }
 
-    public function getDeleteVmAt(): ?\DateTimeImmutable
+    public function getDeleteVmAt(): ?DateTimeImmutable
     {
         return $this->deleteVmAt;
     }
 
-    public function setDeleteVmAt(?\DateTimeImmutable $deleteVmAt): static
+    public function setDeleteVmAt(?DateTimeImmutable $deleteVmAt): static
     {
         $this->deleteVmAt = $deleteVmAt;
 

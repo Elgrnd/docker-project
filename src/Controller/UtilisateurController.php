@@ -135,12 +135,12 @@ final class UtilisateurController extends AbstractController
         if($utilisateur === null) {
             $this->addFlash('error', "L'utilisateur n'existe pas");
             return $this->redirectToRoute('listeUtilisateurs');
-        } else if($utilisateur->getProxmoxVmid() !== null) {
+        } else if($utilisateur->getVm()->getVmId()() !== null) {
             $this->addFlash('error', "Cette Utilisateur à déjà une VM actif");
             return $this->redirectToRoute('listeUtilisateurs');
         } else {
             $vmId = $proxmoxService->cloneVm($utilisateur->getLogin());
-            $utilisateur->setProxmoxVmid($vmId);
+            $utilisateur->getVm()->setVmId($vmId);
             $entityManager->flush();
 
             $this->addFlash('success', "Une VM a été ajouté à l'utilisateur " . $utilisateur->getLogin());
@@ -157,12 +157,12 @@ final class UtilisateurController extends AbstractController
         if($utilisateur === null) {
             $this->addFlash('error', "L'utilisateur n'existe pas");
             return $this->redirectToRoute('listeUtilisateurs');
-        } else if($utilisateur->getProxmoxVmid() === null) {
+        } else if($utilisateur->getVm()->getVmId()() === null) {
             $this->addFlash('error', "Cette Utilisateur n'a pas de VM actif");
             return $this->redirectToRoute('listeUtilisateurs');
         } else {
-            $proxmoxService->deleteVM($utilisateur->getProxmoxVmid());
-            $utilisateur->setProxmoxVmid(null);
+            $proxmoxService->deleteVM($utilisateur->getVm()->getVmId()());
+            $utilisateur->getVm()->setVmId(null);
             $entityManager->flush();
 
             $this->addFlash('success', "La VM a été supprimé à l'utilisateur " . $utilisateur->getLogin());

@@ -16,7 +16,7 @@
             <a href="{{ path('listVersion', {'id': uyr.file.id}) }}">
                 <i class="bi bi-clock-history version-icon" title="Voir les versions"></i>
             </a>
-            {% if app.user.vmStatus == 'ready' and uyr.file.isYaml %}
+            {% if app.user.vm and app.user.vm.vmStatus == 'ready' and uyr.file.isYaml %}
                 <a href="{{ path('deploy_yaml_file', {id: uyr.file.id}) }}"
                    onclick="return confirm('Déployer ce fichier sur votre VM ?');">
                     <i class="bi bi-rocket-takeoff deploy-icon" title="Déployer"></i>

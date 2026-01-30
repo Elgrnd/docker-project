@@ -178,4 +178,52 @@ final class GroupeController extends AbstractController
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
 
+    #[IsGranted('ROLE_PROFESSEUR')]
+    #[Route('/groupe/{id}/vm', name: 'create_vm_groupe', methods: ['POST'])]
+    public function createVmGroup(
+        Groupe $groupe,
+        EntityManagerInterface $entityManager,
+        ProxmoxService $proxmoxService): Response
+    {
+        if(!$groupe) {
+            $this->addFlash('error', "Le groupe n'existe pas");
+            $this->redirectToRoute("accueil");
+        }
+
+        $groupe->getVm()->setVmStatus('creating');
+        $entityManager->flush();
+
+        $proxmoxService->cloneGroupVmAsynchrone($groupe->getId());
+
+        $this->addFlash('success', "Vous avez bien créer une VM pour le groupe " .  $groupe->getNom());
+        return $this->redirectToRoute('mes_groupes');
+    }
+
+    #[IsGranted('ROLE_PROFESSEUR')]
+    #[Route('/groupe/{id}/delete', name: 'delete_vm_groupe', methods: ['POST'])]
+    public function deleteVmGroup(Groupe $groupe, ProxmoxService $proxmoxService, EntityManagerInterface $entityManager): Response
+    {
+        if(!$groupe) {
+            $this->addFlash('error', "Le groupe n'existe pas");
+            $this->redirectToRoute("accueil");
+        }
+
+        $vmid = $groupe->getVm()->getVmId();
+        try {
+            $ok = $proxmoxService->deleteVM($vmid);
+            if ($ok) {
+                $this->addFlash('success', "VM $vmid supprimée avec succès.");
+                $groupe->getVm()->setVmId(null);
+                $groupe->getVm()->setVmStatus('none');
+                $entityManager->flush();
+            } else {
+                $this->addFlash('error', "Impossible de supprimer la VM $vmid.");
+            }
+        } catch (Exception $e) {
+            $this->addFlash('error', "Erreur lors de la suppression de la VM $vmid : " . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('mes_groupes');
+    }
+
 }

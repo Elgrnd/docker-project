@@ -2,6 +2,7 @@
 
 namespace App\Command;
 
+use App\Entity\VirtualMachine;
 use App\Repository\UtilisateurRepository;
 use App\Service\ProxmoxService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -56,8 +57,10 @@ class CreateVmCommand extends Command
             return Command::FAILURE;
         }
         $vmId = $this->proxmoxService->cloneVm($user->getLogin());
-        $user->setProxmoxVmid($vmId);
-        $user->setVmStatus('ready');
+        $virtualMachine = new VirtualMachine();
+        $virtualMachine->setVmId($vmId);
+        $virtualMachine->setVmStatus('ready');
+        $user->setVm($virtualMachine);
         $this->entityManager->flush();
 
         $io->success("The user has been created !");

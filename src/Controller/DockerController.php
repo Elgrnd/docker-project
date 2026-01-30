@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Groupe;
 use App\Entity\TextFile;
+use App\Entity\VirtualMachine;
 use App\Service\DockerService;
 use App\Service\ProxmoxService;
 use App\Service\UtilisateurManagerInterface;
@@ -32,20 +33,20 @@ final class DockerController extends AbstractController
      * @throws ClientExceptionInterface
      */
     #[IsGranted('ROLE_USER')]
-    #[Route('/containers/{vmId}', name: 'listContainers')]
+    #[Route('/virtual-machine/{vmId}/containers/', name: 'listContainers')]
     public function list(
         DockerService               $dockerService,
-        int $vmId,
+        VirtualMachine $virtualMachine,
         ProxmoxService              $proxmoxService,
         UtilisateurManagerInterface $utilisateurManager,
     ): Response
     {
 
-        if ($this->getUser()->getVmStatus() == "none") {
+        if ($virtualMachine->getVmStatus() == "none") {
             $this->addFlash("error", "Vous n'avez pas encore créer de VM");
             return $this->redirectToRoute('index');
         }
-        if ($this->getUser()->getVmStatus() !== "ready") {
+        if ($virtualMachine->getVmStatus() !== "ready") {
             $this->addFlash("error", "Votre VM n'est pas encore prête !");
             return $this->redirectToRoute('index');
         }
@@ -58,7 +59,7 @@ final class DockerController extends AbstractController
             $users = $utilisateurManager->getUtilisateursAvecVm();
             foreach ($users as $userWithVm) {
                 try {
-                    $vmIp = $proxmoxService->getVMIp($userWithVm->getProxmoxVmid());
+                    $vmIp = $proxmoxService->verifVMIp($userWithVm->getVm());
                 } catch (Exception $exception) {
                     $this->addFlash('error', $exception->getMessage() . "for user " .  $userWithVm->getlogin());
                     return $this->redirectToRoute("index");
@@ -67,15 +68,16 @@ final class DockerController extends AbstractController
                     $userContainers = $dockerService->listContainers($vmIp);
                     foreach ($userContainers as &$userContainer) {
                         $userContainer['user'] = $userWithVm->getLogin();
-                        $userContainer['vmid'] = $userWithVm->getProxmoxVmid();
+                        $userContainer['vmid'] = $userWithVm->getVm()->getVmId()();
                     }
                     $containers = array_merge($containers, $userContainers);
                 }
             }
         } else {
-            if ($user->getProxmoxVmid()) {
+            if ($virtualMachine->getVmId()) {
                 try {
-                    $vmIp = $proxmoxService->getVMIp($user->getProxmoxVmid());
+                    $vmIp = $proxmoxService->verifVMIp($virtualMachine);
+
                 } catch (Exception) {
                     $this->addFlash('error', "le QGA n'est pas encore prêt pour la VM");
                     return $this->redirectToRoute("index");
@@ -84,7 +86,7 @@ final class DockerController extends AbstractController
                     $containers = $dockerService->listContainers($vmIp);
                     foreach ($containers as &$container) {
                         $container['user'] = $user->getLogin();
-                        $container['vmid'] = $user->getProxmoxVmid();
+                        $container['vmid'] = $virtualMachine->getVmId();
                     }
                 }
             }
@@ -97,9 +99,9 @@ final class DockerController extends AbstractController
                 $vms = $proxmoxService->getAdminVmOverview();
             } else {
                 // Utilisateur normal : seulement sa VM
-                $vmid = $user->getProxmoxVmid();
+                $vmid = $virtualMachine->getVmId();
                 if ($vmid) {
-                    $runtime = $proxmoxService->getVMRuntimeStatus((int)$vmid);
+                    $runtime = $proxmoxService->getVMRuntimeStatus($vmid);
 
                     $vms = [[
                         'vmid' => $vmid,
@@ -138,10 +140,10 @@ final class DockerController extends AbstractController
      * @throws ClientExceptionInterface
      */
     #[IsGranted('ROLE_USER')]
-    #[Route('/container/{vmid}/{id}/start', name: 'container_start')]
-    public function start(string $id, string $vmid, DockerService $dockerService, ProxmoxService $proxmoxService): Response
+    #[Route('/virtual-machine/{virtual_machine}/container/{id}/start', name: 'container_start')]
+    public function start(string $id, VirtualMachine $virtualMachine, DockerService $dockerService, ProxmoxService $proxmoxService): Response
     {
-        $vmIp = $proxmoxService->getVMIp($vmid);
+        $vmIp = $proxmoxService->verifVMIp($virtualMachine);
         $result = $dockerService->startContainer($id, $vmIp);
 
         if ($result['success']) {
@@ -164,7 +166,7 @@ final class DockerController extends AbstractController
     #[Route('/container/{vmid}/{id}/stop', name: 'container_stop')]
     public function stop(string $id, string $vmid, DockerService $dockerService, ProxmoxService $proxmoxService): Response
     {
-        $vmIp = $proxmoxService->getVMIp($vmid);
+        $vmIp = $proxmoxService->verifVMIp($vmid);
         $result = $dockerService->stopContainer($id, $vmIp);
 
         if ($result['success']) {
@@ -186,7 +188,7 @@ final class DockerController extends AbstractController
     #[Route('/container/{vmid}/{id}/remove', name: 'container_remove')]
     public function remove(string $id, string $vmid, DockerService $dockerService, ProxmoxService $proxmoxService): Response
     {
-        $vmIp = $proxmoxService->getVMIp($vmid);
+        $vmIp = $proxmoxService->verifVMIp($vmid);
         $result = $dockerService->removeContainer($id, $vmIp);
 
         if ($result['success']) {
@@ -264,7 +266,7 @@ final class DockerController extends AbstractController
         DockerService  $dockerService,
         ProxmoxService $proxmoxService
     ): Response {
-        return $this->deployInVm($idFile, $proxmoxService, $dockerService, $this->getUser()->getProxmoxVmid());
+        return $this->deployInVm($idFile, $proxmoxService, $dockerService, $this->getUser()->getVm()->getVmId()());
     }
 
     /**
@@ -293,9 +295,13 @@ final class DockerController extends AbstractController
     public function vmStatus(): JsonResponse
     {
         $user = $this->getUser();
+        $status = null;
+        if($user->getVm()) {
+            $status = $user->getVm()->getVmStatus();
+        }
 
         return new JsonResponse([
-            'status' => $user->getVmStatus() ?? null
+            'status' => $status
         ]);
     }
 
@@ -305,11 +311,10 @@ final class DockerController extends AbstractController
     {
         $user = $this->getUser();
 
-        if ($user->getProxmoxVmid() !== null) {
+        if ($user->getVm() !== null) {
             return new JsonResponse(['status' => 'already_exists'], 400);
         }
-
-        $user->setVmStatus('creating');
+        $user->getVm()->setVmStatus('creating');
         $entityManager->flush();
 
         $proxmoxService->cloneUserVmAsynchrone($user->getLogin());
@@ -322,7 +327,7 @@ final class DockerController extends AbstractController
     public function listServices(DockerService $dockerService, ProxmoxService $proxmoxService): Response
     {
         $user = $this->getUser();
-        $vmip = $proxmoxService->getVMIp($user->getProxmoxVmid());
+        $vmip = $proxmoxService->verifVMIp($user->getVm()->getVmId());
         $services = $dockerService->listServices($vmip);
         return $this->render('docker/listServices.html.twig', [
             'services' => $services
@@ -336,7 +341,7 @@ final class DockerController extends AbstractController
      * @return RedirectResponse
      * @throws Exception
      */
-    public function deployInVm(TextFile $idFile, ProxmoxService $proxmoxService, DockerService $dockerService, int $vmId): RedirectResponse
+    public function deployInVm(TextFile $idFile, ProxmoxService $proxmoxService, DockerService $dockerService, VirtualMachine $vm): RedirectResponse
     {
         if (!$idFile->isYaml()) {
             throw new Exception("Le fichier n'est pas un fichier .yaml/.yml.");
@@ -348,11 +353,11 @@ final class DockerController extends AbstractController
             $projectName = preg_replace('/[^a-z0-9_]/', '_', strtolower(pathinfo($baseName, PATHINFO_FILENAME)));
             $remotePath = '/root/deploy/' . $projectName . '_l' . uniqid() . '.yaml';
 
-            if (!$vmId) {
-                throw new Exception("L'utilisateur n'a pas de VMID Proxmox.");
+            if (!$vm) {
+                throw new Exception("L'utilisateur n'a pas de VM Proxmox.");
             }
 
-            $vmIp = $proxmoxService->getVMIp($vmId);
+            $vmIp = $proxmoxService->verifVMIp($vm);
             if (!$vmIp) {
                 throw new Exception("Impossible de récupérer l'IP de la VM.");
             }

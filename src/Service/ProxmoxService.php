@@ -2,6 +2,8 @@
 
 namespace App\Service;
 
+use App\Entity\VirtualMachine;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
@@ -16,6 +18,7 @@ class ProxmoxService
     private string $apiUrl;
     private string $tokenId;
     private string $secret;
+    private EntityManagerInterface $entityManager;
 
     public function __construct(HttpClientInterface $client, KernelInterface $kernel)
     {
@@ -32,6 +35,17 @@ class ProxmoxService
             'php %s/bin/console app:create-vm %s > /dev/null 2>&1 &',
             $this->projectDir,
             $login
+        );
+
+        exec($command);
+    }
+
+    public function cloneGroupVmAsynchrone(int $id): void
+    {
+        $command = sprintf(
+            'php %s/bin/console app:create-vm-group %d > /dev/null 2>&1 &',
+            $this->projectDir,
+            $id
         );
 
         exec($command);
@@ -111,31 +125,37 @@ class ProxmoxService
      * @throws RedirectionExceptionInterface
      * @throws ClientExceptionInterface
      */
-    public function getVMIp(string $vmid): ?string
+    public function verifVMIp(VirtualMachine $virtualMachine): ?string
     {
-        $response = $this->client->request(
-            'GET',
-            "{$this->apiUrl}/nodes/proxmox/qemu/{$vmid}/agent/network-get-interfaces",
-            [
-                'headers' => [
-                    'Authorization' => "PVEAPIToken={$this->tokenId}={$this->secret}",
-                ],
-                'verify_peer' => false,
-                'verify_host' => false,
-            ]
-        );
+        if(!$virtualMachine->getVmIp()) {
+            $response = $this->client->request(
+                'GET',
+                "{$this->apiUrl}/nodes/proxmox/qemu/{$virtualMachine->getVmId()}/agent/network-get-interfaces",
+                [
+                    'headers' => [
+                        'Authorization' => "PVEAPIToken={$this->tokenId}={$this->secret}",
+                    ],
+                    'verify_peer' => false,
+                    'verify_host' => false,
+                ]
+            );
 
-        $data = json_decode($response->getContent(), true);
+            $data = json_decode($response->getContent(), true);
 
-        foreach ($data['data']['result'] as $interface) {
-            foreach ($interface['ip-addresses'] ?? [] as $ipInfo) {
-                if (($ipInfo['ip-address-type'] ?? '') === 'ipv4' && ($ipInfo['ip-address'] ?? '') !== '127.0.0.1') {
-                    return $ipInfo['ip-address'];
+            foreach ($data['data']['result'] as $interface) {
+                foreach ($interface['ip-addresses'] ?? [] as $ipInfo) {
+                    if (($ipInfo['ip-address-type'] ?? '') === 'ipv4' && ($ipInfo['ip-address'] ?? '') !== '127.0.0.1') {
+                        $virtualMachine->setVmIp($ipInfo['ip-address']);
+                        $this->entityManager->flush();
+                        return $ipInfo['ip-address'];
+                    }
                 }
             }
-        }
 
-        return null;
+            return null;
+        } else {
+            return $virtualMachine->getVmIp();
+        }
     }
 
     /**

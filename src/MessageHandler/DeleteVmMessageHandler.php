@@ -36,11 +36,11 @@ class DeleteVmMessageHandler
             return;
         }
 
-        $this->proxmoxService->deleteVM($user->getProxmoxVmid());
+        $this->proxmoxService->deleteVM($user->getVm()->getVmId());
 
-        $user->setProxmoxVmid(null);
-        $user->setVmStatus('none');
-        $user->setDeleteVmAt(null);
+        $user->getVm()->setVmId(null);
+        $user->getVm()->setVmStatus('none');
+        $user->getVm()->setDeleteVmAt(null);
 
         $this->entityManager->flush();
     }

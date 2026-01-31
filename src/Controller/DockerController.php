@@ -266,7 +266,7 @@ final class DockerController extends AbstractController
         DockerService  $dockerService,
         ProxmoxService $proxmoxService
     ): Response {
-        return $this->deployInVm($idFile, $proxmoxService, $dockerService, $this->getUser()->getVm()->getVmId()());
+        return $this->deployInVm($idFile, $proxmoxService, $dockerService, $this->getUser()->getVm());
     }
 
     /**
@@ -282,10 +282,16 @@ final class DockerController extends AbstractController
         DockerService  $dockerService,
         ProxmoxService $proxmoxService
     ): Response {
-        if(!$groupe || $groupe->getVmStatus() != 'ready') {
-            $this->addFlash('error', "Le groupe n'existe pas ou la VM n'est pas encore prête");
+        if(!$groupe || !$groupe->getVm()) {
+            $this->addFlash('error', "Le groupe ou la VM n'existe pas");
+            $this->redirectToRoute("accueil");
         }
-        return $this->deployInVm($idFile, $proxmoxService, $dockerService, $groupe->getVmId());
+
+        if($groupe->getVm()->getVmStatus() != 'ready') {
+            $this->addFlash('error', "La VM n'est pas encore prête");
+            $this->redirectToRoute("accueil");
+        }
+        return $this->deployInVm($idFile, $proxmoxService, $dockerService, $groupe->getVm());
     }
 
 
@@ -338,6 +344,7 @@ final class DockerController extends AbstractController
      * @param TextFile $idFile
      * @param ProxmoxService $proxmoxService
      * @param DockerService $dockerService
+     * @param VirtualMachine $vm
      * @return RedirectResponse
      * @throws Exception
      */
@@ -352,10 +359,6 @@ final class DockerController extends AbstractController
 
             $projectName = preg_replace('/[^a-z0-9_]/', '_', strtolower(pathinfo($baseName, PATHINFO_FILENAME)));
             $remotePath = '/root/deploy/' . $projectName . '_l' . uniqid() . '.yaml';
-
-            if (!$vm) {
-                throw new Exception("L'utilisateur n'a pas de VM Proxmox.");
-            }
 
             $vmIp = $proxmoxService->verifVMIp($vm);
             if (!$vmIp) {

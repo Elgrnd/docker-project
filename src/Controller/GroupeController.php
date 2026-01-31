@@ -6,6 +6,7 @@ use App\Entity\Groupe;
 use App\Entity\Repertoire;
 use App\Entity\Utilisateur;
 use App\Entity\UtilisateurGroupe;
+use App\Entity\VirtualMachine;
 use App\Form\AjouterMembreGroupeType;
 use App\Form\GroupeType;
 use App\Repository\GroupeRepository;
@@ -44,6 +45,7 @@ final class GroupeController extends AbstractController
             $repertoire->setName('Répertoire groupe');
 
             $groupe->setEtreChef($utilisateur);
+            $groupe->setVm(new VirtualMachine());
             $ug = $groupe->addUtilisateurGroupe($utilisateur);
             $ug->setRole("GROUPE_CHEF");
 

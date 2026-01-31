@@ -32,7 +32,7 @@
 
 
         {% if is_granted('ROLE_PROFESSEUR') %}
-            {% if not groupe.vmStatus or groupe.vmStatus == 'none' %}
+            {% if not groupe.vm.vmStatus or groupe.vm.vmStatus == 'none' %}
                 <form method="post"
                       action="{{ path('create_vm_groupe', {id: groupe.id}) }}"
                       class="create-groupe-form">

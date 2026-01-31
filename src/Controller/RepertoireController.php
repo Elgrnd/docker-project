@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Groupe;
 use App\Entity\Repertoire;
+use App\Entity\VirtualMachine;
 use App\Repository\FileRepository;
 use App\Repository\RepertoireRepository;
 use App\Service\DockerService;
@@ -287,11 +288,16 @@ final class RepertoireController extends AbstractController
         ProxmoxService $proxmoxService
     ): Response
     {
-        if (!$this->getUser() || $this->getUser()->getVmStatus() !== 'ready') {
+        if (!$this->getUser() || !$this->getUser()->getVm()) {
             $this->addFlash('error', 'VM non disponible.');
             return $this->redirectToRoute('repertoire');
         }
-        $this->copyRepertory($repertoire, $repertoireService, $dockerService, $proxmoxService, $this->getUser()->getVm()->getVmId()());
+
+        if ($this->getUser()->getVm()->getVmStatus() !== 'ready') {
+            $this->addFlash('error', "La VM n'est pas encore prête");
+            return $this->redirectToRoute('repertoire');
+        }
+        $this->copyRepertory($repertoire, $repertoireService, $dockerService, $proxmoxService, $this->getUser()->getVm());
         return $this->redirectToRoute("repertoire");
     }
 
@@ -329,7 +335,7 @@ final class RepertoireController extends AbstractController
      * @throws ServerExceptionInterface
      * @throws TransportExceptionInterface
      */
-    public function copyRepertory(Repertoire $repertoire, RepertoireService $repertoireService, DockerService $dockerService, ProxmoxService $proxmoxService, int $vmId): void
+    public function copyRepertory(Repertoire $repertoire, RepertoireService $repertoireService, DockerService $dockerService, ProxmoxService $proxmoxService, VirtualMachine $virtualMachine): void
     {
         $zipPath = sys_get_temp_dir() . '/repertoire_' . $repertoire->getId() . '.zip';
 
@@ -346,7 +352,7 @@ final class RepertoireController extends AbstractController
             $dockerService->deployZipInVm(
                 $zipPath,
                 '/root/' . str_replace(' ', '_', $repertoire->getName()),
-                $proxmoxService->verifVMIp($vmId)
+                $proxmoxService->verifVMIp($virtualMachine)
             );
 
             $this->addFlash('success', 'Répertoire copié dans la VM avec succès.');

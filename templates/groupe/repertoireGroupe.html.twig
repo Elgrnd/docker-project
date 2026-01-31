@@ -43,7 +43,7 @@
             📦 Télécharger en ZIP
         </a>
 
-        {% if groupe.vmStatus == 'ready' %}
+        {% if groupe.vm and groupe.vm.vmStatus == 'ready' %}
             <a href="{{ path('repertoire_copier_vm_groupe', {'repertoire': repertoireRacine.id, 'groupe' : groupe.id}) }}"
                class="btn btn-primary">
                 ⬆️ Copier mon répertoire dans la VM

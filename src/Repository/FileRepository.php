@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\File;
 use App\Entity\Groupe;
+use App\Entity\Utilisateur;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -41,6 +42,17 @@ class FileRepository extends ServiceEntityRepository
             ->andWhere('gfr.groupe = :groupe')
             ->setParameter('groupe', $groupe)
             ->orderBy('gfr.deletedAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function findFromGitlabByUser(Utilisateur $user): array
+    {
+        return $this->createQueryBuilder('f')
+            ->andWhere('f.utilisateur_file = :u')
+            ->andWhere('f.fromGitlab = true')
+            ->setParameter('u', $user)
+            ->orderBy('f.id', 'ASC')
             ->getQuery()
             ->getResult();
     }

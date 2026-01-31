@@ -27,7 +27,6 @@ class EtrePartageType extends AbstractType
 
         $ufrs = $this->ufrRepo->findFilesForUserAdmin($utilisateur, $isAdmin);
 
-        // idFile => label
         $fileChoices = [];
         foreach ($ufrs as $ufr) {
             $file = $ufr->getFile();
@@ -41,7 +40,7 @@ class EtrePartageType extends AbstractType
                 $label = sprintf('%s — %s', $file->getNameFile(), $path);
             }
 
-            $fileChoices[$label] = (string) $file->getId(); // ChoiceType: label => value
+            $fileChoices[$label] = (string) $file->getId();
         }
 
         $builder
@@ -53,7 +52,7 @@ class EtrePartageType extends AbstractType
                 'placeholder' => 'Sélectionner un utilisateur',
             ])
             ->add('fileId', ChoiceType::class, [
-                'mapped' => false,                 // on ne mappe pas direct sur EtrePartage
+                'mapped' => false,
                 'choices' => $fileChoices,
                 'placeholder' => 'Sélectionner un fichier',
                 'label' => 'Fichier à partager',

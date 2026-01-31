@@ -20,8 +20,6 @@ final class GroupeFileRepertoireVoter extends Voter
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        // replace with your own logic
-        // https://symfony.com/doc/current/security/voters.html
         return in_array($attribute, [self::EDIT, self::DELETE])
             && $subject instanceof \App\Entity\GroupeFileRepertoire;
     }
@@ -34,7 +32,6 @@ final class GroupeFileRepertoireVoter extends Voter
             return false;
         }
 
-        // ... (check conditions and return true to grant permission) ...
         switch ($attribute) {
             case self::EDIT:
                 if ($this->security->isGranted('ROLE_ADMIN')) {

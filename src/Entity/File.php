@@ -36,6 +36,12 @@ abstract class File
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     protected ?string $description = null;
 
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    protected bool $fromGitlab = false;
+
+    #[ORM\Column(length: 1024, nullable: true)]
+    protected ?string $gitlabPath = null;
+
     #[ORM\Column(type: 'datetime', nullable: true)]
     protected ?DateTimeInterface $deletedAt = null;
 
@@ -101,6 +107,28 @@ abstract class File
     public function setDescription(?string $description): static
     {
         $this->description = $description;
+        return $this;
+    }
+
+    public function isFromGitlab(): bool
+    {
+        return $this->fromGitlab;
+    }
+
+    public function setFromGitlab(bool $fromGitlab): static
+    {
+        $this->fromGitlab = $fromGitlab;
+        return $this;
+    }
+
+    public function getGitlabPath(): ?string
+    {
+        return $this->gitlabPath;
+    }
+
+    public function setGitlabPath(?string $gitlabPath): static
+    {
+        $this->gitlabPath = $gitlabPath;
         return $this;
     }
 
@@ -178,7 +206,12 @@ abstract class File
         $aliases = [
             'image/jpg' => 'image/jpeg',
             'application/yaml' => 'application/x-yaml',
+
+            'application/x-httpd-php' => 'text/x-php',
+            'application/php' => 'text/x-php',
+            'application/x-php' => 'text/x-php',
         ];
+
         $mimeType = $aliases[$mimeType] ?? $mimeType;
 
         if (!in_array($mimeType, static::allowedMimeTypes(), true)) {

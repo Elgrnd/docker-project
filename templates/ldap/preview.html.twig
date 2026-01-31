@@ -1,0 +1,166 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}<title>Import LDAP - Prévisualisation</title>{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/ldap/preview.css') }}">
+{% endblock %}
+
+{% block scriptJs %}
+    <script src="{{ asset("js/ldap/preview.js") }}" defer></script>
+{% endblock %}
+
+{% block page_content %}
+    <div class="container mt-4 mb-5">
+        <h1 class="mb-4">🔄 Synchronisation LDAP</h1>
+        <p class="lead text-muted">Prévisualisation des modifications avant import</p>
+
+        <!-- Résumé -->
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="summary-card create">
+                    <div class="summary-number text-success">{{ toCreate|length }}</div>
+                    <div class="mt-2">Nouveaux</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="summary-card update">
+                    <div class="summary-number text-warning">{{ toUpdate|length }}</div>
+                    <div class="mt-2">Mises à jour</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="summary-card skip">
+                    <div class="summary-number text-danger">{{ skipped|length }}</div>
+                    <div class="mt-2">Ignorés</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="summary-card unchanged">
+                    <div class="summary-number text-info">{{ unchanged|length }}</div>
+                    <div class="mt-2">Inchangés</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-4">
+            📊 <strong>Total :</strong> {{ totalLdap }} utilisateur(s) dans l'annuaire LDAP
+        </div>
+
+        <!-- Nouveaux utilisateurs -->
+        {% if toCreate|length > 0 %}
+            <div class="section-header" onclick="toggleSection('create-section')">
+                <h3>
+                    <span class="toggle-icon">▶</span>
+                    ✅ Nouveaux utilisateurs ({{ toCreate|length }})
+                </h3>
+                <span class="btn-toggle">Afficher/Masquer</span>
+            </div>
+            <div id="create-section" class="collapsible-content">
+                {% for user in toCreate %}
+                    <div class="user-card">
+                        <strong>{{ user.login }}</strong>
+                        <span class="badge bg-success ms-2">Nouveau</span>
+                        <div class="text-muted mt-1">
+                            {{ user.prenom }} {{ user.nom }}
+                            {% if user.email %} | {{ user.email }}{% endif %}
+                            {% if user.promotion %} | <span class="badge bg-primary">{{ user.promotion }}</span>{% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Mises à jour -->
+        {% if toUpdate|length > 0 %}
+            <div class="section-header" onclick="toggleSection('update-section')">
+                <h3>
+                    <span class="toggle-icon">▶</span>
+                    🔄 Utilisateurs à mettre à jour ({{ toUpdate|length }})
+                </h3>
+                <span class="btn-toggle">Afficher/Masquer</span>
+            </div>
+            <div id="update-section" class="collapsible-content">
+                {% for item in toUpdate %}
+                    <div class="user-card">
+                        <strong>{{ item.user.login }}</strong>
+                        <span class="badge bg-warning text-dark ms-2">Mise à jour</span>
+                        <div class="text-muted">{{ item.user.prenom }} {{ item.user.nom }}</div>
+                        <ul class="changes-list">
+                            {% for change in item.changes %}
+                                <li>{{ change }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Ignorés -->
+        {% if skipped|length > 0 %}
+            <div class="section-header" onclick="toggleSection('skip-section')">
+                <h3>
+                    <span class="toggle-icon">▶</span>
+                    ⚠️ Utilisateurs ignorés ({{ skipped|length }})
+                </h3>
+                <span class="btn-toggle">Afficher/Masquer</span>
+            </div>
+            <div id="skip-section" class="collapsible-content">
+                {% for skip in skipped %}
+                    <div class="user-card">
+                        <strong>{{ skip.login }}</strong>
+                        <span class="badge bg-danger ms-2">Ignoré</span>
+                        <div class="text-muted">{{ skip.reason }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Inchangés -->
+        {% if unchanged|length > 0 %}
+            <div class="section-header" onclick="toggleSection('unchanged-section')">
+                <h3>
+                    <span class="toggle-icon">▶</span>
+                    ℹ️ Utilisateurs inchangés ({{ unchanged|length }})
+                </h3>
+                <span class="btn-toggle">Afficher/Masquer</span>
+            </div>
+            <div id="unchanged-section" class="collapsible-content">
+                {% for user in unchanged %}
+                    <div class="user-card">
+                        <strong>{{ user.login }}</strong>
+                        <span class="badge bg-info ms-2">Inchangé</span>
+                        <div class="text-muted">
+                            {{ user.prenom }} {{ user.nom }}
+                            {% if user.promotion %} | <span class="badge bg-secondary">{{ user.promotion }}</span>{% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Boutons d'action -->
+        <div class="mt-5 text-center">
+            {% if toCreate|length > 0 or toUpdate|length > 0 %}
+                <form method="post" action="{{ path('admin_ldap_import') }}"
+                      onsubmit="return confirm('Confirmer l\'import de {{ toCreate|length }} création(s) et {{ toUpdate|length }} mise(s) à jour ?');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('ldap-import') }}">
+                    <button type="submit" class="btn btn-confirm">
+                        ✓ Confirmer l'import ({{ toCreate|length + toUpdate|length }} modifications)
+                    </button>
+                </form>
+            {% else %}
+                <div class="alert alert-success">
+                    ✅ Aucune modification nécessaire. Base de données à jour !
+                </div>
+            {% endif %}
+
+            <a href="{{ path('listeUtilisateurs') }}" class="btn btn-secondary btn-lg mt-3">
+                ← Annuler
+            </a>
+        </div>
+    </div>
+
+
+{% endblock %}

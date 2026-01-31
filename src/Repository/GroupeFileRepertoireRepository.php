@@ -31,7 +31,7 @@ class GroupeFileRepertoireRepository extends ServiceEntityRepository
 
     public function existsFileGroupe(int $idGroupe, string $nameFile, int $idRepertoire): bool
     {
-        $count = (int) $this->createQueryBuilder('u')
+        $count = (int)$this->createQueryBuilder('u')
             ->select('COUNT(f)')
             ->join('u.file', 'f')
             ->andWhere('u.groupe = :idGroupe')
@@ -45,7 +45,6 @@ class GroupeFileRepertoireRepository extends ServiceEntityRepository
 
         return $count > 0;
     }
-
 
 
     public function recuperertoutFileGroupeParRepertoire($idGroupe)
@@ -69,30 +68,4 @@ class GroupeFileRepertoireRepository extends ServiceEntityRepository
             ->getQuery()
             ->execute();
     }
-
-
-    //    /**
-    //     * @return GroupeFileRepertoire[] Returns an array of GroupeFileRepertoire objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('u')
-    //            ->andWhere('u.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('u.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?GroupeFileRepertoire
-    //    {
-    //        return $this->createQueryBuilder('u')
-    //            ->andWhere('u.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
 }

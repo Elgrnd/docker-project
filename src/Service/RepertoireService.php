@@ -19,28 +19,36 @@ class RepertoireService
     /**
      * Ajoute un répertoire (et tout son contenu) dans un ZIP.
      *
-     * @param Repertoire $repertoire  Le dossier qu’on est en train d'ajouter
-     * @param ZipArchive $zip         L’archive ZIP dans laquelle on écrit
-     * @param string $pathInZip       Le chemin actuel dans le ZIP (genre 'monDossier/sousDossier')
+     * @param Repertoire $repertoire   Le dossier qu’on est en train d’ajouter
+     * @param ZipArchive $archiveZip   L’archive ZIP dans laquelle on écrit
+     * @param string $cheminDansZip    Le chemin actuel dans le ZIP (ex : 'monDossier/sousDossier')
      */
-    public function addRepertoireToZip(Repertoire $repertoire, ZipArchive $zip, string $pathInZip): void
+    public function ajouterRepertoireDansZip(Repertoire $repertoire, ZipArchive $archiveZip, string $cheminDansZip): void
     {
-        $currentPath = $pathInZip === ''
+        $cheminActuel = $cheminDansZip === ''
             ? $repertoire->getName()
-            : $pathInZip . '/' . $repertoire->getName();
+            : $cheminDansZip . '/' . $repertoire->getName();
 
-        if (!$zip->locateName($currentPath . '/')) {
-            $zip->addEmptyDir($currentPath);
+        if (!$archiveZip->locateName($cheminActuel . '/')) {
+            $archiveZip->addEmptyDir($cheminActuel);
         }
 
-        foreach ($repertoire->getChildrenActifs() as $child) {
-            $this->addRepertoireToZip($child, $zip, $currentPath);
+        foreach ($repertoire->getChildrenActifs() as $enfant) {
+            $this->ajouterRepertoireDansZip($enfant, $archiveZip, $cheminActuel);
+        }
+
+        foreach ($repertoire->getAccesFilesUtilisateur() as $accesFile) {
+            $fichierYaml = $accesFile->getFichierYaml();
+            $archiveZip->addFromString(
+                $cheminActuel . '/' . $fichierYaml->getNomFichier(),
+                $fichierYaml->getContenuFichier()
+            );
         }
 
         foreach ($repertoire->getAccesFilesUtilisateur() as $ufr) {
             $file = $ufr->getFile();
-            $filepathInZip = $currentPath . '/' . $file->getNameFile();
-            $zip->addFromString($filepathInZip, $file->getBodyFile());
+            $filepathInZip = $cheminActuel . '/' . $file->getNameFile();
+            $archiveZip->addFromString($filepathInZip, $file->getBodyFile());
         }
     }
 

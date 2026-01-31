@@ -260,7 +260,7 @@ final class RepertoireController extends AbstractController
             $this->redirectToRoute("repertoire");
         }
 
-        $repertoireService->addRepertoireToZip($repertoire, $zip, '');
+        $repertoireService->ajouterRepertoireDansZip($repertoire, $zip, '');
         $zip->close();
 
         return $this->file($zipPath, $repertoire->getName() . '.zip')
@@ -288,7 +288,7 @@ final class RepertoireController extends AbstractController
             return $this->redirectToRoute('repertoire');
         }
 
-        $repertoireService->addRepertoireToZip($repertoire, $zip, '');
+        $repertoireService->ajouterRepertoireDansZip($repertoire, $zip, '');
         $zip->close();
 
         try {

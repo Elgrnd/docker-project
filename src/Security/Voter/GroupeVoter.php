@@ -21,8 +21,6 @@ final class GroupeVoter extends Voter
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        // replace with your own logic
-        // https://symfony.com/doc/current/security/voters.html
         return in_array($attribute, [self::EDIT, self::LEAVE, self::VIEW, self::MODERATE])
             && $subject instanceof \App\Entity\Groupe;
     }
@@ -41,8 +39,6 @@ final class GroupeVoter extends Voter
             $role = $ug->getRole();
         }
 
-
-        // ... (check conditions and return true to grant permission) ...
         switch ($attribute) {
             case self::EDIT:
                 if ($this->security->isGranted('ROLE_ADMIN')) {

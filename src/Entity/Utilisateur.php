@@ -12,7 +12,6 @@ use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints as Assert;
 
-#[UniqueEntity(fields: ['adresseMail'], message: "Adresse mail déjà prise")]
 #[UniqueEntity(fields: ['login'], message: "Login déjà pris")]
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_LOGIN', fields: ['login'])]
@@ -36,11 +35,21 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\Column(length: 255)]
-    #[Assert\NotBlank]
-    #[Assert\NotNull]
+    #[ORM\Column(length: 255, nullable: true)]
     #[Assert\Email(message: "Cette adresse email n'est pas valide !")]
     private ?string $adresseMail = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $nom = null;
+
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $prenom = null;
+
+    #[ORM\Column(length: 100, nullable: true)]
+    private ?string $promotion = null;
+
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $gitlabLastCommitSha = null;
 
     /**
      * @var Collection<int, Groupe>
@@ -91,6 +100,10 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $gitlabTokenNonce = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $deleteVmAt = null;
+
 
     public function __construct()
     {
@@ -162,6 +175,36 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getNom(): ?string
+    {
+        return $this->nom;
+    }
+
+    public function setNom(?string $nom): void
+    {
+        $this->nom = $nom;
+    }
+
+    public function getPrenom(): ?string
+    {
+        return $this->prenom;
+    }
+
+    public function setPrenom(?string $prenom): void
+    {
+        $this->prenom = $prenom;
+    }
+
+    public function getPromotion(): ?string
+    {
+        return $this->promotion;
+    }
+
+    public function setPromotion(?string $promotion): void
+    {
+        $this->promotion = $promotion;
+    }
+
     /**
      * ✅ UNIQUE GETTER
      * @return Collection<int, File>
@@ -212,6 +255,17 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     public function setGitlabUrl(?string $gitlabUrl): self
     {
         $this->gitlabUrl = $gitlabUrl;
+        return $this;
+    }
+
+    public function getGitlabLastCommitSha(): ?string
+    {
+        return $this->gitlabLastCommitSha;
+    }
+
+    public function setGitlabLastCommitSha(?string $sha): self
+    {
+        $this->gitlabLastCommitSha = $sha;
         return $this;
     }
 
@@ -297,4 +351,17 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         $this->gitlabTokenNonce = $gitlabTokenNonce;
         return $this;
     }
+
+    public function getDeleteVmAt(): ?\DateTimeImmutable
+    {
+        return $this->deleteVmAt;
+    }
+
+    public function setDeleteVmAt(?\DateTimeImmutable $deleteVmAt): static
+    {
+        $this->deleteVmAt = $deleteVmAt;
+
+        return $this;
+    }
+
 }

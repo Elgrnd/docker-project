@@ -1,0 +1,43 @@
+{% macro render_tree(nodes) %}
+    {% for name, item in nodes %}
+        {% if item.type == 'blob' %}
+            <div class="tree-item">
+                {{ include('repertoire/components/fileGitlab.html.twig', {
+                    name: name,
+                    item: item
+                }) }}
+            </div>
+        {% endif %}
+    {% endfor %}
+
+    {% for name, item in nodes %}
+        {% if item.type == 'tree' %}
+            {% set folderCount = 0 %}
+            {% if item.children is defined %}
+                {% for _name, child in item.children %}
+                    {% if child.type == 'tree' %}
+                        {% set folderCount = folderCount + 1 %}
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+
+            <div class="tree-item">
+                <div class="tree-folder repertoire-gitlab" data-gitlab-folder="1">
+                    <span class="toggle-icon">▼</span>
+                    <i class="bi bi-folder-fill folder-icon"></i>
+                    <strong>{{ name }}</strong>
+
+                    <small class="text-muted">
+                        {{ folderCount }} sous-répertoire(s)
+                    </small>
+                </div>
+
+                {% if item.children is defined %}
+                    <div class="tree-children" style="display:block;">
+                        {{ _self.render_tree(item.children) }}
+                    </div>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% endfor %}
+{% endmacro %}

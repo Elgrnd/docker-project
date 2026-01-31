@@ -17,8 +17,6 @@ final class FileVoter extends Voter
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        // replace with your own logic
-        // https://symfony.com/doc/current/security/voters.html
         return in_array($attribute, [self::OWNER, self::BIBLIO, self::DOWNLOAD], true)
             && $subject instanceof \App\Entity\File;
     }
@@ -35,7 +33,6 @@ final class FileVoter extends Voter
             return true;
         }
 
-        // ... (check conditions and return true to grant permission) ...
         switch ($attribute) {
             case self::OWNER:
                 if ($subject->getUtilisateurFile() === $user) {

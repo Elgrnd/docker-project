@@ -27,7 +27,7 @@ class TextFileRepository extends ServiceEntityRepository
     public function recupererTextFileSansUtilisateur(): array
     {
         return $this->createQueryBuilder('y')
-            ->andWhere('y.utilisateur_file IS NULL') // idem
+            ->andWhere('y.utilisateur_file IS NULL')
             ->orderBy('y.nameFile', 'ASC')
             ->getQuery()
             ->getResult();
@@ -38,7 +38,7 @@ class TextFileRepository extends ServiceEntityRepository
         return (bool) $this->createQueryBuilder('u')
             ->select('COUNT(u.id)')
             ->andWhere('u.nameFile = :nameFile')
-            ->andWhere('u.utilisateur_file IS NULL') // idem
+            ->andWhere('u.utilisateur_file IS NULL')
             ->setParameter('nameFile', $nameFile)
             ->getQuery()
             ->getSingleScalarResult();

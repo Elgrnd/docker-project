@@ -44,7 +44,7 @@ class AjouterMembreGroupeType extends AbstractType
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
-            'data_class' => null, // Pas d'entité directement liée
+            'data_class' => null,
         ]);
         $resolver->setRequired('groupe');
         $resolver->setAllowedTypes('groupe', Groupe::class);

@@ -11,88 +11,85 @@
 {% endblock %}
 
 {% block page_content %}
-    <div class="container-centered">
-        <h1 class="group-title">{{ groupe.nom }}</h1>
+    <main class="center">
+        <h2>{{ groupe.nom }}</h2>
 
-        <div class="members-card">
-            <h2 class="members-heading">Membres</h2>
+        <h3 class="mt-4">Membres du groupe</h3>
 
-            <table class="members-table">
-                <thead>
+        <table class="table table-striped mt-3">
+            <thead>
+            <tr>
+                <th>Login</th>
+                <th>Rôle dans le groupe</th>
+                {% if is_granted('GROUPE_MODERATE', groupe) %}
+                    <th>Action</th>
+                {% endif %}
+            </tr>
+            </thead>
+
+            <tbody>
+            {% for membre in groupe.getMembres() %}
                 <tr>
-                    <th>Nom</th>
-                    <th>Rôle</th>
+                    <td>{{ membre.login }}</td>
+
+                    <td>
+                        {% set pivot = membre.getUtilisateurGroupeRelation(groupe) %}
+                        {# pivot.role contient GROUPE_UTILISATEUR / GROUPE_MODERATEUR / GROUPE_CHEF #}
+
+                        {% if is_granted('GROUPE_EDIT', groupe) and membre != groupe.etreChef and membre != app.user %}
+                            <select
+                                    class="form-select"
+                                    data-utilisateur-login="{{ membre.login }}"
+                                    data-groupe-id="{{ groupe.id }}"
+                            >
+                                <option value="GROUPE_UTILISATEUR" {{ pivot.role == 'GROUPE_UTILISATEUR' ? 'selected' }}>Utilisateur</option>
+                                <option value="GROUPE_MODERATEUR" {{ pivot.role == 'GROUPE_MODERATEUR' ? 'selected' }}>Modérateur</option>
+                                <option value="GROUPE_ADMINISTRATEUR" {{ pivot.role == 'GROUPE_ADMINISTRATEUR' ? 'selected' }}>Administrateur</option>
+                            </select>
+                        {% else %}
+                            {{ (pivot.role|replace({'GROUPE_': ''})|lower)|capitalize }}
+                        {% endif %}
+                    </td>
+
                     {% if is_granted('GROUPE_MODERATE', groupe) %}
-                        <th>Action</th>
-                    {% endif %}
-                </tr>
-                </thead>
-
-                <tbody>
-                {% for membre in groupe.getMembres() %}
-                    <tr>
-                        <td class="member-name">{{ membre.login }}</td>
-
-                        {# ====== SELECT ROLE ====== #}
-                        <td class="member-role">
-                            {% set pivot = membre.getUtilisateurGroupeRelation(groupe) %}
-                            {# pivot.role contient GROUPE_UTILISATEUR / GROUPE_MODERATEUR / GROUPE_CHEF #}
-
-                            {% if is_granted('GROUPE_EDIT', groupe) and membre != groupe.etreChef and membre != app.user %}
-                                <select
-                                        class="role-select"
-                                        data-utilisateur-login="{{ membre.login }}"
-                                        data-groupe-id="{{ groupe.id }}"
-                                >
-                                    <option value="GROUPE_UTILISATEUR" {{ pivot.role == 'GROUPE_UTILISATEUR' ? 'selected' }}>Utilisateur</option>
-                                    <option value="GROUPE_MODERATEUR" {{ pivot.role == 'GROUPE_MODERATEUR' ? 'selected' }}>Modérateur</option>
-                                    <option value="GROUPE_ADMINISTRATEUR" {{ pivot.role == 'GROUPE_ADMINISTRATEUR' ? 'selected' }}>Administrateur</option>
-                                </select>
-                            {% else %}
-                                <span class="role-text">{{ (pivot.role|replace({'GROUPE_': ''})|lower)|capitalize }}</span>
+                        <td>
+                            {% if membre != groupe.etreChef %}
+                                <form method="post"
+                                      action="{{ path('supprimer_membre_groupe', {id: groupe.id, login: membre.login}) }}"
+                                      onsubmit="return confirm('Supprimer {{ membre.login }} du groupe ?');">
+                                    <button type="submit" class="btn btn-warning btn-sm">Retirer</button>
+                                </form>
                             {% endif %}
                         </td>
+                    {% endif %}
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="3" class="text-center">Aucun membre.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
 
-                        {# ====== BOUTON RETIRER ====== #}
-                        {% if is_granted('GROUPE_MODERATE', groupe) %}
-                            <td class="member-action">
-                                {% if membre != groupe.etreChef %}
-                                    <form method="post"
-                                          action="{{ path('supprimer_membre_groupe', {id: groupe.id, login: membre.login}) }}"
-                                          onsubmit="return confirm('Supprimer {{ membre.login }} du groupe ?');">
-                                        <button type="submit" class="btn-remove">Retirer</button>
-                                    </form>
-                                {% endif %}
-                            </td>
-                        {% endif %}
-                    </tr>
-                {% else %}
-                    <tr>
-                        <td colspan="3" class="text-center">Aucun membre.</td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-
-            {% if is_granted('GROUPE_MODERATE', groupe) %}
-                <div class="add-member-section">
-                    {{ form_start(formAjouterMembre) }}
-                    {{ form_row(formAjouterMembre.utilisateur) }}
-                    <button type="submit" class="btn-add-member">Ajouter des membres</button>
-                    {{ form_end(formAjouterMembre) }}
-                </div>
-            {% endif %}
-        </div>
+        {% if is_granted('GROUPE_MODERATE', groupe) %}
+            <fieldset class="mt-4">
+                <legend>Ajouter un membre</legend>
+                {{ form_start(formAjouterMembre) }}
+                {{ form_row(formAjouterMembre.utilisateur) }}
+                <button type="submit" class="btn">Ajouter</button>
+                {{ form_end(formAjouterMembre) }}
+            </fieldset>
+        {% endif %}
 
         {% if is_granted('GROUPE_LEAVE', groupe) %}
-            <form method="post" action="{{ path('quitter_groupe', {id: groupe.id}) }}" class="leave-group-form"
+            <form method="post" action="{{ path('quitter_groupe', {id: groupe.id}) }}" class="mt-3"
                   onsubmit="return confirm('Voulez-vous vraiment quitter ce groupe ?')">
                 <button type="submit" class="btn btn-warning">Quitter le groupe</button>
             </form>
         {% endif %}
 
-        <div class="back-link-container">
+        <div class="mt-4">
             <a href="{{ path('mes_groupes') }}" class="btn btn-secondary">← Retour à mes groupes</a>
         </div>
-    </div>
+    </main>
 {% endblock %}

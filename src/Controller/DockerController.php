@@ -11,6 +11,7 @@ use App\Service\UtilisateurManagerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\Extension\Validator\ViolationMapper\MappingRule;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -33,7 +34,7 @@ final class DockerController extends AbstractController
      * @throws ClientExceptionInterface
      */
     #[IsGranted('ROLE_USER')]
-    #[Route('/virtual-machine/{vmId}/containers/', name: 'listContainers')]
+    #[Route('/virtual-machine/{id}/containers/', name: 'listContainers')]
     public function list(
         DockerService               $dockerService,
         VirtualMachine $virtualMachine,
@@ -41,8 +42,7 @@ final class DockerController extends AbstractController
         UtilisateurManagerInterface $utilisateurManager,
     ): Response
     {
-
-        if ($virtualMachine->getVmStatus() == "none") {
+        if($virtualMachine->getVmId() == null || $virtualMachine->getVmStatus() == "none") {
             $this->addFlash("error", "Vous n'avez pas encore créer de VM");
             return $this->redirectToRoute('index');
         }
@@ -68,7 +68,7 @@ final class DockerController extends AbstractController
                     $userContainers = $dockerService->listContainers($vmIp);
                     foreach ($userContainers as &$userContainer) {
                         $userContainer['user'] = $userWithVm->getLogin();
-                        $userContainer['vmid'] = $userWithVm->getVm()->getVmId()();
+                        $userContainer['vmid'] = $userWithVm->getVm()->getId();
                     }
                     $containers = array_merge($containers, $userContainers);
                 }
@@ -86,7 +86,7 @@ final class DockerController extends AbstractController
                     $containers = $dockerService->listContainers($vmIp);
                     foreach ($containers as &$container) {
                         $container['user'] = $user->getLogin();
-                        $container['vmid'] = $virtualMachine->getVmId();
+                        $container['vmid'] = $virtualMachine->getId();
                     }
                 }
             }
@@ -139,12 +139,12 @@ final class DockerController extends AbstractController
      * @throws RedirectionExceptionInterface
      * @throws ClientExceptionInterface
      */
-    #[IsGranted('ROLE_USER')]
-    #[Route('/virtual-machine/{virtual_machine}/container/{id}/start', name: 'container_start')]
-    public function start(string $id, VirtualMachine $virtualMachine, DockerService $dockerService, ProxmoxService $proxmoxService): Response
+    #[IsGranted('VM_MANAGE', 'virtualMachine')]
+    #[Route('/virtual-machine/{virtualMachine}/container/{idContainer}/start', name: 'container_start')]
+    public function start(string $idContainer, VirtualMachine $virtualMachine, DockerService $dockerService, ProxmoxService $proxmoxService): Response
     {
         $vmIp = $proxmoxService->verifVMIp($virtualMachine);
-        $result = $dockerService->startContainer($id, $vmIp);
+        $result = $dockerService->startContainer($idContainer, $vmIp);
 
         if ($result['success']) {
             $this->addFlash('success', 'Container started successfully.');
@@ -152,7 +152,7 @@ final class DockerController extends AbstractController
             $this->addFlash('error', $result['message']);
         }
 
-        return $this->redirectToRoute("listContainers");
+        return $this->redirectToRoute('listContainers', ["id" => $virtualMachine->getId()]);
     }
 
 
@@ -162,12 +162,12 @@ final class DockerController extends AbstractController
      * @throws RedirectionExceptionInterface
      * @throws ClientExceptionInterface
      */
-    #[IsGranted('ROLE_USER')]
-    #[Route('/container/{vmid}/{id}/stop', name: 'container_stop')]
-    public function stop(string $id, string $vmid, DockerService $dockerService, ProxmoxService $proxmoxService): Response
+    #[IsGranted('VM_MANAGE', 'virtualMachine')]
+    #[Route('/virtual-machine/{virtualMachine}/container/{idContainer}/stop', name: 'container_stop')]
+    public function stop(string $idContainer, VirtualMachine $virtualMachine, DockerService $dockerService, ProxmoxService $proxmoxService): Response
     {
-        $vmIp = $proxmoxService->verifVMIp($vmid);
-        $result = $dockerService->stopContainer($id, $vmIp);
+        $vmIp = $proxmoxService->verifVMIp($virtualMachine);
+        $result = $dockerService->stopContainer($idContainer, $vmIp);
 
         if ($result['success']) {
             $this->addFlash('success', 'Container stopped successfully.');
@@ -175,7 +175,7 @@ final class DockerController extends AbstractController
             $this->addFlash('error', $result['message']);
         }
 
-        return $this->redirectToRoute('listContainers');
+        return $this->redirectToRoute('listContainers', ["id" => $virtualMachine->getId()]);
     }
 
     /**
@@ -184,12 +184,12 @@ final class DockerController extends AbstractController
      * @throws RedirectionExceptionInterface
      * @throws ClientExceptionInterface
      */
-    #[IsGranted('ROLE_USER')]
-    #[Route('/container/{vmid}/{id}/remove', name: 'container_remove')]
-    public function remove(string $id, string $vmid, DockerService $dockerService, ProxmoxService $proxmoxService): Response
+    #[IsGranted('VM_MANAGE', 'virtualMachine')]
+    #[Route('/virtual-machine/{virtualMachine}/container/{idContainer}/remove', name: 'container_remove')]
+    public function remove(string $idContainer, VirtualMachine $virtualMachine, DockerService $dockerService, ProxmoxService $proxmoxService): Response
     {
-        $vmIp = $proxmoxService->verifVMIp($vmid);
-        $result = $dockerService->removeContainer($id, $vmIp);
+        $vmIp = $proxmoxService->verifVMIp($virtualMachine);
+        $result = $dockerService->removeContainer($idContainer, $vmIp);
 
         if ($result['success']) {
             $this->addFlash('success', 'Container removed successfully.');
@@ -197,7 +197,7 @@ final class DockerController extends AbstractController
             $this->addFlash('error', $result['message']);
         }
 
-        return $this->redirectToRoute('listContainers');
+        return $this->redirectToRoute('listContainers', ["id" => $virtualMachine->getId()]);
     }
 
     #[Route('/admin/vm/{vmid}/start', name: 'admin_vm_start')]
@@ -311,7 +311,7 @@ final class DockerController extends AbstractController
     {
         $user = $this->getUser();
 
-        if ($user->getVm() !== null) {
+        if ($user->getVm()->getVmId() !== null) {
             return new JsonResponse(['status' => 'already_exists'], 400);
         }
         $user->getVm()->setVmStatus('creating');

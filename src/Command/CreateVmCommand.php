@@ -57,10 +57,8 @@ class CreateVmCommand extends Command
             return Command::FAILURE;
         }
         $vmId = $this->proxmoxService->cloneVm($user->getLogin());
-        $virtualMachine = new VirtualMachine();
-        $virtualMachine->setVmId($vmId);
-        $virtualMachine->setVmStatus('ready');
-        $user->setVm($virtualMachine);
+        $user->getVm()->setVmId($vmId);
+        $user->getVm()->setVmStatus('ready');
         $this->entityManager->flush();
 
         $io->success("The user has been created !");

@@ -19,11 +19,16 @@ class ProxmoxService
     private string $tokenId;
     private string $secret;
     private EntityManagerInterface $entityManager;
+    private string $projectDir;
 
-    public function __construct(HttpClientInterface $client, KernelInterface $kernel)
+    public function __construct(
+        HttpClientInterface $client,
+        KernelInterface $kernel,
+        EntityManagerInterface $entityManager)
     {
         $this->client = $client;
         $this->projectDir = $kernel->getProjectDir();
+        $this->entityManager = $entityManager;
         $this->apiUrl = $_ENV['PROXMOX_API_URL'];
         $this->tokenId = $_ENV['PROXMOX_TOKEN_ID'];
         $this->secret = $_ENV['PROXMOX_TOKEN_SECRET'];

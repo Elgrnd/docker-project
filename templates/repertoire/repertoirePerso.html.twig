@@ -26,23 +26,60 @@
 
 
     <div class="container mt-4">
-        <h1>Gestion des répertoires</h1>
+        <h1>Répertoire</h1>
 
+        {# Card Arborescence avec bouton GitLab #}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">📂 Arborescence</h5>
+                <a href="{{ path('gitlab_fichiers') }}" class="btn-gitlab">GitLab</a>
+            </div>
+            <div class="card-body tree-container">
+                {% if repertoireRacine %}
+                    {{ arbre.render_tree(repertoireRacine, listUyr, 'perso') }}
+                {% else %}
+                    <p class="text-muted">Aucun répertoire trouvé.</p>
+                {% endif %}
+            </div>
 
-        {# Bouton pour afficher le formulaire #}
-        <div class="mb-4">
-            <a href="#" id="toggleFormBtn" class="btn btn-success">
-                ➕ Créer un nouveau répertoire
-            </a>
+            {# Boutons d'action #}
+            <div class="btn-actions-container">
+                <a href="{{ path('repertoire_telecharger_zip', {id: repertoireRacine.id}) }}"
+                   class="btn btn-primary mt-3">
+                    Télécharger En ZIP
+                </a>
+
+                <a href="{{ path('repertoire_corbeille') }}" class="btn btn-outline-danger">
+                    Voir La Corbeille
+                </a>
+            </div>
         </div>
 
-        {# Formulaire de création (masqué par défaut) #}
-        {{ include('repertoire/components/formulaireCreation.html.twig', {'form': formRepertoire}) }}
+        {# Section création nouveau répertoire #}
+        <div class="create-section">
+            <h3>Créer Un Nouveau Repertoire</h3>
 
-        <a href="{{ path('repertoire_telecharger_zip', {id: repertoireRacine.id}) }}"
-           class="btn btn-primary mt-3">
-            📦 Télécharger en ZIP
-        </a>
+            {{ form_start(formRepertoire, {'attr': {'class': 'needs-validation'}}) }}
+
+            <div class="mb-3">
+                {{ form_label(formRepertoire.name, 'Nom Repertoire') }}
+                {{ form_widget(formRepertoire.name, {'attr': {'class': 'form-control'}}) }}
+                {{ form_errors(formRepertoire.name) }}
+            </div>
+
+            <div class="mb-3">
+                {{ form_label(formRepertoire.parent, 'Repertoire Parent') }}
+                {{ form_widget(formRepertoire.parent, {'attr': {'class': 'form-select'}}) }}
+                <small class="form-text">
+                    Le Répertoire Personnel Est Sélectionné Par Défaut
+                </small>
+                {{ form_errors(formRepertoire.parent) }}
+            </div>
+
+            <button type="submit" class="btn btn-primary">Créer</button>
+
+            {{ form_end(formRepertoire) }}
+        </div>
 
         {% if app.user and app.user.vmStatus == 'ready' %}
             <a href="{{ path('repertoire_copier_vm', {'id': repertoireRacine.id}) }}"
@@ -51,30 +88,6 @@
             </a>
         {% endif %}
 
-
-    <div class="card">
-        <div class="card-header">
-            <h5 class="mb-0">📂 Arborescence</h5>
-        </div>
-        <div class="card-body tree-container">
-            {% if repertoireRacine %}
-                {{ arbre.render_tree(repertoireRacine, listUyr, 'perso') }}
-            {% else %}
-                <p class="text-muted">Aucun répertoire trouvé.</p>
-            {% endif %}
-        </div>
-    </div>
-
-
-    <div class="card mt-4">
-        <div class="card-header">
-            <h5 class="mb-0">🗑️ Corbeille</h5>
-        </div>
-        <div class="card-body">
-            <a href="{{ path('repertoire_corbeille') }}" class="btn btn-outline-danger">
-                Voir les éléments supprimés
-            </a>
-        </div>
     </div>
 
 {% endblock %}

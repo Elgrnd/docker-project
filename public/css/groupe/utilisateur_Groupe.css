@@ -1,144 +1,220 @@
-/* ==================== SECTION MEMBRES ==================== */
-.membres-section {
-    margin-top: 2rem;
-}
-
-.membres-section h3 {
-    margin-bottom: 1rem;
-    color: #333;
-}
-
-/* ==================== TABLEAU MEMBRES ==================== */
-.table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 1rem;
-    background: #fff;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.table thead {
-    background-color: #f8f9fa;
-}
-
-.table th {
-    padding: 1rem;
-    text-align: left;
-    font-weight: 600;
-    border-bottom: 2px solid #dee2e6;
-    color: #495057;
-}
-
-.table td {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid #e9ecef;
-    vertical-align: middle;
-}
-
-.table tbody tr:last-child td {
-    border-bottom: none;
-}
-
-.table-striped tbody tr:nth-of-type(odd) {
-    background-color: #f8f9fa;
-}
-
-.table tbody tr:hover {
-    background-color: #e9ecef;
-    transition: background-color 0.2s ease;
-}
-
-/* Mise en évidence de l'utilisateur courant */
-.table tbody tr.current-user {
-    background-color: #e7f3ff;
-}
-
-.table tbody tr.current-user:hover {
-    background-color: #d0e9ff;
-}
-
-/* Centrage du texte "Aucun membre" */
-.text-center {
-    text-align: center;
-    color: #6c757d;
-    font-style: italic;
+/* ==================== CONTENEUR PRINCIPAL ==================== */
+.container-centered {
+    max-width: 1200px;
+    margin: 0 auto;
     padding: 2rem 1rem;
 }
 
-/* ==================== BADGE CHEF ==================== */
-.badge-chef {
-    display: inline-block;
-    padding: 0.25rem 0.5rem;
-    background-color: #ffc107;
-    color: #000;
-    border-radius: 4px;
-    font-size: 0.75rem;
+/* ==================== TITRE DU GROUPE ==================== */
+.group-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin-bottom: 2rem;
+    text-align: left;
+}
+
+/* ==================== CARTE DES MEMBRES ==================== */
+.members-card {
+    background: linear-gradient(135deg, #e0e7ff 0%, #f3f4f6 100%);
+    border-radius: 24px;
+    padding: 3rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.members-heading {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+/* ==================== TABLEAU MEMBRES ==================== */
+.members-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #ffffff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-bottom: 2rem;
+}
+
+.members-table thead {
+    background: linear-gradient(90deg, #a5b4fc 0%, #c7d2fe 100%);
+}
+
+.members-table th {
+    padding: 1.25rem 1.5rem;
+    text-align: center;
     font-weight: 600;
-    margin-left: 0.5rem;
+    font-size: 1.1rem;
+    color: #1f2937;
+    border: none;
+}
+
+.members-table td {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
     vertical-align: middle;
+    text-align: center;
+    color: #1f2937;
+}
+
+.members-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.members-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.members-table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+/* Alternance des lignes */
+.members-table tbody tr:nth-child(odd) {
+    background-color: #ffffff;
+}
+
+.members-table tbody tr:nth-child(even) {
+    background-color: #f9fafb;
+}
+
+/* ==================== NOM ET RÔLE ==================== */
+.member-name {
+    font-weight: 600;
+    font-size: 1.05rem;
+    color: #1f2937;
+}
+
+.member-role {
+    font-size: 1rem;
+}
+
+.role-text {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background-color: #f3f4f6;
+    border-radius: 6px;
+    color: #4b5563;
+    font-weight: 500;
 }
 
 /* ==================== SELECT RÔLE ==================== */
-.form-select {
-    font-size: 0.95rem;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
-    background-color: #fff;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 0.75rem center;
-    background-size: 16px 12px;
-    padding: 0.375rem 2.5rem 0.375rem 0.75rem;
-    cursor: pointer;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-}
-
-.form-select:hover {
-    border-color: #80bdff;
-}
-
-.form-select:focus {
-    outline: 0;
-    border-color: #80bdff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
-
-.form-select:disabled {
-    background-color: #e9ecef;
-    cursor: not-allowed;
-    opacity: 0.6;
-}
-
-/* Label de rôle pour utilisateurs sans permission de modification */
-.role-label {
-    display: inline-block;
-    padding: 0.375rem 0.75rem;
-    background-color: #e9ecef;
-    border-radius: 4px;
-    color: #495057;
-    font-size: 0.95rem;
-}
-
-/* ==================== BOUTONS ==================== */
-.btn {
-    display: inline-block;
+.role-select {
     padding: 0.5rem 1rem;
     font-size: 1rem;
-    font-weight: 400;
+    border: 2px solid #d1d5db;
+    border-radius: 6px;
+    background-color: #ffffff;
+    color: #1f2937;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 150px;
+}
+
+.role-select:hover {
+    border-color: #6366f1;
+}
+
+.role-select:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* ==================== BOUTON RETIRER ==================== */
+.btn-remove {
+    background-color: #ef4444;
+    color: #ffffff;
+    border: none;
+    padding: 0.625rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.btn-remove:hover {
+    background-color: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.btn-remove:active {
+    transform: translateY(0);
+}
+
+.member-action form {
+    margin: 0;
+}
+
+/* ==================== SECTION AJOUTER DES MEMBRES ==================== */
+.add-member-section {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+}
+
+.btn-add-member {
+    background: linear-gradient(90deg, #4f46e5 0%, #6366f1 100%);
+    color: #ffffff;
+    border: none;
+    padding: 0.875rem 3rem;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 1.05rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+    text-transform: none;
+}
+
+.btn-add-member:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(79, 70, 229, 0.4);
+    background: linear-gradient(90deg, #4338ca 0%, #4f46e5 100%);
+}
+
+.btn-add-member:active {
+    transform: translateY(-1px);
+}
+
+/* ==================== FORMULAIRES ==================== */
+.add-member-section form {
+    display: inline-block;
+}
+
+.leave-group-form {
+    text-align: center;
+    margin: 2rem 0;
+}
+
+/* ==================== BOUTONS GÉNÉRIQUES ==================== */
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    font-weight: 600;
     text-align: center;
     text-decoration: none;
-    border: 1px solid transparent;
-    border-radius: 4px;
+    border: none;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
     line-height: 1.5;
 }
 
 .btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .btn:active {
@@ -146,149 +222,142 @@
 }
 
 .btn-warning {
-    background-color: #ffc107;
-    color: #000;
-    border-color: #ffc107;
+    background-color: #f59e0b;
+    color: #ffffff;
 }
 
 .btn-warning:hover {
-    background-color: #e0a800;
-    border-color: #d39e00;
-    color: #000;
+    background-color: #d97706;
 }
 
 .btn-secondary {
-    background-color: #6c757d;
-    color: #fff;
-    border-color: #6c757d;
+    background-color: #6b7280;
+    color: #ffffff;
 }
 
 .btn-secondary:hover {
-    background-color: #5a6268;
-    border-color: #545b62;
-    color: #fff;
+    background-color: #4b5563;
 }
 
-.btn-sm {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
-}
-
-/* ==================== FORMULAIRES ==================== */
-.remove-membre-form,
-.leave-groupe-form {
-    display: inline;
-    margin: 0;
-}
-
-/* Fieldset pour ajouter un membre */
-fieldset {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 1.5rem;
-    background-color: #f8f9fa;
+/* ==================== LIEN RETOUR ==================== */
+.back-link-container {
+    text-align: left;
     margin-top: 2rem;
 }
 
-fieldset legend {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #333;
-    padding: 0 0.5rem;
-    width: auto;
-    margin-bottom: 0;
+/* ==================== MESSAGE AUCUN MEMBRE ==================== */
+.text-center {
+    text-align: center;
+    color: #6b7280;
+    font-style: italic;
+    padding: 2rem 1rem;
+    font-size: 1.05rem;
 }
 
-fieldset .btn {
-    margin-top: 0.5rem;
-}
-
-/* Amélioration des champs de formulaire */
+/* ==================== CHAMPS DE FORMULAIRE ==================== */
 .form-control {
     display: block;
     width: 100%;
-    padding: 0.375rem 0.75rem;
+    padding: 0.75rem 1rem;
     font-size: 1rem;
     line-height: 1.5;
-    color: #495057;
-    background-color: #fff;
-    background-clip: padding-box;
-    border: 1px solid #ced4da;
-    border-radius: 4px;
+    color: #1f2937;
+    background-color: #ffffff;
+    border: 2px solid #d1d5db;
+    border-radius: 8px;
     transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    max-width: 400px;
+    margin: 0 auto 1rem auto;
 }
 
 .form-control:focus {
-    color: #495057;
-    background-color: #fff;
-    border-color: #80bdff;
+    color: #1f2937;
+    background-color: #ffffff;
+    border-color: #6366f1;
     outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 /* Labels de formulaire */
 label {
-    display: inline-block;
+    display: block;
     margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: #333;
-}
-
-/* ==================== UTILITAIRES MARGIN/PADDING ==================== */
-.mt-3 {
-    margin-top: 1rem;
-}
-
-.mt-4 {
-    margin-top: 1.5rem;
-}
-
-/* ==================== MESSAGES D'INFO ==================== */
-.info-message {
-    padding: 1rem;
-    background-color: #d1ecf1;
-    border: 1px solid #bee5eb;
-    border-radius: 4px;
-    color: #0c5460;
-    margin-top: 1rem;
-}
-
-.no-members {
+    font-weight: 600;
+    color: #1f2937;
     text-align: center;
-    padding: 2rem;
-    color: #6c757d;
-    font-style: italic;
 }
 
 /* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
-    .table {
+    .container-centered {
+        padding: 1rem 0.5rem;
+    }
+
+    .group-title {
+        font-size: 1.75rem;
+        text-align: center;
+    }
+
+    .members-card {
+        padding: 1.5rem;
+        border-radius: 16px;
+    }
+
+    .members-heading {
+        font-size: 1.5rem;
+    }
+
+    .members-table {
         font-size: 0.9rem;
     }
 
-    .table th,
-    .table td {
-        padding: 0.5rem;
+    .members-table th,
+    .members-table td {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .btn-remove {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    .role-select {
+        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+        min-width: 120px;
+    }
+
+    .btn-add-member {
+        padding: 0.75rem 2rem;
+        font-size: 0.95rem;
     }
 
     .btn {
-        padding: 0.375rem 0.75rem;
+        padding: 0.625rem 1.25rem;
         font-size: 0.9rem;
     }
 
-    .form-select {
-        font-size: 0.9rem;
-        padding: 0.3rem 0.6rem;
+    /* Empiler les cellules sur mobile si nécessaire */
+    .members-table th:nth-child(3),
+    .members-table td:nth-child(3) {
+        display: table-cell;
+    }
+}
+
+@media (max-width: 480px) {
+    .members-table {
+        display: block;
+        overflow-x: auto;
     }
 
-    fieldset {
+    .btn-add-member {
+        width: 100%;
         padding: 1rem;
     }
 
-    /* Empiler les boutons sur mobile */
-    .remove-membre-form .btn {
-        width: 100%;
-        margin-top: 0.25rem;
+    .form-control {
+        max-width: 100%;
     }
 }
 
@@ -304,36 +373,29 @@ label {
     }
 }
 
-.table tbody tr {
+.members-table tbody tr {
     animation: fadeIn 0.3s ease;
 }
 
-/* Animation au changement de rôle */
-.form-select.updating {
-    opacity: 0.6;
-    pointer-events: none;
+/* Animation au chargement de la carte */
+.members-card {
+    animation: fadeIn 0.5s ease;
 }
 
 /* ==================== ÉTATS DE VALIDATION ==================== */
-.form-control.is-invalid,
-.form-select.is-invalid {
-    border-color: #dc3545;
-    padding-right: calc(1.5em + 0.75rem);
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' width='12' height='12' fill='none' stroke='%23dc3545'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right calc(0.375em + 0.1875rem) center;
-    background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+.form-control.is-invalid {
+    border-color: #ef4444;
 }
 
-.form-control.is-invalid:focus,
-.form-select.is-invalid:focus {
-    border-color: #dc3545;
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+.form-control.is-invalid:focus {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
 
 .invalid-feedback {
     display: block;
     margin-top: 0.25rem;
     font-size: 0.875rem;
-    color: #dc3545;
+    color: #ef4444;
+    text-align: center;
 }

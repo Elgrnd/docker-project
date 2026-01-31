@@ -29,7 +29,7 @@ final class GroupeController extends AbstractController
     {
         $utilisateur = $this->getUser();
 
-        if ($this->isGranted('ROLE_ADMIN')) {
+        if ($this->isGranted('ROLE_PROFESSEUR')) {
             $groupesMembre = $em->getRepository(Groupe::class)->findAll();
         } else {
             $groupesMembre = $utilisateur->getUtilisateurGroupe();

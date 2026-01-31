@@ -13,8 +13,6 @@ final class VirtualMachineVoter extends Voter
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        // replace with your own logic
-        // https://symfony.com/doc/current/security/voters.html
         return $attribute == self::MANAGE
             && $subject instanceof VirtualMachine;
     }
@@ -23,19 +21,16 @@ final class VirtualMachineVoter extends Voter
     {
         $user = $token->getUser();
 
-        // if the user is anonymous, do not grant access
         if (!$user instanceof UserInterface) {
             return false;
         }
 
-        // ... (check conditions and return true to grant permission) ...
         switch ($attribute) {
             case self::MANAGE:
-                // logic to determine if the user can EDIT
                 if($user->getVm() === $subject || in_array('ROLE_ADMIN', $user->getRoles())) {
                     return true;
                 }
-                // return true or false
+
             return false;
         }
 

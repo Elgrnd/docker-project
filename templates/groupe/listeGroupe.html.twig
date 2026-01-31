@@ -13,7 +13,7 @@
 
 {% block page_content %}
     <h2>
-        {% if not is_granted('ROLE_ADMIN') %}Mes {% endif %}Groupes
+        {% if not is_granted('ROLE_PROFESSEUR') %}Mes {% endif %}Groupes
     </h2>
 
     {% if groupesMembre is empty %}
@@ -23,7 +23,7 @@
             {% for groupe in groupesMembre %}
                 {% include 'groupe/groupe.html.twig' with {
                     'groupe': groupe,
-                    'isAdmin': is_granted('ROLE_ADMIN'),
+                    'isAdmin': is_granted('ROLE_PROFESSEUR'),
                     'canEdit': is_granted('GROUPE_EDIT', groupe)
                 } %}
             {% endfor %}

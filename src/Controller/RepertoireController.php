@@ -317,11 +317,15 @@ final class RepertoireController extends AbstractController
         ProxmoxService $proxmoxService
     ): Response
     {
-        if (!$groupe || $groupe->getVmStatus() !== 'ready') {
+        if (!$groupe || !$groupe->getVm()) {
             $this->addFlash('error', 'VM non disponible.');
             return $this->redirectToRoute('repertoire');
         }
-        $this->copyRepertory($repertoire, $repertoireService, $dockerService, $proxmoxService, $groupe->getVmId());
+        if ($groupe->getVm()->getVmStatus() !== 'ready') {
+            $this->addFlash('error', 'VM non disponible.');
+            return $this->redirectToRoute('repertoire');
+        }
+        $this->copyRepertory($repertoire, $repertoireService, $dockerService, $proxmoxService, $groupe->getVm());
         return $this->redirectToRoute("fichiers_groupe", ["id" => $groupe->getId()]);
     }
 

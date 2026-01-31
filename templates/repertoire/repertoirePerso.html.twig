@@ -27,86 +27,117 @@
 
 
     <div class="container mt-4">
-        <h1>Gestion des répertoires</h1>
+        <h1>Répertoire</h1>
 
+        {# Card Arborescence #}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">📂 Arborescence</h5>
+                {# Menu déroulant GitLab #}
+                {% if app.user.gitlabUrl %}
+                    <div class="gitlab-dropdown-container">
+                        <button class="btn btn-gitlab-menu" type="button" id="gitlabDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            ⚙️ Options GitLab
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="gitlabDropdown">
+                            <li>
+                                <a class="dropdown-item" href="{{ path('gitlab_url') }}">
+                                    ✏️ Modifier URL GitLab
+                                </a>
+                            </li>
+                            <li>
+                                <form method="post" action="{{ path('actualiserGitlab') }}" class="dropdown-item-form">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('actualiserGitlab') }}">
+                                    <button type="submit" class="dropdown-item">
+                                        🔄 Actualiser GitLab
+                                    </button>
+                                </form>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{{ path('gitlab_supprimer_url') }}"
+                                   onclick="return confirm('Voulez-vous vraiment supprimer votre URL GitLab ?')">
+                                    🗑️ Supprimer URL GitLab
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <div class="gitlab-dropdown-container">
+                        <a href="{{ path('gitlab_url') }}" class="btn btn-gitlab-menu">
+                            ➕ Configurer GitLab
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
 
-        {# Bouton pour afficher le formulaire #}
-        <div class="mb-4">
-            <a href="#" id="toggleFormBtn" class="btn btn-success">
-                ➕ Créer un nouveau répertoire
-            </a>
+            <div class="card-body tree-container">
+                {% if repertoireRacine %}
+                    {{ arbre.render_tree(repertoireRacine, listUyr, 'perso') }}
+                {% else %}
+                    <p class="text-muted">Aucun répertoire trouvé.</p>
+                {% endif %}
+
+                <hr class="my-4">
+
+                {% if gitlabTree %}
+                    {{ git.render_tree(gitlabTree) }}
+                {% else %}
+                    <p class="text-muted">Aucun dépôt GitLab configuré.</p>
+                {% endif %}
+            </div>
+
+            {# Boutons d'action #}
+            <div class="btn-actions-group">
+                <a href="{{ path('repertoire_telecharger_zip', {id: repertoireRacine.id}) }}"
+                   class="btn btn-primary">
+                    Télécharger En ZIP
+                </a>
+
+                {% if app.user and app.user.vmStatus == 'ready' %}
+                    <a href="{{ path('repertoire_copier_vm', {'id': repertoireRacine.id}) }}"
+                       class="btn btn-primary">
+                        ⬆️ Copier dans la VM
+                    </a>
+                {% endif %}
+
+                <a href="{{ path('repertoire_corbeille') }}" class="btn btn-outline-danger">
+                    Voir La Corbeille
+                </a>
+            </div>
         </div>
 
-        {# Formulaire de création (masqué par défaut) #}
-        {{ include('repertoire/components/formulaireCreation.html.twig', {'form': formRepertoire}) }}
 
-    <div class="d-flex flex-wrap gap-2 mt-3 align-items-center">
-        <a href="{{ path('repertoire_telecharger_zip', {id: repertoireRacine.id}) }}"
-           class="btn btn-primary">
-            📦 Télécharger en ZIP (répertoire personnel)
-        </a>
 
-        {% if app.user and app.user.vmStatus == 'ready' %}
-            <a href="{{ path('repertoire_copier_vm', {'id': repertoireRacine.id}) }}"
-               class="btn btn-primary">
-                ⬆️ Copier mon répertoire dans la VM
-            </a>
-        {% endif %}
+        {# Section création nouveau répertoire #}
+        <div id="formContainer">
+            <div class="card-header">
+                <h5 class="mb-0">Créer Un Nouveau Repertoire</h5>
+            </div>
+            <div class="card-body">
+                {{ form_start(formRepertoire, {'attr': {'class': 'needs-validation'}}) }}
 
-        <a href="{{ path('gitlab_url') }}" class="btn btn-outline-primary">
-            ✏️ Modifier URL GitLab
-        </a>
+                <div class="mb-3">
+                    {{ form_label(formRepertoire.name, 'Nom Repertoire') }}
+                    {{ form_widget(formRepertoire.name, {'attr': {'class': 'form-control'}}) }}
+                    {{ form_errors(formRepertoire.name) }}
+                </div>
 
-        {% if app.user.gitlabUrl %}
-            <form method="post" action="{{ path('actualiserGitlab') }}" class="d-inline">
-                <input type="hidden" name="_token" value="{{ csrf_token('actualiserGitlab') }}">
-                <button type="submit" class="btn btn-outline-warning">
-                    🔄 Actualiser GitLab
-                </button>
-            </form>
+                <div class="mb-3">
+                    {{ form_label(formRepertoire.parent, 'Repertoire Parent') }}
+                    {{ form_widget(formRepertoire.parent, {'attr': {'class': 'form-select'}}) }}
+                    <small class="form-text">
+                        Le Répertoire Personnel Est Sélectionné Par Défaut
+                    </small>
+                    {{ form_errors(formRepertoire.parent) }}
+                </div>
 
-            <a href="{{ path('gitlab_supprimer_url') }}"
-               class="btn btn-outline-danger"
-               onclick="return confirm('Voulez-vous vraiment supprimer votre URL GitLab ?')">
-                🗑️ Supprimer URL GitLab
-            </a>
-        {% endif %}
-    </div>
+                <button type="submit" class="btn btn-primary">Créer</button>
 
-    <div class="card mt-4">
-        <div class="card-header">
-            <h5 class="mb-0">📂 Arborescences</h5>
+                {{ form_end(formRepertoire) }}
+            </div>
         </div>
 
-        <div class="card-body tree-container">
-
-            {% if repertoireRacine %}
-                {{ arbre.render_tree(repertoireRacine, listUyr, 'perso') }}
-            {% else %}
-                <p class="text-muted">Aucun répertoire trouvé.</p>
-            {% endif %}
-
-            <hr class="my-4">
-
-            {% if gitlabTree %}
-                {{ git.render_tree(gitlabTree) }}
-            {% else %}
-                <p class="text-muted">Aucun dépôt GitLab configuré.</p>
-            {% endif %}
-        </div>
-    </div>
-
-
-
-    <div class="card mt-4">
-        <div class="card-header">
-            <h5 class="mb-0">🗑️ Corbeille</h5>
-        </div>
-        <div class="card-body">
-            <a href="{{ path('repertoire_corbeille') }}" class="btn btn-outline-danger">
-                Voir les éléments supprimés
-            </a>
-        </div>
     </div>
 
 {% endblock %}

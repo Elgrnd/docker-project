@@ -69,14 +69,29 @@ final class DockerController extends AbstractController
                     return $this->redirectToRoute("index");
                 }
                 if ($vmIp) {
-                    $groupes = $groupeRepository->findAll();
-                    $accessibleVms = $this->getAccessibleVms($groupes);
                     $userContainers = $dockerService->listContainers($vmIp);
                     foreach ($userContainers as &$userContainer) {
                         $userContainer['user'] = $userWithVm->getLogin();
                         $userContainer['vmid'] = $userWithVm->getVm()->getId();
                     }
                     $containers = array_merge($containers, $userContainers);
+                }
+            }
+            $groupes = $groupeRepository->findGroupsWithVmid();
+            $accessibleVms = $this->getAccessibleVms($groupes);
+            foreach ($groupes as $groupe) {
+                try {
+                    $proxmoxService->verifVMIp($groupe->getVm());
+                } catch (Exception $exception) {
+                    $this->addFlash('error', $exception->getMessage() . "pour le groupe " . $groupe->getNom());
+                    return $this->redirectToRoute("index");
+                }
+                if($groupe->getVm()->getVmIp()) {
+                    $groupContainers = $dockerService->listContainers($vmIp);
+                    foreach ($groupContainers as &$groupContainer) {
+                        $groupContainer['groupe'] = $groupe->getNom();
+                        $groupContainer['vmid'] = $groupe->getVm()->getId();
+                    }
                 }
             }
         } else {

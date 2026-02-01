@@ -40,6 +40,7 @@ class DeleteVmMessageHandler
 
         $user->getVm()->setVmId(null);
         $user->getVm()->setVmStatus('none');
+        $user->getVm()->setVmIp(null);
         $user->getVm()->setDeleteVmAt(null);
 
         $this->entityManager->flush();

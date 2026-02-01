@@ -63,13 +63,13 @@ class AuthentificationSubscriber
         if($event->getResponse()) {
             $user = $event->getToken()->getUser();
             if ($user->getVm()->getVmId() !== null) {
-                $user->getVm()->setDeleteVmAt(new DateTimeImmutable('+10 minutes'));
+                $user->getVm()->setDeleteVmAt(new DateTimeImmutable('+30 seconds'));
                 $user->getVm()->setVmStatus('pending_delete');
                 $this->entityManager->flush();
 
                 $this->bus->dispatch(
                     new DeleteVmMessage($user->getId()),
-                    [new DelayStamp(600000)]
+                    [new DelayStamp(30000)]
                 );
             }
 

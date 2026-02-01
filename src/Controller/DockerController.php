@@ -47,7 +47,7 @@ final class DockerController extends AbstractController
     ): Response
     {
         if ($virtualMachine->getVmId() == null || $virtualMachine->getVmStatus() == "none") {
-            $this->addFlash("error", "Vous n'avez pas encore créer de VM");
+            $this->addFlash("error", "Vous n'avez pas encore crée de VM");
             return $this->redirectToRoute('index');
         }
         if ($virtualMachine->getVmStatus() !== "ready") {
@@ -69,14 +69,30 @@ final class DockerController extends AbstractController
                     return $this->redirectToRoute("index");
                 }
                 if ($vmIp) {
-                    $groupes = $groupeRepository->findAll();
-                    $accessibleVms = $this->getAccessibleVms($groupes);
                     $userContainers = $dockerService->listContainers($vmIp);
                     foreach ($userContainers as &$userContainer) {
                         $userContainer['user'] = $userWithVm->getLogin();
                         $userContainer['vmid'] = $userWithVm->getVm()->getId();
                     }
                     $containers = array_merge($containers, $userContainers);
+                }
+            }
+            $groupes = $groupeRepository->findGroupsWithVmid();
+            $accessibleVms = $this->getAccessibleVms($groupes);
+            foreach ($groupes as $groupe) {
+                try {
+                    $vmIpGroup = $proxmoxService->verifVMIp($groupe->getVm());
+                } catch (Exception $exception) {
+                    $this->addFlash('error', $exception->getMessage() . "pour le groupe " . $groupe->getNom());
+                    return $this->redirectToRoute("index");
+                }
+                if($vmIpGroup) {
+                    $groupContainers = $dockerService->listContainers($vmIpGroup);
+                    foreach ($groupContainers as &$groupContainer) {
+                        $groupContainer['user'] = $groupe->getNom();
+                        $groupContainer['vmid'] = $groupe->getVm()->getId();
+                    }
+                    $containers =  array_merge($containers, $groupContainers);
                 }
             }
         } else {

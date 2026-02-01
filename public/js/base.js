@@ -1,5 +1,5 @@
 function confirmLogoutVm() {
     return confirm(
-    "Attention : votre VM sera supprimée dans 10 minutes si vous ne vous reconnectez pas entre-temps.\n\nSouhaitez-vous continuer ?"
+    "Attention : votre VM sera supprimée dans 30 secondes si vous ne vous reconnectez pas entre-temps.\n\nSouhaitez-vous continuer ?"
     );
 }

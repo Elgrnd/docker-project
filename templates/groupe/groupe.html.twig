@@ -8,7 +8,7 @@
     <td class="groupe-actions-cell">
         <div class="groupe-actions">
             {% if canEdit %}
-                <a href="{{ path('voir_groupe', {id: groupe.id}) }}" class="btn-action btn-edite">Édité</a>
+                <a href="{{ path('voir_groupe', {id: groupe.id}) }}" class="btn-action btn-edite">Éditer</a>
             {% else %}
                 <a href="{{ path('voir_groupe', {id: groupe.id}) }}" class="btn-action btn-membre">Membre</a>
             {% endif %}

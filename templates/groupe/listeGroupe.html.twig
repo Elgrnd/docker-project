@@ -12,21 +12,7 @@
 {% endblock %}
 
 {% block page_content %}
-    <h2>
-        {% if not is_granted('ROLE_PROFESSEUR') %}Mes {% endif %}Groupes
-    </h2>
 
-    {% if groupesMembre is empty %}
-        <p class="no-groups">Aucun groupe rejoint.</p>
-    {% else %}
-        <div class="groupes-list">
-            {% for groupe in groupesMembre %}
-                {% include 'groupe/groupe.html.twig' with {
-                    'groupe': groupe,
-                    'isAdmin': is_granted('ROLE_PROFESSEUR'),
-                    'canEdit': is_granted('GROUPE_EDIT', groupe)
-                } %}
-            {% endfor %}
 
     <!-- Section Créer un groupe -->
     <div class="create-groupe-card">
@@ -65,11 +51,12 @@
                     </thead>
                     <tbody id="groupesTableBody">
                     {% for groupe in groupesMembre %}
-                        {% include 'groupe/groupe.html.twig' with {
+                        {{ include('groupe/groupe.html.twig', {
                             'groupe': groupe,
-                            'isAdmin': is_granted('ROLE_ADMIN'),
-                            'canEdit': is_granted('GROUPE_EDIT', groupe)
-                        } %}
+                            'isAdmin' : is_granted('ROLE_ADMIN'),
+                            'canEdit' : is_granted('GROUPE_EDIT', groupe)})
+                        }}
+
                     {% endfor %}
                     </tbody>
                 </table>

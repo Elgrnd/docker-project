@@ -75,7 +75,7 @@ class AuthentificationSubscriber
 
             $flashBag = $this->requestStack->getSession()->getFlashBag();
             $flashBag->add('success',
-                'Déconnexion réussie. Votre VM sera supprimée dans 10 minutes si vous ne vous reconnectez pas.'
+                'Déconnexion réussie. Votre VM sera supprimée dans 30 secondes si vous ne vous reconnectez pas.'
             );
         }
     }

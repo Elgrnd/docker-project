@@ -21,7 +21,7 @@
                   class="delete-groupe-form"
                   data-confirm-message="Supprimer ce groupe ?">
                 <input type="hidden" name="_token" value="{{ csrf_token('delete-groupe-' ~ groupe.id) }}">
-                <button type="submit" class="btn btn-danger">Supprimer</button>
+                <button type="submit" class="btn-action btn-danger">Supprimer</button>
             </form>
         {% endif %}
 
@@ -31,7 +31,7 @@
                 <form method="post"
                       action="{{ path('create_vm_groupe', {id: groupe.id}) }}"
                       class="create-groupe-form">
-                    <button type="submit" class="btn btn-shared">Créer une VM</button>
+                    <button type="submit" class="btn-action btn-shared">Créer une VM</button>
                 </form>
             {% else %}
                 <form method="post"
@@ -43,4 +43,4 @@
             {% endif %}
         {% endif %}
     </div>
-</article>
+</td>

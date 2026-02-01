@@ -143,11 +143,11 @@
                     {% if is_granted('ROLE_ADMIN') %}
                         <td>
                             <a href="{{ path('admin_vm_start', {'vmid': vm.vmid}) }}"
-                               class="btn btn-success btn-sm">Start</a>
+                               class="btn btn-success btn-sm">Lancer</a>
                             <a href="{{ path('admin_vm_stop', {'vmid': vm.vmid}) }}"
-                               class="btn btn-warning btn-sm">Stop</a>
+                               class="btn btn-warning btn-sm">Arrêter</a>
                             <a href="{{ path('admin_vm_delete', {'vmid': vm.vmid}) }}" class="btn btn-danger btn-sm"
-                               onclick="return confirm('Supprimer cette VM ?')">Delete</a>
+                               onclick="return confirm('Supprimer cette VM ?')">Supprimer</a>
                         </td>
                     {% endif %}
                 </tr>

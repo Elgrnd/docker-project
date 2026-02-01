@@ -202,6 +202,10 @@
     background-color: #3b82f6;
 }
 
+.btn-danger {
+    background-color: #ef4444;
+}
+
 .btn-edite:hover {
     background-color: #2563eb;
     transform: translateY(-1px);
@@ -220,6 +224,10 @@
 
 .btn-fichier {
     background-color: #a78bfa;
+}
+
+.btn-shared {
+    background-color: #10b981;
 }
 
 .btn-fichier:hover {

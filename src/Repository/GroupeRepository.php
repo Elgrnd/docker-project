@@ -20,7 +20,7 @@ class GroupeRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('g')
             ->innerJoin('g.vm', 'v')
-            ->where('v.vm_id IS NOT NULL and v.vm_status = "ready"')
+            ->where("v.vmId IS NOT NULL and v.vmStatus = 'ready'")
             ->getQuery()
             ->getResult();
     }

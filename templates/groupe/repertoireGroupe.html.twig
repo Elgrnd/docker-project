@@ -43,6 +43,13 @@
             📦 Télécharger en ZIP
         </a>
 
+        {% if groupe.vm and groupe.vm.vmStatus == 'ready' %}
+            <a href="{{ path('repertoire_copier_vm_groupe', {'repertoire': repertoireRacine.id, 'groupe' : groupe.id}) }}"
+               class="btn btn-primary">
+                ⬆️ Copier mon répertoire dans la VM
+            </a>
+        {% endif %}
+
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">📂 Arborescence</h5>

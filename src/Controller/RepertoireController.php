@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Groupe;
 use App\Entity\Repertoire;
+use App\Entity\VirtualMachine;
 use App\Repository\FileRepository;
 use App\Repository\RepertoireRepository;
 use App\Service\DockerService;
@@ -13,10 +14,15 @@ use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use ZipArchive;
 
 
@@ -267,6 +273,12 @@ final class RepertoireController extends AbstractController
             ->deleteFileAfterSend();
     }
 
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
+     */
     #[IsGranted("ROLE_USER")]
     #[Route('/repertoire/copier-vm/{id}', name: 'repertoire_copier_vm')]
     public function copierRepertoireDansVm(
@@ -276,16 +288,65 @@ final class RepertoireController extends AbstractController
         ProxmoxService $proxmoxService
     ): Response
     {
-        if (!$this->getUser() || $this->getUser()->getVmStatus() !== 'ready') {
+        if (!$this->getUser() || !$this->getUser()->getVm()) {
             $this->addFlash('error', 'VM non disponible.');
             return $this->redirectToRoute('repertoire');
         }
+
+        if ($this->getUser()->getVm()->getVmStatus() !== 'ready') {
+            $this->addFlash('error', "La VM n'est pas encore prête");
+            return $this->redirectToRoute('repertoire');
+        }
+        $this->copyRepertory($repertoire, $repertoireService, $dockerService, $proxmoxService, $this->getUser()->getVm());
+        return $this->redirectToRoute("repertoire");
+    }
+
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
+     */
+    #[IsGranted("ROLE_ADMIN")]
+    #[Route('/repertoire/{repertoire}/groupe/{groupe}/copier-vm', name: 'repertoire_copier_vm_groupe')]
+    public function copierRepertoireGroupeDansVm(
+        Repertoire $repertoire,
+        Groupe $groupe,
+        DockerService $dockerService,
+        RepertoireService $repertoireService,
+        ProxmoxService $proxmoxService
+    ): Response
+    {
+        if (!$groupe || !$groupe->getVm()) {
+            $this->addFlash('error', 'VM non disponible.');
+            return $this->redirectToRoute('repertoire');
+        }
+        if ($groupe->getVm()->getVmStatus() !== 'ready') {
+            $this->addFlash('error', 'VM non disponible.');
+            return $this->redirectToRoute('repertoire');
+        }
+        $this->copyRepertory($repertoire, $repertoireService, $dockerService, $proxmoxService, $groupe->getVm());
+        return $this->redirectToRoute("fichiers_groupe", ["id" => $groupe->getId()]);
+    }
+
+    /**
+     * @param Repertoire $repertoire
+     * @param RepertoireService $repertoireService
+     * @param DockerService $dockerService
+     * @param ProxmoxService $proxmoxService
+     * @throws ClientExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws TransportExceptionInterface
+     */
+    public function copyRepertory(Repertoire $repertoire, RepertoireService $repertoireService, DockerService $dockerService, ProxmoxService $proxmoxService, VirtualMachine $virtualMachine): void
+    {
         $zipPath = sys_get_temp_dir() . '/repertoire_' . $repertoire->getId() . '.zip';
 
         $zip = new ZipArchive();
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
             $this->addFlash('error', "Impossible de créer l’archive ZIP.");
-            return $this->redirectToRoute('repertoire');
+            return;
         }
 
         $repertoireService->ajouterRepertoireDansZip($repertoire, $zip, '');
@@ -295,7 +356,7 @@ final class RepertoireController extends AbstractController
             $dockerService->deployZipInVm(
                 $zipPath,
                 '/root/' . str_replace(' ', '_', $repertoire->getName()),
-                $proxmoxService->getVMIp($this->getUser()->getProxmoxVmid())
+                $proxmoxService->verifVMIp($virtualMachine)
             );
 
             $this->addFlash('success', 'Répertoire copié dans la VM avec succès.');
@@ -304,7 +365,6 @@ final class RepertoireController extends AbstractController
         }
 
         @unlink($zipPath);
-        return $this->redirectToRoute("repertoire");
     }
 
 }

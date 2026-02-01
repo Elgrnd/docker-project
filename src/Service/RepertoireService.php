@@ -38,10 +38,10 @@ class RepertoireService
         }
 
         foreach ($repertoire->getAccesFilesUtilisateur() as $accesFile) {
-            $fichierYaml = $accesFile->getFichierYaml();
+            $fichier = $accesFile->getFile();
             $archiveZip->addFromString(
-                $cheminActuel . '/' . $fichierYaml->getNomFichier(),
-                $fichierYaml->getContenuFichier()
+                $cheminActuel . '/' . $fichier->getNameFile(),
+                $fichier->getBodyFile()
             );
         }
 

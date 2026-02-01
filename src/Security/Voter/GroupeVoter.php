@@ -41,7 +41,7 @@ final class GroupeVoter extends Voter
 
         switch ($attribute) {
             case self::EDIT:
-                if ($this->security->isGranted('ROLE_ADMIN')) {
+                if ($this->security->isGranted('ROLE_PROFESSEUR')) {
                     return true;
                 }
                 else if ($subject->getEtreChef() === $user) {
@@ -78,7 +78,7 @@ final class GroupeVoter extends Voter
 
 
             case self::VIEW:
-                if ($this->security->isGranted('ROLE_ADMIN')) {
+                if ($this->security->isGranted('ROLE_PROFESSEUR')) {
                     return true;
                 }
                 else if ($subject->contientMembre($user)) {

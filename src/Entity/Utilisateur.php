@@ -57,9 +57,6 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Groupe::class, mappedBy: 'etreChef', orphanRemoval: true)]
     private Collection $etrechef;
 
-    #[ORM\Column(nullable: true)]
-    private ?int $proxmoxVmid = null;
-
     /**
      * @var Collection<int, UtilisateurGroupe>
      */
@@ -92,17 +89,14 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 500, nullable: true)]
     private ?string $gitlabUrl = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
-    private ?string $vmStatus = null;
-
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $gitlabTokenCipher = null;
 
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $gitlabTokenNonce = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?\DateTimeImmutable $deleteVmAt = null;
+    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    private ?VirtualMachine $vm = null;
 
 
     public function __construct()
@@ -269,28 +263,6 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getProxmoxVmid(): ?int
-    {
-        return $this->proxmoxVmid;
-    }
-
-    public function setProxmoxVmid(?int $proxmoxVmid): static
-    {
-        $this->proxmoxVmid = $proxmoxVmid;
-        return $this;
-    }
-
-    public function getVmStatus(): ?string
-    {
-        return $this->vmStatus;
-    }
-
-    public function setVmStatus(?string $vmStatus): static
-    {
-        $this->vmStatus = $vmStatus;
-        return $this;
-    }
-
     public function getUtilisateurGroupeRelation(Groupe $groupe): ?UtilisateurGroupe
     {
         foreach ($this->utilisateur_groupe as $ug) {
@@ -352,14 +324,14 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getDeleteVmAt(): ?\DateTimeImmutable
+    public function getVm(): ?VirtualMachine
     {
-        return $this->deleteVmAt;
+        return $this->vm;
     }
 
-    public function setDeleteVmAt(?\DateTimeImmutable $deleteVmAt): static
+    public function setVm(?VirtualMachine $vm): static
     {
-        $this->deleteVmAt = $deleteVmAt;
+        $this->vm = $vm;
 
         return $this;
     }

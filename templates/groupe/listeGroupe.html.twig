@@ -4,6 +4,7 @@
 
 {% block stylesheets %}
     <link rel="stylesheet" href="{{ asset('css/groupe/listeGroupe.css') }}">
+    <script defer type="text/javascript" src="{{ asset('js/vmStatus.js') }}"></script>
 {% endblock %}
 
 {% block scriptJs %}
@@ -11,6 +12,22 @@
 {% endblock %}
 
 {% block page_content %}
+    <h2>
+        {% if not is_granted('ROLE_PROFESSEUR') %}Mes {% endif %}Groupes
+    </h2>
+
+    {% if groupesMembre is empty %}
+        <p class="no-groups">Aucun groupe rejoint.</p>
+    {% else %}
+        <div class="groupes-list">
+            {% for groupe in groupesMembre %}
+                {% include 'groupe/groupe.html.twig' with {
+                    'groupe': groupe,
+                    'isAdmin': is_granted('ROLE_PROFESSEUR'),
+                    'canEdit': is_granted('GROUPE_EDIT', groupe)
+                } %}
+            {% endfor %}
+
     <!-- Section Créer un groupe -->
     <div class="create-groupe-card">
         <h2 class="text-center mb-4">Créer Un Groupe</h2>

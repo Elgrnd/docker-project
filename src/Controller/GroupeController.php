@@ -6,11 +6,14 @@ use App\Entity\Groupe;
 use App\Entity\Repertoire;
 use App\Entity\Utilisateur;
 use App\Entity\UtilisateurGroupe;
+use App\Entity\VirtualMachine;
 use App\Form\AjouterMembreGroupeType;
 use App\Form\GroupeType;
 use App\Repository\GroupeRepository;
 use App\Repository\UtilisateurRepository;
+use App\Service\ProxmoxService;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -26,7 +29,7 @@ final class GroupeController extends AbstractController
     {
         $utilisateur = $this->getUser();
 
-        if ($this->isGranted('ROLE_ADMIN')) {
+        if ($this->isGranted('ROLE_PROFESSEUR')) {
             $groupesMembre = $em->getRepository(Groupe::class)->findAll();
         } else {
             $groupesMembre = $utilisateur->getUtilisateurGroupe();
@@ -42,6 +45,7 @@ final class GroupeController extends AbstractController
             $repertoire->setName('Répertoire groupe');
 
             $groupe->setEtreChef($utilisateur);
+            $groupe->setVm(new VirtualMachine());
             $ug = $groupe->addUtilisateurGroupe($utilisateur);
             $ug->setRole("GROUPE_CHEF");
 
@@ -162,7 +166,7 @@ final class GroupeController extends AbstractController
             return new JsonResponse(['error' => 'Utilisateur introuvable'], Response::HTTP_NOT_FOUND);
         }
 
-        $ug = $em->getRepository(\App\Entity\UtilisateurGroupe::class)
+        $ug = $em->getRepository(UtilisateurGroupe::class)
             ->findOneBy(['groupe' => $groupe, 'utilisateur' => $utilisateur]);
 
         if (!$ug) {
@@ -174,6 +178,55 @@ final class GroupeController extends AbstractController
         $em->flush();
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
+    }
+
+    #[IsGranted('ROLE_PROFESSEUR')]
+    #[Route('/groupe/{id}/vm', name: 'create_vm_groupe', methods: ['POST'])]
+    public function createVmGroup(
+        Groupe $groupe,
+        EntityManagerInterface $entityManager,
+        ProxmoxService $proxmoxService): Response
+    {
+        if(!$groupe) {
+            $this->addFlash('error', "Le groupe n'existe pas");
+            $this->redirectToRoute("accueil");
+        }
+
+        $groupe->getVm()->setVmStatus('creating');
+        $entityManager->flush();
+
+        $proxmoxService->cloneGroupVmAsynchrone($groupe->getId());
+
+        $this->addFlash('success', "Vous avez bien créer une VM pour le groupe " .  $groupe->getNom());
+        return $this->redirectToRoute('mes_groupes');
+    }
+
+    #[IsGranted('ROLE_PROFESSEUR')]
+    #[Route('/groupe/{id}/delete', name: 'delete_vm_groupe', methods: ['POST'])]
+    public function deleteVmGroup(Groupe $groupe, ProxmoxService $proxmoxService, EntityManagerInterface $entityManager): Response
+    {
+        if(!$groupe) {
+            $this->addFlash('error', "Le groupe n'existe pas");
+            $this->redirectToRoute("accueil");
+        }
+
+        $vmid = $groupe->getVm()->getVmId();
+        try {
+            $ok = $proxmoxService->deleteVM($vmid);
+            if ($ok) {
+                $this->addFlash('success', "VM $vmid supprimée avec succès.");
+                $groupe->getVm()->setVmId(null);
+                $groupe->getVm()->setVmIp(null);
+                $groupe->getVm()->setVmStatus('none');
+                $entityManager->flush();
+            } else {
+                $this->addFlash('error', "Impossible de supprimer la VM $vmid.");
+            }
+        } catch (Exception $e) {
+            $this->addFlash('error', "Erreur lors de la suppression de la VM $vmid : " . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('mes_groupes');
     }
 
 }

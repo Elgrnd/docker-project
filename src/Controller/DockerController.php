@@ -419,10 +419,10 @@ final class DockerController extends AbstractController
 
     /**
      * A Refactor ! La fonction devrait surement se trouver dans Utilisateur
-     * @param array $groupes
+     * @param Collection $groupes
      * @return array[]
      */
-    public function getAccessibleVms(array $groupes): array
+    public function getAccessibleVms(mixed $groupes): array
     {
         $user = $this->getUser();
         $accessibleVms = [$user->getVM()->getVmId() => [

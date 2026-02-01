@@ -92,6 +92,7 @@ final class DockerController extends AbstractController
                         $groupContainer['groupe'] = $groupe->getNom();
                         $groupContainer['vmid'] = $groupe->getVm()->getId();
                     }
+                    $containers =  array_merge($containers, $groupContainers);
                 }
             }
         } else {

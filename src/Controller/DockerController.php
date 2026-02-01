@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Groupe;
 use App\Entity\TextFile;
 use App\Entity\VirtualMachine;
+use App\Repository\GroupeRepository;
 use App\Repository\VirtualMachineRepository;
 use App\Service\DockerService;
 use App\Service\ProxmoxService;
@@ -37,13 +38,13 @@ final class DockerController extends AbstractController
     #[Route('/virtual-machine/{id}/containers/', name: 'listContainers', options: ['expose' => true])]
     public function list(
         DockerService               $dockerService,
-        VirtualMachine $virtualMachine,
+        VirtualMachine              $virtualMachine,
         ProxmoxService              $proxmoxService,
         UtilisateurManagerInterface $utilisateurManager,
-        VirtualMachineRepository $virtualMachineRepository,
+        GroupeRepository $groupeRepository
     ): Response
     {
-        if($virtualMachine->getVmId() == null || $virtualMachine->getVmStatus() == "none") {
+        if ($virtualMachine->getVmId() == null || $virtualMachine->getVmStatus() == "none") {
             $this->addFlash("error", "Vous n'avez pas encore créer de VM");
             return $this->redirectToRoute('index');
         }
@@ -62,10 +63,12 @@ final class DockerController extends AbstractController
                 try {
                     $vmIp = $proxmoxService->verifVMIp($userWithVm->getVm());
                 } catch (Exception $exception) {
-                    $this->addFlash('error', $exception->getMessage() . "for user " .  $userWithVm->getlogin());
+                    $this->addFlash('error', $exception->getMessage() . "for user " . $userWithVm->getlogin());
                     return $this->redirectToRoute("index");
                 }
                 if ($vmIp) {
+                    $groupes = $groupeRepository->findAll();
+                    $accessibleVms = $this->getAccessibleVms($groupes);
                     $userContainers = $dockerService->listContainers($vmIp);
                     foreach ($userContainers as &$userContainer) {
                         $userContainer['user'] = $userWithVm->getLogin();
@@ -88,18 +91,8 @@ final class DockerController extends AbstractController
                     $container['user'] = $user->getLogin();
                     $container['vmid'] = $virtualMachine->getId();
                 }
-                $accessibleVms = [$user->getVM()->getVmId() => [
-                    'vm' => $user->getVM(),
-                    'label' => 'VM - User ' . $user->getLogin(),
-                ]];
-                foreach ($user->getUtilisateurGroupe() as $groupe) {
-                    if ($groupe->getVm() && $groupe->getVm()->getVmStatus() == "ready") {
-                        $accessibleVms[$groupe->getVm()->getId()] = [
-                            'vm' => $groupe->getVm(),
-                            'label' => 'VM – Groupe ' . $groupe->getNom()
-                        ];
-                    }
-                }
+                $groupes = $this->getUser()->getUtilisateurGroupe();
+                $accessibleVms = $this->getAccessibleVms($groupes);
             }
         }
 
@@ -143,7 +136,6 @@ final class DockerController extends AbstractController
             'virtualMachine' => $virtualMachine,
         ]);
     }
-
 
 
     /**
@@ -228,7 +220,7 @@ final class DockerController extends AbstractController
             $this->addFlash('error', "Erreur lors du démarrage de la VM $vmid : " . $e->getMessage());
         }
 
-        return $this->redirectToRoute('listContainers');
+        return $this->redirectToRoute('listContainers', ['id' => $this->getUser()->getVm()->getVmId()]);
     }
 
     #[Route('/admin/vm/{vmid}/stop', name: 'admin_vm_stop')]
@@ -246,7 +238,7 @@ final class DockerController extends AbstractController
             $this->addFlash('error', "Erreur lors de l'arrêt de la VM $vmid : " . $e->getMessage());
         }
 
-        return $this->redirectToRoute('listContainers');
+        return $this->redirectToRoute('listContainers', ['id' => $this->getUser()->getVm()->getVmId()]);
     }
 
     #[Route('/admin/vm/{vmid}/delete', name: 'admin_vm_delete')]
@@ -264,7 +256,7 @@ final class DockerController extends AbstractController
             $this->addFlash('error', "Erreur lors de la suppression de la VM $vmid : " . $e->getMessage());
         }
 
-        return $this->redirectToRoute('listContainers');
+        return $this->redirectToRoute('listContainers', ['id' => $this->getUser()->getVm()->getVmId()]);
     }
 
     /**
@@ -278,7 +270,8 @@ final class DockerController extends AbstractController
         TextFile       $idFile,
         DockerService  $dockerService,
         ProxmoxService $proxmoxService
-    ): Response {
+    ): Response
+    {
         return $this->deployInVm($idFile, $proxmoxService, $dockerService, $this->getUser()->getVm());
     }
 
@@ -291,22 +284,22 @@ final class DockerController extends AbstractController
     #[IsGranted('ROLE_USER')]
     public function deployYamlInVmGroup(
         TextFile       $idFile,
-        Groupe $groupe,
+        Groupe         $groupe,
         DockerService  $dockerService,
         ProxmoxService $proxmoxService
-    ): Response {
-        if(!$groupe || !$groupe->getVm()) {
+    ): Response
+    {
+        if (!$groupe || !$groupe->getVm()) {
             $this->addFlash('error', "Le groupe ou la VM n'existe pas");
             $this->redirectToRoute("accueil");
         }
 
-        if($groupe->getVm()->getVmStatus() != 'ready') {
+        if ($groupe->getVm()->getVmStatus() != 'ready') {
             $this->addFlash('error', "La VM n'est pas encore prête");
             $this->redirectToRoute("accueil");
         }
         return $this->deployInVm($idFile, $proxmoxService, $dockerService, $groupe->getVm());
     }
-
 
 
     #[IsGranted('ROLE_USER')]
@@ -315,7 +308,7 @@ final class DockerController extends AbstractController
     {
         $user = $this->getUser();
         $status = null;
-        if($user->getVm()) {
+        if ($user->getVm()) {
             $status = $user->getVm()->getVmStatus();
         }
 
@@ -420,6 +413,29 @@ final class DockerController extends AbstractController
         }
 
         return $this->redirectToRoute('repertoire');
+    }
+
+    /**
+     * A Refactor ! La fonction devrait surement se trouver dans Utilisateur
+     * @return array[]
+     */
+    public function getAccessibleVms(array $groupes): array
+    {
+        $user = $this->getUser();
+        $accessibleVms = [$user->getVM()->getVmId() => [
+            'vm' => $user->getVM(),
+            'label' => 'VM - User ' . $user->getLogin(),
+        ]];
+
+        foreach ($groupes as $groupe) {
+            if ($groupe->getVm() && $groupe->getVm()->getVmStatus() == "ready") {
+                $accessibleVms[$groupe->getVm()->getId()] = [
+                    'vm' => $groupe->getVm(),
+                    'label' => 'VM – Groupe ' . $groupe->getNom()
+                ];
+            }
+        }
+        return $accessibleVms;
     }
 
 

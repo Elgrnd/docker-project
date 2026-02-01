@@ -31,6 +31,7 @@ class AuthentificationSubscriber
 
             if ($user->getVm() !== null) {
                 $user->getVm()->setDeleteVmAt(null);
+                $user->getVm()->setVmStatus('ready');
                 $this->entityManager->flush();
             }
             $request = $this->requestStack->getCurrentRequest();

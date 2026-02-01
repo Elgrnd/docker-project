@@ -89,7 +89,7 @@ final class DockerController extends AbstractController
                 if($vmIpGroup) {
                     $groupContainers = $dockerService->listContainers($vmIpGroup);
                     foreach ($groupContainers as &$groupContainer) {
-                        $groupContainer['groupe'] = $groupe->getNom();
+                        $groupContainer['user'] = $groupe->getNom();
                         $groupContainer['vmid'] = $groupe->getVm()->getId();
                     }
                     $containers =  array_merge($containers, $groupContainers);

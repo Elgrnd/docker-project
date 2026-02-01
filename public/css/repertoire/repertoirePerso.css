@@ -1,36 +1,140 @@
+/* ========== RÉPERTOIRE PERSONNEL - DESIGN SELON IMAGE ========== */
+
+/* Page background */
+body {
+    background-color: #F9FAFB;
+}
+
+/* Container principal */
+.container.mt-4 {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1.5rem;
+}
+
+/* Titre principal "Répertoire" */
+.container.mt-4 > h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 2rem;
+}
+
+/* Masquer le bouton "Créer un nouveau répertoire" original */
+.mb-4 {
+    display: none !important;
+}
+
+/* Masquer les boutons d'action en haut */
+.d-flex.flex-wrap.gap-2.mt-3.align-items-center {
+    display: none !important;
+}
+
+/* ========== CARD ARBORESCENCE ========== */
+.card {
+    background: linear-gradient(116.5deg, rgb(238, 242, 255) 0.53461%, rgb(249, 250, 251) 99.465%);
+    border: none;
+    border-radius: 24px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    padding: 2.5rem;
+    margin-bottom: 2rem;
+}
+
+.card-header {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.card-header h5 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #000;
+    margin: 0;
+    display: flex;
+    align-items: center;
+}
+
+.card-header h5 .mb-0 {
+    margin: 0 !important;
+}
+
+/* ========== BOUTON GITLAB ========== */
+.btn-gitlab {
+    background-color: #4338CA;
+    color: white;
+    padding: 0.75rem 2.5rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1rem;
+    text-decoration: none;
+    border: none;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.btn-gitlab:hover {
+    background-color: #3730a3;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(67, 56, 202, 0.3);
+}
+
+
+/* ========== ZONE ARBORESCENCE ========== */
+.card-body.tree-container {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    margin-bottom: 2rem;
+    min-height: 200px;
+}
+
+/* Style de l'arborescence */
 .tree-container {
-    font-family: monospace;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 1rem;
+    line-height: 1.8;
 }
 
-/* Espacement uniforme pour tous les items (perso + gitlab) */
 .tree-item {
-    padding: 4px 0; /* au lieu de 8 */
+    padding: 0.5rem 0;
 }
 
-/* même respiration que les dossiers */
 .tree-folder {
-    padding: 4px;
-    border-radius: 4px;
+    cursor: pointer;
+    user-select: none;
+    font-weight: 500;
+    color: #000;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    transition: background-color 0.2s;
 }
 
 .tree-folder:hover {
-    background-color: #f8f9fa;
+    background-color: #f3f4f6;
 }
 
 .tree-children {
-    margin-left: 25px;
-    border-left: 1px dashed #dee2e6;
-    padding-left: 10px;
+    margin-left: 30px;
+    border-left: 2px solid #e5e7eb;
+    padding-left: 20px;
+    margin-top: 0.5rem;
 }
 
 .folder-icon {
-    color: #ffc107;
-    margin-right: 5px;
+    color: #fbbf24;
+    margin-right: 8px;
+    font-size: 1.2rem;
 }
 
 .file-icon {
-    color: #17a2b8;
-    margin-right: 5px;
+    color: #6366f1;
+    margin-right: 8px;
 }
 
 .toggle-icon {
@@ -52,15 +156,17 @@
 .file-actions i {
     cursor: pointer;
     transition: color 0.2s;
+    font-size: 1rem;
 }
 
-.view-icon:hover { color: #007bff; }
-.download-icon:hover { color: #28a745; }
-.edit-icon:hover { color: #ffc107; }
-.bin-icon:hover { color: #dc3545; }
+.view-icon:hover { color: #3b82f6; }
+.download-icon:hover { color: #10b981; }
+.edit-icon:hover { color: #f59e0b; }
+.bin-icon:hover { color: #ef4444; }
+.deploy-icon:hover { color: #3b82f6; }
 
 .file-item {
-    padding: 4px 0;
+    padding: 5px 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -79,26 +185,210 @@
     color: inherit;
 }
 
-.deploy-icon-btn:hover .deploy-icon {
-    color: #0d6efd;
-}
-
-.supprimerFichier {
+.supprimerFichier,
+.supprimerRepertoire,
+.supprimerRepertoireGroupe {
     background: none;
     border: none;
     padding: 0;
     cursor: pointer;
+    color: #6b7280;
 }
 
-.supprimerRepertoire {
-    background: none;
+.supprimerFichier:hover,
+.supprimerRepertoire:hover,
+.supprimerRepertoireGroupe:hover {
+    color: #ef4444;
+}
+
+/* Séparateur entre arborescence et GitLab */
+.card-body hr {
+    border: none;
+    border-top: 2px solid #e5e7eb;
+    margin: 2rem 0;
+}
+
+/* ========== BOUTONS D'ACTION (Télécharger ZIP et Voir Corbeille) ========== */
+.card-body .d-flex.gap-2,
+.btn-actions-group {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.card .btn-primary,
+.card-body .btn-primary {
+    background-color: #818CF8;
+    border: none;
+    color: white;
+    padding: 0.875rem 3rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.card .btn-primary:hover,
+.card-body .btn-primary:hover {
+    background-color: #6366f1;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(129, 140, 248, 0.3);
+}
+
+.card .btn-outline-danger,
+.card-body .btn-outline-danger {
+    background-color: #FF0004;
+    border: none;
+    color: white;
+    padding: 0.875rem 3rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.card .btn-outline-danger:hover,
+.card-body .btn-outline-danger:hover {
+    background-color: #cc0003;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(255, 0, 4, 0.3);
+}
+
+/* Masquer la card corbeille originale */
+.card.mt-4:last-child {
+    display: none;
+}
+
+/* ========== SECTION CRÉER UN NOUVEAU RÉPERTOIRE ========== */
+#formContainer,
+.create-section {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 24px;
+    padding: 3rem;
+    margin-top: 3rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+#formContainer .card-header,
+.create-section-header {
+    background: transparent;
     border: none;
     padding: 0;
+    margin-bottom: 2rem;
+}
+
+#formContainer .card-header h5,
+.create-section h3,
+.create-section-title {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+    color: #000;
+}
+
+#formContainer .card-body {
+    padding: 0;
+}
+
+.create-section .form-label,
+#formContainer .form-label,
+.mb-3 label {
+    font-weight: 600;
+    color: #000;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.create-section .form-control,
+.create-section .form-select,
+#formContainer .form-control,
+#formContainer .form-select,
+.mb-3 input.form-control,
+.mb-3 select.form-select {
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    width: 100%;
+}
+
+.create-section .form-control:focus,
+.create-section .form-select:focus,
+#formContainer .form-control:focus,
+#formContainer .form-select:focus,
+.mb-3 input.form-control:focus,
+.mb-3 select.form-select:focus {
+    border-color: #818CF8;
+    box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.1);
+    outline: none;
+}
+
+.create-section .form-text,
+#formContainer .form-text,
+.mb-3 small.form-text {
+    color: #818CF8;
+    font-size: 0.875rem;
+    display: block;
+    margin-top: 0.5rem;
+}
+
+.create-section .btn-primary,
+#formContainer .btn-primary,
+.mb-3 .btn-primary,
+button[type="submit"].btn-primary {
+    background-color: #4338CA;
+    border: none;
+    color: white;
+    padding: 0.875rem 3rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1rem;
+    display: block;
+    margin: 2rem auto 0;
+    transition: all 0.3s ease;
     cursor: pointer;
 }
 
+.create-section .btn-primary:hover,
+#formContainer .btn-primary:hover,
+button[type="submit"].btn-primary:hover {
+    background-color: #3730a3;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(67, 56, 202, 0.3);
+}
 
-/* L’arrière-plan flou */
+/* Bouton Annuler */
+#formContainer .btn-secondary,
+.btn-secondary {
+    background-color: #9ca3af;
+    border: none;
+    color: white;
+    padding: 0.875rem 2rem;
+    border-radius: 50px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+#formContainer .btn-secondary:hover,
+.btn-secondary:hover {
+    background-color: #6b7280;
+    transform: translateY(-2px);
+}
+
+/* Afficher le formulaire par défaut */
+#formContainer.d-none {
+    display: block !important;
+}
+
+/* ========== MODAL ========== */
 .overlay-blur {
     display: none;
     position: fixed;
@@ -106,60 +396,185 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(6px);
     z-index: 1000;
 }
 
-/* La fenêtre modale */
 .modal-file {
     display: none;
     position: fixed;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 70%;
+    width: 80%;
+    max-width: 900px;
     max-height: 80%;
     background: white;
-    border-radius: 10px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     z-index: 1001;
-    overflow: auto;
+    overflow: hidden;
 }
 
-/* En-tête de la modale */
 .modal-header {
     display: flex;
     justify-content: flex-end;
-    padding: 10px;
-    border-bottom: 1px solid #ddd;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e5e7eb;
+    background: white;
 }
 
 .close-modal {
     cursor: pointer;
-    font-size: 24px;
-    color: #666;
+    font-size: 28px;
+    color: #6b7280;
     transition: color 0.2s;
+    line-height: 1;
 }
 
 .close-modal:hover {
     color: #000;
 }
 
-/* Corps de la modale */
 .modal-body-file {
-    padding: 20px;
-    font-family: monospace;
+    padding: 2rem;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
     white-space: pre-wrap;
-    background: #f9f9f9;
-    border-radius: 10px;
+    background: #f9fafb;
+    overflow: auto;
+    max-height: calc(80vh - 80px);
+    font-size: 0.9rem;
+    line-height: 1.6;
 }
 
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+    .container.mt-4 > h1 {
+        font-size: 2rem;
+    }
 
-.supprimerRepertoireGroupe {
-    background: none;
+    .card {
+        padding: 1.5rem;
+        border-radius: 16px;
+    }
+
+    .card-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .card-header::after {
+        align-self: flex-end;
+    }
+
+    .card-body .d-flex.gap-2,
+    .btn-actions-group {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .card .btn-primary,
+    .card .btn-outline-danger,
+    .btn-gitlab {
+        width: 100%;
+        text-align: center;
+    }
+
+    .create-section,
+    #formContainer {
+        padding: 2rem 1.5rem;
+    }
+
+    .tree-children {
+        margin-left: 15px;
+        padding-left: 10px;
+    }
+
+    .modal-file {
+        width: 95%;
+    }
+}
+
+/* Fix pour le texte muted */
+.text-muted {
+    color: #6b7280;
+    font-style: italic;
+}
+
+/* ========== MENU DÉROULANT GITLAB ========== */
+.gitlab-dropdown-container {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: center;
+}
+
+.btn-gitlab-menu {
+    background-color: #4338CA;
+    color: white;
+    padding: 0.875rem 2.5rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1rem;
     border: none;
-    padding: 0;
+    transition: all 0.3s ease;
     cursor: pointer;
 }
 
+.btn-gitlab-menu:hover {
+    background-color: #3730a3;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(67, 56, 202, 0.3);
+}
+
+.dropdown-menu {
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 0.5rem 0;
+    min-width: 250px;
+}
+
+.dropdown-item {
+    padding: 0.75rem 1.5rem;
+    color: #000;
+    font-weight: 500;
+    transition: background-color 0.2s;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dropdown-item:hover {
+    background-color: #f3f4f6;
+    color: #000;
+}
+
+.dropdown-item.text-danger {
+    color: #dc2626 !important;
+}
+
+.dropdown-item.text-danger:hover {
+    background-color: #fee2e2;
+    color: #dc2626 !important;
+}
+
+.dropdown-item-form {
+    margin: 0;
+    padding: 0;
+}
+
+.dropdown-item-form button {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+}
+
+.dropdown-divider {
+    margin: 0.5rem 0;
+    border-color: #e5e7eb;
+}

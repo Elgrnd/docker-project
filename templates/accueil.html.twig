@@ -1,11 +1,66 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}<title>Liste des conteneurs</title> {% endblock %}
+{% block title %}<title>Accueil - SAE A3</title>{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/accueil.css') }}">
+{% endblock %}
 
 {% block scriptJs %}
     <script defer type="text/javascript" src="{{ asset('js/vmStatus.js') }}"></script>
 {% endblock %}
 
 {% block page_content %}
-    <div id="vm-status-box"></div>
+    {% if is_granted('ROLE_USER') %}
+        {# Page pour utilisateurs connectés #}
+        <div class="welcome-card">
+            <h1>Bienvenue {{ app.user.login }}</h1>
+            <p>Texte D'intro</p>
+
+            <div class="welcome-buttons">
+                <a href="{{ path('repertoire') }}" class="btn-welcome">Repertoire Personnel</a>
+                <a href="{{ path('file_upload') }}" class="btn-welcome">Importer Un Fichier</a>
+            </div>
+        </div>
+
+        <div class="tutorial-section">
+            <h2>Tutoriel D'utilisation</h2>
+
+            <div class="tutorial-cards">
+                <div class="tutorial-card">
+                    <h3>Texte</h3>
+                    <span class="plus-icon">+</span>
+                    <p>Vidéo</p>
+                </div>
+
+                <div class="tutorial-card">
+                    <h3>Texte</h3>
+                    <span class="plus-icon">+</span>
+                    <p>Vidéo</p>
+                </div>
+
+                <div class="tutorial-card">
+                    <h3>Texte</h3>
+                    <span class="plus-icon">+</span>
+                    <p>Vidéo</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="vm-status-box"></div>
+
+    {% else %}
+        {# Page pour visiteurs non connectés #}
+        <div class="welcome-card">
+            <h1>Bienvenue sur DockerIUT !</h1>
+            <p>Créez vos environnements docker en un clic et travaillez sans friction</p>
+
+            <div class="welcome-buttons">
+                <a href="{{ path('inscription') }}" class="btn-welcome">Inscription</a>
+                <a href="{{ path('connexion') }}" class="btn-welcome">Connexion</a>
+            </div>
+        </div>
+
+        <div id="vm-status-box"></div>
+    {% endif %}
 {% endblock %}

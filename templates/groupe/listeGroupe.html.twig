@@ -8,7 +8,7 @@
 {% endblock %}
 
 {% block scriptJs %}
-    <script src="{{ asset('js/groupes.js') }}"></script>
+    <script defer type="text/javascript" src="{{ asset('js/groupe/groupes.js') }}"></script>
 {% endblock %}
 
 {% block page_content %}
@@ -27,14 +27,53 @@
                     'canEdit': is_granted('GROUPE_EDIT', groupe)
                 } %}
             {% endfor %}
-        </div>
-    {% endif %}
 
-    <section class="create-groupe-section">
-        <h3>Créer un groupe</h3>
-        {{ form_start(formGroupe, {'attr': {'class': 'form-groupe'}}) }}
-        {{ form_row(formGroupe.nom) }}
-        <button type="submit" class="btn btn-primary">Créer</button>
+    <!-- Section Créer un groupe -->
+    <div class="create-groupe-card">
+        <h2 class="text-center mb-4">Créer Un Groupe</h2>
+        {{ form_start(formGroupe, {'attr': {'class': 'create-groupe-form'}}) }}
+        <div class="form-group-custom">
+            <label for="groupe_nom">Nom Du Groupe :</label>
+            {{ form_widget(formGroupe.nom, {'attr': {'class': 'form-control-custom', 'id': 'groupe_nom'}}) }}
+        </div>
+        <div class="text-center">
+            <button type="submit" class="btn-creer">Créer</button>
+        </div>
         {{ form_end(formGroupe) }}
-    </section>
+    </div>
+
+    <!-- Section Liste des groupes -->
+    <div class="liste-groupes-card">
+        <h2 class="text-center mb-4">Listes Des Groupes</h2>
+
+        <!-- Barre de recherche -->
+        <div class="search-bar-container">
+            <input type="text" id="searchGroupe" class="search-input" placeholder="Rechercher un groupe...">
+        </div>
+
+        {% if groupesMembre is empty %}
+            <p class="no-groups text-center">Aucun groupe rejoint.</p>
+        {% else %}
+            <!-- Table des groupes -->
+            <div class="table-responsive">
+                <table class="groupes-table">
+                    <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Action</th>
+                    </tr>
+                    </thead>
+                    <tbody id="groupesTableBody">
+                    {% for groupe in groupesMembre %}
+                        {% include 'groupe/groupe.html.twig' with {
+                            'groupe': groupe,
+                            'isAdmin': is_granted('ROLE_ADMIN'),
+                            'canEdit': is_granted('GROUPE_EDIT', groupe)
+                        } %}
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
 {% endblock %}

@@ -11,44 +11,50 @@
         <div class="auth-card">
 
             <div class="auth-header">
-                <h1>Inscription</h1>
-                <p class="auth-subtitle">Créez votre compte</p>
+                <h1>Inscription :</h1>
             </div>
 
             {{ form_start(formulaireUtilisateur, {
-                'attr': {'class': 'auth-form needs-validation'}
+                'attr': {'class': 'auth-form'}
             }) }}
 
             <div class="mb-3">
-                {{ form_label(formulaireUtilisateur.login, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+                {{ form_label(formulaireUtilisateur.login, 'Login :') }}
                 <p class="form-hint">Entre 4 et 20 caractères</p>
-                {{ form_widget(formulaireUtilisateur.login) }}
+                {{ form_widget(formulaireUtilisateur.login, {
+                    'attr': {'class': 'form-control', 'placeholder': ''}
+                }) }}
                 {{ form_errors(formulaireUtilisateur.login) }}
             </div>
 
             <div class="mb-3">
-                {{ form_label(formulaireUtilisateur.plainPassword, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+                {{ form_label(formulaireUtilisateur.plainPassword, 'Mot De Passe :') }}
                 <p class="form-hint">
                     8 à 30 caractères, avec une minuscule, une majuscule et un chiffre
                 </p>
-                {{ form_widget(formulaireUtilisateur.plainPassword) }}
+                {{ form_widget(formulaireUtilisateur.plainPassword, {
+                    'attr': {'class': 'form-control', 'placeholder': ''}
+                }) }}
                 {{ form_errors(formulaireUtilisateur.plainPassword) }}
             </div>
 
-            <div class="mb-4">
-                {{ form_label(formulaireUtilisateur.adresseMail, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
-                {{ form_widget(formulaireUtilisateur.adresseMail) }}
+            <div class="mb-3">
+                {{ form_label(formulaireUtilisateur.adresseMail, 'Adresse Mail :') }}
+                {{ form_widget(formulaireUtilisateur.adresseMail, {
+                    'attr': {'class': 'form-control', 'placeholder': ''}
+                }) }}
                 {{ form_errors(formulaireUtilisateur.adresseMail) }}
             </div>
 
-            {{ form_widget(formulaireUtilisateur.inscription) }}
+            {{ form_widget(formulaireUtilisateur.inscription, {
+                'attr': {'class': 'btn-submit'},
+                'label': 'S\'inscrire'
+            }) }}
 
-            <div class="auth-footer text-center">
-                <small class="text-muted">
+            <div class="auth-footer">
+                <small>
                     Déjà un compte ?
-                    <a href="{{ path('connexion') }}" class="text-primary fw-medium">
-                        Se connecter
-                    </a>
+                    <a href="{{ path('connexion') }}">Se Connecter</a>
                 </small>
             </div>
 

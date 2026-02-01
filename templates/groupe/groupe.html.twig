@@ -1,24 +1,19 @@
-<article class="groupe-item">
-    <h3 class="groupe-name">
-        {{ groupe.nom }}
+<tr class="groupe-row" data-nom="{{ groupe.nom|lower }}">
+    <td class="groupe-nom-cell">
+        <span class="groupe-nom-text">{{ groupe.nom }}</span>
         {% if isAdmin and groupe.etreChef %}
-            <span class="groupe-chef">({{ groupe.etreChef.login }})</span>
+            <small class="groupe-chef-text">({{ groupe.etreChef.login }})</small>
         {% endif %}
-    </h3>
+    </td>
+    <td class="groupe-actions-cell">
+        <div class="groupe-actions">
+            {% if canEdit %}
+                <a href="{{ path('voir_groupe', {id: groupe.id}) }}" class="btn-action btn-edite">Édité</a>
+            {% else %}
+                <a href="{{ path('voir_groupe', {id: groupe.id}) }}" class="btn-action btn-membre">Membre</a>
+            {% endif %}
 
-    <div class="groupe-actions">
-        <a href="{{ path('voir_groupe', {id: groupe.id}) }}" class="btn btn-secondary">
-            Membres
-        </a>
-        <a href="{{ path('fichiers_groupe', {id: groupe.id}) }}" class="btn btn-primary">
-            Fichiers
-        </a>
-        <a href="{{ path('upload_file_groupe', {id: groupe.id}) }}" class="btn btn-import">
-            Importer un fichier
-        </a>
-        <a href="{{ path('partager_file_groupe', {id: groupe.id}) }}" class="btn btn-shared">
-            Partager un fichier
-        </a>
+            <a href="{{ path('fichiers_groupe', {id: groupe.id}) }}" class="btn-action btn-fichier">Fichier</a>
 
         {% if canEdit %}
             <form method="post"

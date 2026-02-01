@@ -76,7 +76,6 @@ class TextFile extends File
             'text/x-ini',
             'text/x-properties',
             'application/toml',
-            'application/octet-stream', // fallback (si text-only OK)
             'text/x-php'
         ];
     }

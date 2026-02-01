@@ -74,6 +74,7 @@
     max-width: 900px;
     margin-left: auto;
     margin-right: auto;
+    overflow: visible;
 }
 
 .liste-groupes-card h2 {
@@ -109,6 +110,7 @@
 /* ========== TABLE DES GROUPES ========== */
 .table-responsive {
     overflow-x: auto;
+    overflow-y: visible;
 }
 
 .groupes-table {
@@ -116,7 +118,7 @@
     border-collapse: collapse;
     background-color: white;
     border-radius: 12px;
-    overflow: hidden;
+    overflow: visible;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -175,6 +177,8 @@
 .groupe-actions-cell {
     padding: 15px 20px;
     vertical-align: middle;
+    position: relative;
+    overflow: visible;
 }
 
 /* ========== BOUTONS D'ACTION ========== */
@@ -202,10 +206,6 @@
     background-color: #3b82f6;
 }
 
-.btn-danger {
-    background-color: #ef4444;
-}
-
 .btn-edite:hover {
     background-color: #2563eb;
     transform: translateY(-1px);
@@ -224,10 +224,6 @@
 
 .btn-fichier {
     background-color: #a78bfa;
-}
-
-.btn-shared {
-    background-color: #10b981;
 }
 
 .btn-fichier:hover {
@@ -256,6 +252,86 @@
     color: #6b7280;
     padding: 30px;
     font-size: 1rem;
+}
+
+/* ========== DROPDOWN FICHIER ========== */
+.dropdown-fichier {
+    position: relative;
+    display: inline-block;
+    z-index: 100;
+}
+
+.dropdown-toggle {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.dropdown-toggle i {
+    font-size: 0.75rem;
+    transition: transform 0.2s ease;
+}
+
+.dropdown-fichier:hover .dropdown-toggle i {
+    transform: rotate(180deg);
+}
+
+.dropdown-menu-fichier {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 0;
+    margin-top: 5px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 220px;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.3s ease;
+}
+
+.dropdown-menu-fichier.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-item-fichier {
+    display: flex;
+    align-items: center;
+    padding: 12px 18px;
+    color: #1a1a1a;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.dropdown-item-fichier:last-child {
+    border-bottom: none;
+    border-radius: 0 0 12px 12px;
+}
+
+.dropdown-item-fichier:first-child {
+    border-radius: 12px 12px 0 0;
+}
+
+.dropdown-item-fichier:hover {
+    background-color: #f3f4f6;
+    color: #4f46e5;
+    padding-left: 22px;
+}
+
+.dropdown-item-fichier i {
+    font-size: 1rem;
+    color: #6b7280;
+}
+
+.dropdown-item-fichier:hover i {
+    color: #4f46e5;
 }
 
 /* ========== RESPONSIVE ========== */

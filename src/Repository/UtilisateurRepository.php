@@ -35,6 +35,7 @@ class UtilisateurRepository extends ServiceEntityRepository implements PasswordU
         $this->getEntityManager()->flush();
     }
 
+    /* TODO: Refactor : déplacer la fonction à un autre endroit, renommer car elle récupère toutes les VM désormais*/
     public function getUtilisateursAvecVm(): array
     {
         return $this->createQueryBuilder('u')

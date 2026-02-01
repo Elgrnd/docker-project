@@ -216,6 +216,7 @@ final class GroupeController extends AbstractController
             if ($ok) {
                 $this->addFlash('success', "VM $vmid supprimée avec succès.");
                 $groupe->getVm()->setVmId(null);
+                $groupe->getVm()->setVmIp(null);
                 $groupe->getVm()->setVmStatus('none');
                 $entityManager->flush();
             } else {

@@ -163,6 +163,9 @@ final class UtilisateurController extends AbstractController
         } else {
             $proxmoxService->deleteVM($utilisateur->getVm()->getVmId()());
             $utilisateur->getVm()->setVmId(null);
+            $utilisateur->getVm()->setVmStatus(null);
+            $utilisateur->getVm()->setVmIp(null);
+            $utilisateur->getVm()->setDeleteVmAt(null);
             $entityManager->flush();
 
             $this->addFlash('success', "La VM a été supprimé à l'utilisateur " . $utilisateur->getLogin());

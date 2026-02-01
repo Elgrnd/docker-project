@@ -38,7 +38,8 @@ class UtilisateurRepository extends ServiceEntityRepository implements PasswordU
     public function getUtilisateursAvecVm(): array
     {
         return $this->createQueryBuilder('u')
-            ->where("u.proxmoxVmid IS NOT NULL AND u.vmStatus = 'ready'")
+            ->join('u.vm', 'vm')
+            ->where("vm.vmStatus IS NOT NULL AND vm.vmStatus = 'ready'")
             ->getQuery()
             ->getResult();
     }

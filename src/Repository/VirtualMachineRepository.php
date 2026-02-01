@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\Utilisateur;
 use App\Entity\VirtualMachine;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;

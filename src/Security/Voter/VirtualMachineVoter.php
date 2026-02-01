@@ -27,8 +27,18 @@ final class VirtualMachineVoter extends Voter
 
         switch ($attribute) {
             case self::MANAGE:
-                if($user->getVm() === $subject || in_array('ROLE_ADMIN', $user->getRoles())) {
+                if ($user->getVm() === $subject) {
                     return true;
+                }
+
+                if (in_array('ROLE_ADMIN', $user->getRoles())) {
+                    return true;
+                }
+
+                foreach ($user->getUtilisateurGroupe() as $groupe) {
+                    if ($groupe->getVm() && $groupe->getVm() === $subject) {
+                        return true;
+                    }
                 }
 
             return false;

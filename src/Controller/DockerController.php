@@ -5,13 +5,13 @@ namespace App\Controller;
 use App\Entity\Groupe;
 use App\Entity\TextFile;
 use App\Entity\VirtualMachine;
+use App\Repository\VirtualMachineRepository;
 use App\Service\DockerService;
 use App\Service\ProxmoxService;
 use App\Service\UtilisateurManagerInterface;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Form\Extension\Validator\ViolationMapper\MappingRule;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -33,13 +33,14 @@ final class DockerController extends AbstractController
      * @throws RedirectionExceptionInterface
      * @throws ClientExceptionInterface
      */
-    #[IsGranted('ROLE_USER')]
-    #[Route('/virtual-machine/{id}/containers/', name: 'listContainers')]
+    #[IsGranted('VM_MANAGE', 'virtualMachine')]
+    #[Route('/virtual-machine/{id}/containers/', name: 'listContainers', options: ['expose' => true])]
     public function list(
         DockerService               $dockerService,
         VirtualMachine $virtualMachine,
         ProxmoxService              $proxmoxService,
         UtilisateurManagerInterface $utilisateurManager,
+        VirtualMachineRepository $virtualMachineRepository,
     ): Response
     {
         if($virtualMachine->getVmId() == null || $virtualMachine->getVmStatus() == "none") {
@@ -74,19 +75,29 @@ final class DockerController extends AbstractController
                 }
             }
         } else {
-            if ($virtualMachine->getVmId()) {
-                try {
-                    $vmIp = $proxmoxService->verifVMIp($virtualMachine);
+            try {
+                $vmIp = $proxmoxService->verifVMIp($virtualMachine);
 
-                } catch (Exception) {
-                    $this->addFlash('error', "le QGA n'est pas encore prêt pour la VM");
-                    return $this->redirectToRoute("index");
+            } catch (Exception) {
+                $this->addFlash('error', "le QGA n'est pas encore prêt pour la VM");
+                return $this->redirectToRoute("index");
+            }
+            if ($vmIp) {
+                $containers = $dockerService->listContainers($vmIp);
+                foreach ($containers as &$container) {
+                    $container['user'] = $user->getLogin();
+                    $container['vmid'] = $virtualMachine->getId();
                 }
-                if ($vmIp) {
-                    $containers = $dockerService->listContainers($vmIp);
-                    foreach ($containers as &$container) {
-                        $container['user'] = $user->getLogin();
-                        $container['vmid'] = $virtualMachine->getId();
+                $accessibleVms = [$user->getVM()->getVmId() => [
+                    'vm' => $user->getVM(),
+                    'label' => 'VM - User ' . $user->getLogin(),
+                ]];
+                foreach ($user->getUtilisateurGroupe() as $groupe) {
+                    if ($groupe->getVm() && $groupe->getVm()->getVmStatus() == "ready") {
+                        $accessibleVms[$groupe->getVm()->getId()] = [
+                            'vm' => $groupe->getVm(),
+                            'label' => 'VM – Groupe ' . $groupe->getNom()
+                        ];
                     }
                 }
             }
@@ -126,8 +137,10 @@ final class DockerController extends AbstractController
 
         return $this->render('docker/listContainers.html.twig', [
             'containers' => $containers,
+            'accessibleVms' => $accessibleVms,
             'vms' => $vms,
             'controller_name' => 'DockerController',
+            'virtualMachine' => $virtualMachine,
         ]);
     }
 

@@ -2,10 +2,27 @@
 
 {% block title %}<title>Liste des conteneurs</title> {% endblock %}
 {% block scriptJs %}
-    <script src="{{ asset('js/searchContainers.js') }}"></script>{% endblock %}
+    <script src="{{ asset('js/searchContainers.js') }}"></script>
+    <script src="{{ asset('js/docker/vmSelect.js') }}"></script>
+{% endblock %}
 
 {% block page_content %}
     <h2 class="mb-4">Conteneurs Docker en cours d’exécution</h2>
+
+    <div class="mb-4">
+        <label for="vmSelect" class="form-label fw-bold">
+            VM accessible
+        </label>
+
+        <select id="vmSelect" class="form-select">
+            {% for item in accessibleVms %}
+                <option value="{{ item.vm.id }}"
+                        {% if item.vm.id == virtualMachine.id %}selected{% endif %}>
+                    {{ item.label }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
 
     <div class="mb-3">
         <label for="searchInput"></label><input type="text" id="searchInput" class="form-control" placeholder="Rechercher par nom ou ID...">

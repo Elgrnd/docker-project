@@ -29,7 +29,7 @@ class AuthentificationSubscriber
         if($event->getAuthenticator()) {
             $user = $event->getUser();
 
-            if ($user->getVm() !== null) {
+            if ($user->getVm()->getVmId() !== null) {
                 $user->getVm()->setDeleteVmAt(null);
                 $user->getVm()->setVmStatus('ready');
                 $this->entityManager->flush();
@@ -38,7 +38,7 @@ class AuthentificationSubscriber
 
             $createVm = $request->request->get('create_vm');
             if($createVm) {
-                if ($user->getVm() === null) {
+                if ($user->getVm()->getVmId() === null) {
                     $user->getVm()->setVmStatus('creating');
                     $this->entityManager->flush();
                     $this->proxmoxService->cloneUserVmAsynchrone($user->getLogin());
@@ -62,7 +62,7 @@ class AuthentificationSubscriber
     public function logout(LogoutEvent $event) {
         if($event->getResponse()) {
             $user = $event->getToken()->getUser();
-            if ($user->getVm() !== null) {
+            if ($user->getVm()->getVmId() !== null) {
                 $user->getVm()->setDeleteVmAt(new DateTimeImmutable('+10 minutes'));
                 $user->getVm()->setVmStatus('pending_delete');
                 $this->entityManager->flush();

@@ -28,11 +28,11 @@ class DeleteVmMessageHandler
     {
         $user = $this->utilisateurRepository->find($message->userId);
 
-        if (!$user || $user->getDeleteVmAt() === null) {
+        if (!$user || $user->getVm()->getDeleteVmAt() === null) {
             return;
         }
 
-        if ($user->getDeleteVmAt() > new DateTimeImmutable()) {
+        if ($user->getVm()->getDeleteVmAt() > new DateTimeImmutable()) {
             return;
         }
 

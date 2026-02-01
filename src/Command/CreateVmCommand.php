@@ -61,7 +61,7 @@ class CreateVmCommand extends Command
         $user->getVm()->setVmStatus('ready');
         $this->entityManager->flush();
 
-        $io->success("The user has been created !");
+        $io->success("The virtual machine has been created !");
         return Command::SUCCESS;
     }
 }

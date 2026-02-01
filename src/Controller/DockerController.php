@@ -10,8 +10,10 @@ use App\Repository\VirtualMachineRepository;
 use App\Service\DockerService;
 use App\Service\ProxmoxService;
 use App\Service\UtilisateurManagerInterface;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use phpDocumentor\Reflection\Types\Collection;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
@@ -417,9 +419,10 @@ final class DockerController extends AbstractController
 
     /**
      * A Refactor ! La fonction devrait surement se trouver dans Utilisateur
+     * @param ArrayCollection $groupes
      * @return array[]
      */
-    public function getAccessibleVms(array $groupes): array
+    public function getAccessibleVms(ArrayCollection $groupes): array
     {
         $user = $this->getUser();
         $accessibleVms = [$user->getVM()->getVmId() => [

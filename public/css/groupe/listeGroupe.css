@@ -200,6 +200,7 @@
     display: inline-block;
     transition: all 0.2s ease;
     color: white;
+    background-color: var(--button-3);
 }
 
 .btn-edite {

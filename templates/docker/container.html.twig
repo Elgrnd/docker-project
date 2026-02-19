@@ -2,7 +2,15 @@
     <td>{{ container.user }}</td>
     <td>{{ container.name }}</td>
     <td>{{ container.id }}</td>
-    <td>{{ container.ports }}</td>
+    <td>
+        {% if container.url %}
+            <a href="{{ container.url }}" target="_blank" rel="noopener noreferrer">
+                {{ container.ports }}
+            </a>
+        {% else %}
+            {{ container.ports }}
+        {% endif %}
+    </td>
     <td>{{ container.status }}</td>
     <td>
         {% if 'Up' in container.status %}

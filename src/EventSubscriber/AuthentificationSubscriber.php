@@ -29,16 +29,17 @@ class AuthentificationSubscriber
         if($event->getAuthenticator()) {
             $user = $event->getUser();
 
-            if ($user->getDeleteVmAt() !== null) {
-                $user->setDeleteVmAt(null);
+            if ($user->getVm()->getVmId() !== null) {
+                $user->getVm()->setDeleteVmAt(null);
+                $user->getVm()->setVmStatus('ready');
                 $this->entityManager->flush();
             }
             $request = $this->requestStack->getCurrentRequest();
 
             $createVm = $request->request->get('create_vm');
             if($createVm) {
-                if ($user->getProxmoxVmid() === null) {
-                    $user->setVmStatus('creating');
+                if ($user->getVm()->getVmId() === null) {
+                    $user->getVm()->setVmStatus('creating');
                     $this->entityManager->flush();
                     $this->proxmoxService->cloneUserVmAsynchrone($user->getLogin());
                 }
@@ -61,20 +62,20 @@ class AuthentificationSubscriber
     public function logout(LogoutEvent $event) {
         if($event->getResponse()) {
             $user = $event->getToken()->getUser();
-            if ($user->getProxmoxVmid() !== null) {
-                $user->setDeleteVmAt(new DateTimeImmutable('+10 minutes'));
-                $user->setVmStatus('pending_delete');
+            if ($user->getVm()->getVmId() !== null) {
+                $user->getVm()->setDeleteVmAt(new DateTimeImmutable('+30 seconds'));
+                $user->getVm()->setVmStatus('pending_delete');
                 $this->entityManager->flush();
 
                 $this->bus->dispatch(
                     new DeleteVmMessage($user->getId()),
-                    [new DelayStamp(600000)]
+                    [new DelayStamp(30000)]
                 );
             }
 
             $flashBag = $this->requestStack->getSession()->getFlashBag();
             $flashBag->add('success',
-                'Déconnexion réussie. Votre VM sera supprimée dans 10 minutes si vous ne vous reconnectez pas.'
+                'Déconnexion réussie. Votre VM sera supprimée dans 30 secondes si vous ne vous reconnectez pas.'
             );
         }
     }

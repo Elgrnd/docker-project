@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\Utilisateur;
+use App\Entity\VirtualMachine;
 use App\Repository\UtilisateurRepository;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -19,7 +20,8 @@ class UtilisateurManager implements UtilisateurManagerInterface
     /**
      * Chiffre le mot de passe puis l'affecte au champ correspondant dans la classe de l'utilisateur
      */
-    private function chiffrerMotDePasse(Utilisateur $utilisateur, ?string $plainPassword) : void {
+    private function chiffrerMotDePasse(Utilisateur $utilisateur, ?string $plainPassword) : void
+    {
         $hashed = $this->passwordHasher->hashPassword($utilisateur, $plainPassword);
         $utilisateur->setPassword($hashed);
     }
@@ -29,6 +31,7 @@ class UtilisateurManager implements UtilisateurManagerInterface
      */
     public function processNewUtilisateur(Utilisateur $utilisateur, ?string $plainPassword) : void {
         $this->chiffrerMotDePasse($utilisateur, $plainPassword);
+        $utilisateur->setVm(new VirtualMachine());
     }
 
     public function getUtilisateursAvecVm() : array {

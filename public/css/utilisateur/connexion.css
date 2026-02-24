@@ -87,9 +87,6 @@
     color: var(--button-1);
 }
 
-.form-check {
-    display: none;
-}
 
 @media (max-width: 768px) {
     .auth-card {

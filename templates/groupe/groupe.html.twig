@@ -8,22 +8,55 @@
     <td class="groupe-actions-cell">
         <div class="groupe-actions">
             {% if canEdit %}
-                <a href="{{ path('voir_groupe', {id: groupe.id}) }}" class="btn-action btn-edite">Édité</a>
+                <a href="{{ path('voir_groupe', {id: groupe.id}) }}" class="btn-action btn-edite">Éditer</a>
             {% else %}
                 <a href="{{ path('voir_groupe', {id: groupe.id}) }}" class="btn-action btn-membre">Membre</a>
             {% endif %}
 
-            <a href="{{ path('fichiers_groupe', {id: groupe.id}) }}" class="btn-action btn-fichier">Fichier</a>
+            <div class="dropdown-fichier">
+                <button type="button" class="btn-action btn-fichier dropdown-toggle">
+                    Fichier
+                    <i class="bi bi-chevron-down ms-1"></i>
+                </button>
+                <div class="dropdown-menu-fichier">
+                    <a href="{{ path('fichiers_groupe', {id: groupe.id}) }}" class="dropdown-item-fichier">
+                        <i class="bi bi-folder2-open me-2"></i>Fichiers
+                    </a>
+                    <a href="{{ path('upload_file_groupe', {id: groupe.id}) }}" class="dropdown-item-fichier">
+                        <i class="bi bi-cloud-upload me-2"></i>Importer un fichier
+                    </a>
+                    <a href="{{ path('partager_file_groupe', {id: groupe.id}) }}" class="dropdown-item-fichier">
+                        <i class="bi bi-share me-2"></i>Partager un fichier
+                    </a>
+                </div>
+            </div>
 
             {% if canEdit %}
+            <form method="post"
+                  action="{{ path('supprimer_groupe', {id: groupe.id}) }}"
+                  class="delete-groupe-form"
+                  data-confirm-message="Supprimer ce groupe ?">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete-groupe-' ~ groupe.id) }}">
+                <button type="submit" class="btn-action btn-danger">Supprimer</button>
+            </form>
+        {% endif %}
+
+
+        {% if is_granted('ROLE_PROFESSEUR') %}
+            {% if not groupe.vm.vmStatus or groupe.vm.vmStatus == 'none' %}
                 <form method="post"
-                      action="{{ path('supprimer_groupe', {id: groupe.id}) }}"
+                      action="{{ path('create_vm_groupe', {id: groupe.id}) }}"
+                      class="create-groupe-form">
+                    <button type="submit" class="btn-action btn-shared">Créer une VM</button>
+                </form>
+            {% else %}
+                <form method="post"
+                      action="{{ path('delete_vm_groupe', {id: groupe.id}) }}"
                       class="delete-groupe-form"
-                      data-confirm-message="Supprimer ce groupe ?">
-                    <input type="hidden" name="_token" value="{{ csrf_token('delete-groupe-' ~ groupe.id) }}">
-                    <button type="submit" class="btn-action btn-supprimer">Supprimer</button>
+                      data-confirm-message="Supprimer la VM de ce groupe ?">
+                    <button type="submit" class="btn-action btn-danger">Supprimer la VM</button>
                 </form>
             {% endif %}
-        </div>
-    </td>
-</tr>
+        {% endif %}
+    </div>
+</td>

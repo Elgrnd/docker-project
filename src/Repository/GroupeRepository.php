@@ -15,4 +15,14 @@ class GroupeRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Groupe::class);
     }
+
+    public function findGroupsWithVmid(): array
+    {
+        return $this->createQueryBuilder('g')
+            ->innerJoin('g.vm', 'v')
+            ->where("v.vmId IS NOT NULL and v.vmStatus = 'ready'")
+            ->getQuery()
+            ->getResult();
+    }
+
 }

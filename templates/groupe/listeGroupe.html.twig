@@ -4,6 +4,7 @@
 
 {% block stylesheets %}
     <link rel="stylesheet" href="{{ asset('css/groupe/listeGroupe.css') }}">
+    <script defer type="text/javascript" src="{{ asset('js/vmStatus.js') }}"></script>
 {% endblock %}
 
 {% block scriptJs %}
@@ -11,6 +12,8 @@
 {% endblock %}
 
 {% block page_content %}
+
+
     <!-- Section Créer un groupe -->
     <div class="create-groupe-card">
         <h2 class="text-center mb-4">Créer Un Groupe</h2>
@@ -48,11 +51,12 @@
                     </thead>
                     <tbody id="groupesTableBody">
                     {% for groupe in groupesMembre %}
-                        {% include 'groupe/groupe.html.twig' with {
+                        {{ include('groupe/groupe.html.twig', {
                             'groupe': groupe,
-                            'isAdmin': is_granted('ROLE_ADMIN'),
-                            'canEdit': is_granted('GROUPE_EDIT', groupe)
-                        } %}
+                            'isAdmin' : is_granted('ROLE_ADMIN'),
+                            'canEdit' : is_granted('GROUPE_EDIT', groupe)})
+                        }}
+
                     {% endfor %}
                     </tbody>
                 </table>

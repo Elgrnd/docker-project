@@ -112,6 +112,7 @@ class DockerService
                 'name' => $name,
                 'status' => $status,
                 'ports'  => $ports,
+                'url' => $this->getWebUrlFromPorts($vmIp, $ports),
             ];
         }
         return $containers;
@@ -171,6 +172,21 @@ class DockerService
             'success' => str_contains($output, $id) || str_contains($output, 'running'),
             'message' => trim($output),
         ];
+    }
+
+    private function getWebUrlFromPorts(string $vmIp, string $ports) : ?string
+    {
+        $url = null;
+
+        if (str_contains($ports, '->80/tcp') && preg_match('/:(\d+)->80\/tcp/', $ports, $m)) {
+            $url = 'http://' . $vmIp . ':' . $m[1];
+        }
+
+        if (str_contains($ports, '->443/tcp') && preg_match('/:(\d+)->443\/tcp/', $ports, $m)) {
+            $url = 'https://' . $vmIp . ':' . $m[1];
+        }
+
+        return $url;
     }
 
 

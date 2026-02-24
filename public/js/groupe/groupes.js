@@ -25,3 +25,32 @@ document.getElementById('searchGroupe')?.addEventListener('input', function(e) {
         }
     });
 });
+
+// Gestion des dropdowns
+document.addEventListener('DOMContentLoaded', function() {
+    const dropdowns = document.querySelectorAll('.dropdown-fichier');
+
+    dropdowns.forEach(dropdown => {
+        const toggle = dropdown.querySelector('.dropdown-toggle');
+        const menu = dropdown.querySelector('.dropdown-menu-fichier');
+
+        toggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+
+            // Fermer tous les autres dropdowns
+            document.querySelectorAll('.dropdown-menu-fichier').forEach(m => {
+                if (m !== menu) m.classList.remove('show');
+            });
+
+            // Toggle le dropdown actuel
+            menu.classList.toggle('show');
+        });
+    });
+
+    // Fermer le dropdown si on clique ailleurs
+    document.addEventListener('click', function() {
+        document.querySelectorAll('.dropdown-menu-fichier').forEach(menu => {
+            menu.classList.remove('show');
+        });
+    });
+});

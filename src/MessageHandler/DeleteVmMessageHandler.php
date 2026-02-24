@@ -28,19 +28,20 @@ class DeleteVmMessageHandler
     {
         $user = $this->utilisateurRepository->find($message->userId);
 
-        if (!$user || $user->getDeleteVmAt() === null) {
+        if (!$user || $user->getVm()->getDeleteVmAt() === null) {
             return;
         }
 
-        if ($user->getDeleteVmAt() > new DateTimeImmutable()) {
+        if ($user->getVm()->getDeleteVmAt() > new DateTimeImmutable()) {
             return;
         }
 
-        $this->proxmoxService->deleteVM($user->getProxmoxVmid());
+        $this->proxmoxService->deleteVM($user->getVm()->getVmId());
 
-        $user->setProxmoxVmid(null);
-        $user->setVmStatus('none');
-        $user->setDeleteVmAt(null);
+        $user->getVm()->setVmId(null);
+        $user->getVm()->setVmStatus('none');
+        $user->getVm()->setVmIp(null);
+        $user->getVm()->setDeleteVmAt(null);
 
         $this->entityManager->flush();
     }

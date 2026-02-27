@@ -69,6 +69,15 @@
                         </a>
                     </div>
                 {% endif %}
+
+                {% if app.user.vm.vmStatus == 'ready' %}
+                    <form method="post" action="{{ path('copier_vm') }}" class="dropdown-item-form">
+                        <button type="submit" class="dropdown-item"
+                                onclick="return confirm('Copier tout /root de la VM dans copieVM ?');">
+                            📥 Copier VM
+                        </button>
+                    </form>
+                {% endif %}
             </div>
 
             <div class="card-body tree-container">

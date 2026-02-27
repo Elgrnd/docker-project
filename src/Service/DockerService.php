@@ -2,6 +2,8 @@
 
 namespace App\Service;
 
+use Random\RandomException;
+
 class DockerService
 {
 
@@ -187,6 +189,66 @@ class DockerService
         }
 
         return $url;
+    }
+
+    public function fetchFileFromVm(string $remotePath, string $localFilePath, string $vmIp): string
+    {
+        $dir = dirname($localFilePath);
+        if (!is_dir($dir)) {
+            mkdir($dir, 0775, true);
+        }
+
+        $scpCommand = sprintf(
+            'scp %s -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no %s %s',
+            $this->getSshBaseOptions(),
+            escapeshellarg($this->sshUser . '@' . $vmIp . ':' . $remotePath),
+            escapeshellarg($localFilePath)
+        );
+
+
+        return trim(shell_exec($scpCommand . ' 2>&1') ?? '');
+    }
+
+    /**
+     * @throws RandomException
+     */
+    public function pullDirFromVmAsTarAndExtract(string $remoteDir, string $localExtractDir, string $vmIp): string
+    {
+        $remoteTar = '/tmp/copievm_' . bin2hex(random_bytes(6)) . '.tar.gz';
+
+        $tarCmd = sprintf(
+            'cd %s && tar --exclude="./.*" -czf %s . 2>&1',
+            escapeshellarg('/root'),
+            escapeshellarg($remoteTar)
+        );
+
+        $tarOut = $this->runInVm($tarCmd, $vmIp);
+
+        $check = $this->runInVm('test -f ' . escapeshellarg($remoteTar) . ' && echo OK || echo NO', $vmIp);
+        if (trim($check) !== 'OK') {
+            throw new \RuntimeException("Création tar échouée: " . $tarOut);
+        }
+
+        $localTar = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . basename($remoteTar);
+        $err = $this->fetchFileFromVm($remoteTar, $localTar, $vmIp);
+        if (!is_file($localTar) || filesize($localTar) === 0) {
+            throw new \RuntimeException("SCP échoué: " . $err);
+        }
+
+        if (!is_dir($localExtractDir)) {
+            mkdir($localExtractDir, 0775, true);
+        }
+
+        $extractCmd = sprintf(
+            'tar -xzf %s -C %s 2>&1',
+            escapeshellarg($localTar),
+            escapeshellarg($localExtractDir)
+        );
+
+        $extractOut = shell_exec($extractCmd);
+        @unlink($localTar);
+
+        return trim($extractOut ?? '');
     }
 
 

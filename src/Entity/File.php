@@ -55,6 +55,12 @@ abstract class File
     #[ORM\OneToMany(targetEntity: GroupeFileRepertoire::class, mappedBy: "file")]
     protected Collection $groupeParRepertoire;
 
+    #[ORM\Column(options: ['default' => false])]
+    private ?bool $fromVm = false;
+
+    #[ORM\Column(length: 1024, nullable: true)]
+    private ?string $vmPath = null;
+
     public function __construct()
     {
         $this->utilisateursParRepertoire = new ArrayCollection();
@@ -227,5 +233,29 @@ abstract class File
     public function isBinary(): bool
     {
         return $this instanceof BinaryFile;
+    }
+
+    public function isFromVm(): ?bool
+    {
+        return $this->fromVm;
+    }
+
+    public function setFromVm(?bool $fromVm): static
+    {
+        $this->fromVm = $fromVm;
+
+        return $this;
+    }
+
+    public function getVmPath(): ?string
+    {
+        return $this->vmPath;
+    }
+
+    public function setVmPath(?string $vmPath): static
+    {
+        $this->vmPath = $vmPath;
+
+        return $this;
     }
 }

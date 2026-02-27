@@ -9,6 +9,8 @@ use App\Entity\Repertoire;
 use App\Entity\UtilisateurFileRepertoire;
 use Doctrine\ORM\EntityManagerInterface;
 use ZipArchive;
+use App\Entity\TextFile;
+use App\Entity\Utilisateur;
 
 class RepertoireService
 {
@@ -121,6 +123,121 @@ class RepertoireService
         }
 
         $em->remove($file);
+        $em->flush();
+    }
+
+    public function importLocalDirIntoRepertoire(
+        string $localRootDir,
+        Repertoire $destRoot,
+        Utilisateur $u,
+        EntityManagerInterface $em
+    ): array {
+        $dirMap = ['' => $destRoot];
+        $importedDirs = 0;
+        $importedFiles = 0;
+
+        $it = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($localRootDir, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::SELF_FIRST
+        );
+
+        foreach ($it as $full => $info) {
+            $rel = ltrim(str_replace($localRootDir, '', $full), DIRECTORY_SEPARATOR);
+
+            if ($rel === '.ssh' || str_starts_with($rel, '.ssh' . DIRECTORY_SEPARATOR)) {
+                continue;
+            }
+
+            if ($info->isDir()) {
+                $parentRel = trim(dirname($rel), '.');
+                $parentRel = $parentRel === '.' ? '' : $parentRel;
+
+                $parent = $dirMap[$parentRel] ?? $destRoot;
+                $name = $info->getBasename();
+
+                $existing = $em->getRepository(Repertoire::class)->findOneBy([
+                    'parent' => $parent,
+                    'name' => $name,
+                    'utilisateur_repertoire' => $u,
+                ]);
+
+                if (!$existing) {
+                    $r = new Repertoire();
+                    $r->setName($name);
+                    $r->setParent($parent);
+                    $r->setUtilisateurRepertoire($u);
+                    $em->persist($r);
+                    $em->flush();
+
+                    $dirMap[$rel] = $r;
+                    $importedDirs++;
+                } else {
+                    $dirMap[$rel] = $existing;
+                }
+
+                continue;
+            }
+
+            if (!$info->isFile()) continue;
+
+            $parentRel = trim(dirname($rel), '.');
+            $parentRel = $parentRel === '.' ? '' : $parentRel;
+            $targetRep = $dirMap[$parentRel] ?? $destRoot;
+
+            $nameFile = $info->getBasename();
+            $ext = strtolower(ltrim((string) pathinfo($nameFile, PATHINFO_EXTENSION), '.'));
+
+            if ($ext === '' || !in_array($ext, TextFile::allowedExtensions(), true)) {
+                continue;
+            }
+
+            $content = @file_get_contents($full);
+            if ($content === false) continue;
+
+            $tf = new TextFile();
+            $tf->setBodyFile($content);
+            $tf->setNameFile($nameFile);
+            $tf->setExtension($ext);
+            $tf->setMimeType('text/plain');
+            $tf->setUtilisateurFile($u);
+
+            // perso
+            $tf->setFromGitlab(false);
+            $tf->setGitlabPath(null);
+            $tf->setFromVm(false);
+            $tf->setVmPath(null);
+
+            $em->persist($tf);
+            $em->flush();
+
+            $link = new UtilisateurFileRepertoire();
+            $link->setUtilisateur($u);
+            $link->setFile($tf);
+            $link->setRepertoire($targetRep);
+
+            $em->persist($link);
+            $em->flush();
+
+            $importedFiles++;
+        }
+
+        return ['dirs' => $importedDirs, 'files' => $importedFiles];
+    }
+
+    public function clearRepertoire(Repertoire $repertoire, EntityManagerInterface $em): void
+    {
+        foreach ($repertoire->getAccesFilesUtilisateur() as $ufr) {
+            $file = $ufr->getFile();
+
+            $em->remove($ufr);
+            $em->remove($file);
+        }
+
+        foreach ($repertoire->getChildrenActifs() as $child) {
+            $this->clearRepertoire($child, $em);
+            $em->remove($child);
+        }
+
         $em->flush();
     }
 }

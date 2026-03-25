@@ -48,6 +48,9 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 100, nullable: true)]
     private ?string $promotion = null;
 
+    #[ORM\Column(length: 10, nullable: true)]
+    private ?string $classe = null;
+
     #[ORM\Column(length: 64, nullable: true)]
     private ?string $gitlabLastCommitSha = null;
 
@@ -197,6 +200,16 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPromotion(?string $promotion): void
     {
         $this->promotion = $promotion;
+    }
+
+    public function getClasse(): ?string
+    {
+        return $this->classe;
+    }
+
+    public function setClasse(?string $classe): void
+    {
+        $this->classe = $classe;
     }
 
     /**

@@ -2,8 +2,10 @@
 
 namespace App\Controller;
 
+use App\Entity\Groupe;
 use App\Entity\Repertoire;
 use App\Entity\Utilisateur;
+use App\Entity\UtilisateurGroupe;
 use App\Form\GitlabUrlType;
 use App\Form\UtilisateurType;
 use App\Repository\UtilisateurRepository;
@@ -284,4 +286,41 @@ final class UtilisateurController extends AbstractController
         $this->addFlash('success', 'URL GitLab supprimée.');
         return $this->redirectToRoute('repertoire');
     }
+
+    #[IsGranted('ROLE_ETUDIANT')]
+    #[Route('/choisir-classe', name: 'choisir_classe', methods: ['POST'])]
+    public function choisirClasse(Request $request, EntityManagerInterface $em): Response
+    {
+        if (!$this->isCsrfTokenValid('choisir_classe', $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF invalide.');
+        }
+
+        $utilisateur = $this->getUser();
+        $classeId = $request->request->get('classe_id');
+
+        $groupe = $em->getRepository(Groupe::class)->find($classeId);
+
+        if ($groupe) {
+            $utilisateur->setClasse($groupe->getNom());
+            $dejaPresent = $em->getRepository(UtilisateurGroupe::class)->findOneBy([
+                'utilisateur' => $utilisateur,
+                'groupe' => $groupe,
+            ]);
+
+            if (!$dejaPresent) {
+                $ug = new UtilisateurGroupe();
+                $ug->setUtilisateur($utilisateur);
+                $ug->setGroupe($groupe);
+                $em->persist($ug);
+            }
+
+            $em->flush();
+            $em->flush();
+            $request->getSession()->remove('show_classe_popup');
+            $this->addFlash('success', 'Classe assignée avec succès.');
+        }
+
+        return $this->redirectToRoute('mes_groupes');
+    }
+
 }

@@ -2,8 +2,11 @@
 
 namespace App\Controller;
 
+use App\Entity\File;
 use App\Entity\Groupe;
 use App\Entity\Repertoire;
+use App\Entity\Utilisateur;
+use App\Entity\UtilisateurFileRepertoire;
 use App\Entity\VirtualMachine;
 use App\Repository\FileRepository;
 use App\Repository\RepertoireRepository;
@@ -12,10 +15,12 @@ use App\Service\ProxmoxService;
 use App\Service\RepertoireService;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
+use RuntimeException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
@@ -365,6 +370,86 @@ final class RepertoireController extends AbstractController
         }
 
         @unlink($zipPath);
+    }
+
+    #[IsGranted("ROLE_USER")]
+    #[Route('/vm/copier', name: 'copier_vm', methods: ['POST'])]
+    public function copierVm(
+        Request $request,
+        DockerService $docker,
+        ProxmoxService $proxmox,
+        EntityManagerInterface $em,
+        KernelInterface $kernel,
+        RepertoireRepository $repertoireRepository,
+        RepertoireService $repertoireService
+    ): Response {
+        $user = $this->getUser();
+
+        $vm = $user->getVm();
+        if (!$vm || $vm->getVmStatus() !== 'ready') {
+            $this->addFlash('error', 'VM manquante ou pas encore prête');
+            return $this->redirectToRoute('repertoire');
+        }
+
+        try {
+            $vmIp = $proxmox->verifVMIp($vm);
+            if (!$vmIp) throw new RuntimeException("IP VM introuvable");
+
+            $projectDir = $kernel->getProjectDir();
+            $extractDir = $projectDir . '/var/tmp_vm_extract/' . $user->getId();
+
+            if (is_dir($extractDir)) {
+                $this->rrmdir($extractDir);
+            }
+
+            $docker->pullDirFromVmAsTarAndExtract('/root', $extractDir, $vmIp);
+
+            $racine = $repertoireRepository->recupererRepertoireRacineUtilisateur($user->getId());
+            if (!$racine) throw new \RuntimeException("Répertoire racine introuvable");
+
+            $copieVm = $repertoireRepository->findOneBy([
+                'parent' => $racine,
+                'name' => 'copieVM',
+                'utilisateur_repertoire' => $user,
+            ]);
+
+            if (!$copieVm) {
+                $copieVm = new Repertoire();
+                $copieVm->setName('copieVM');
+                $copieVm->setParent($racine);
+                $copieVm->setUtilisateurRepertoire($user);
+                $em->persist($copieVm);
+                $em->flush();
+            } else {
+                $repertoireService->clearRepertoire($copieVm, $em);
+            }
+
+            $res = $repertoireService->importLocalDirIntoRepertoire(
+                $extractDir,
+                $copieVm,
+                $user,
+                $em
+            );
+
+            $this->addFlash('success', "copieVM créé : {$res['dirs']} dossier(s), {$res['files']} fichier(s) texte importé(s).");
+        } catch (\Throwable $e) {
+            $this->addFlash('error', "Copie VM échouée: " . $e->getMessage());
+        }
+
+        return $this->redirectToRoute('repertoire');
+    }
+
+    private function rrmdir(string $dir): void
+    {
+        if (!is_dir($dir)) return;
+        $it = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::CHILD_FIRST
+        );
+        foreach ($it as $f) {
+            $f->isDir() ? @rmdir($f->getPathname()) : @unlink($f->getPathname());
+        }
+        @rmdir($dir);
     }
 
 }

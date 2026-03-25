@@ -56,4 +56,14 @@ class FileRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function findFromVmByUser(Utilisateur $u): array
+    {
+        return $this->createQueryBuilder('f')
+            ->andWhere('f.utilisateur_file = :u')
+            ->andWhere('f.fromVm = true')
+            ->setParameter('u', $u)
+            ->getQuery()
+            ->getResult();
+    }
 }

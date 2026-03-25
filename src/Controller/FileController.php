@@ -16,6 +16,7 @@ use App\Service\GitlabApiException;
 use App\Service\GitlabApiService;
 use App\Service\GitlabSyncService;
 use App\Service\FlashMessageHelperInterface;
+use App\Service\VmSyncService;
 use Doctrine\ORM\EntityManagerInterface;
 use DomainException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -301,6 +302,8 @@ final class FileController extends AbstractController
         $gitlabProject = null;
         $gitlabBranch = null;
 
+        $vmTree = null;
+
         if ($utilisateur->getGitlabUrl()) {
             $parsed = $gitlab->parseGitlabUrl($utilisateur->getGitlabUrl());
 
@@ -331,6 +334,7 @@ final class FileController extends AbstractController
             'gitlabTree' => $gitlabTree,
             'gitlabProject' => $gitlabProject,
             'gitlabBranch' => $gitlabBranch,
+
         ]);
     }
 

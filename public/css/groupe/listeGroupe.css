@@ -109,8 +109,7 @@
 
 /* ========== TABLE DES GROUPES ========== */
 .table-responsive {
-    overflow-x: auto;
-    overflow-y: visible;
+    overflow: visible;
 }
 
 .groupes-table {
@@ -259,7 +258,7 @@
 .dropdown-fichier {
     position: relative;
     display: inline-block;
-    z-index: 100;
+    z-index: 1;
 }
 
 .dropdown-toggle {
@@ -271,6 +270,10 @@
 .dropdown-toggle i {
     font-size: 0.75rem;
     transition: transform 0.2s ease;
+}
+
+.dropdown-fichier.open {
+    z-index: 9999;
 }
 
 .dropdown-fichier:hover .dropdown-toggle i {

@@ -37,20 +37,22 @@ document.addEventListener('DOMContentLoaded', function() {
         toggle.addEventListener('click', function(e) {
             e.stopPropagation();
 
-            // Fermer tous les autres dropdowns
-            document.querySelectorAll('.dropdown-menu-fichier').forEach(m => {
-                if (m !== menu) m.classList.remove('show');
+            document.querySelectorAll('.dropdown-fichier').forEach(d => {
+                if (d !== dropdown) {
+                    d.classList.remove('open');
+                    d.querySelector('.dropdown-menu-fichier')?.classList.remove('show');
+                }
             });
 
-            // Toggle le dropdown actuel
             menu.classList.toggle('show');
+            dropdown.classList.toggle('open');
         });
     });
 
-    // Fermer le dropdown si on clique ailleurs
     document.addEventListener('click', function() {
-        document.querySelectorAll('.dropdown-menu-fichier').forEach(menu => {
-            menu.classList.remove('show');
+        document.querySelectorAll('.dropdown-fichier').forEach(dropdown => {
+            dropdown.classList.remove('open');
+            dropdown.querySelector('.dropdown-menu-fichier')?.classList.remove('show');
         });
     });
 });

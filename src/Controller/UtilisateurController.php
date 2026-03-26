@@ -323,4 +323,14 @@ final class UtilisateurController extends AbstractController
         return $this->redirectToRoute('mes_groupes');
     }
 
+    #[IsGranted('ROLE_USER')]
+    #[Route('/ignorer-classe-popup', name: 'ignorer_classe_popup', methods: ['GET'])]
+    public function ignorerClassePopup(Request $request): Response
+    {
+        $request->getSession()->remove('show_classe_popup');
+
+        return $this->redirectToRoute('index');
+    }
+
+
 }

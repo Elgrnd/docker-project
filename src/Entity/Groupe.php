@@ -37,6 +37,9 @@ class Groupe
     #[ORM\OneToOne(cascade: ['persist', 'remove'])]
     private ?VirtualMachine $vm = null;
 
+    #[ORM\Column]
+    private bool $isClass = false;
+
 
     public function __construct()
     {
@@ -173,4 +176,16 @@ class Groupe
 
         return $this;
     }
+
+    public function isClass(): bool
+    {
+        return $this->isClass;
+    }
+
+    public function setIsClass(bool $isClass): void
+    {
+        $this->isClass = $isClass;
+    }
+
+
 }

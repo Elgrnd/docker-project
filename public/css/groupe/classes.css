@@ -1,0 +1,66 @@
+/* ========== CARTE CRÉER UN GROUPE ========== */
+.create-groupe-card {
+    background: linear-gradient(135deg, #e8eeff 0%, #f5f7ff 100%);
+    border-radius: 20px;
+    padding: 50px 60px;
+    margin-bottom: 50px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.create-groupe-card h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 30px;
+}
+
+.form-group-custom {
+    margin-bottom: 25px;
+}
+
+.form-group-custom label {
+    display: block;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #1a1a1a;
+    margin-bottom: 10px;
+    text-align: left;
+}
+
+.form-control-custom {
+    width: 100%;
+    padding: 15px 20px;
+    border: 2px solid #d1d5db;
+    border-radius: 30px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background-color: #ffffff;
+}
+
+.form-control-custom:focus {
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.btn-creer {
+    background-color: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 12px 60px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 15px;
+}
+
+.btn-creer:hover {
+    background-color: #4338ca;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}

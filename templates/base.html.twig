@@ -146,6 +146,38 @@
 
 <main class="container my-5">
     {% block page_content %}{% endblock %}
+
+    <!-- POPUP POUR CHOISIR LA CLASSE -->
+    {% if app.session.get('show_classe_popup') %}
+        <div id="classeModal" class="modal show d-block" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Choisissez votre classe</h5>
+                        <a href="{{ path('ignorer_classe_popup') }}" class="btn-close" aria-label="Fermer"></a>
+                    </div>
+                    <div class="modal-body">
+                        <form method="POST" action="{{ path('choisir_classe') }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('choisir_classe') }}">
+                            {% set classes_disponibles = app.session.get('classes_disponibles') %}
+                            {% for classe in classes_disponibles %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="classe_id"
+                                           id="classe_{{ classe.id }}" value="{{ classe.id }}">
+                                    <label class="form-check-label" for="classe_{{ classe.id }}">
+                                        {{ classe.nom }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                            <button type="submit" class="btn btn-primary mt-3">Confirmer</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-backdrop show"></div>
+    {% endif %}
+
 </main>
 
 <footer class="text-center py-3 mt-auto">

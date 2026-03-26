@@ -29,33 +29,16 @@ final class GroupeController extends AbstractController
     {
         $utilisateur = $this->getUser();
 
-        if ($this->isGranted('ROLE_PROFESSEUR')) {
-            $groupesMembre = $em->getRepository(Groupe::class)->findAll();
-        } else {
-            $groupesMembre = $utilisateur->getUtilisateurGroupe();
-        }
+        $groupesMembre = $this->isGranted('ROLE_PROFESSEUR')
+            ? $em->getRepository(Groupe::class)->findAll()
+            : $utilisateur->getUtilisateurGroupe();
+
+        $redirect = $this->handleGroupeForm($request, $em, 'Groupe créé avec succès.', 'mes_groupes');
+        if ($redirect) return $redirect;
 
         $groupe = new Groupe();
         $formGroupe = $this->createForm(GroupeType::class, $groupe);
         $formGroupe->handleRequest($request);
-
-        if ($formGroupe->isSubmitted() && $formGroupe->isValid()) {
-            $repertoire = new Repertoire();
-            $repertoire->setGroupeRepertoire($groupe);
-            $repertoire->setName('Répertoire groupe');
-
-            $groupe->setEtreChef($utilisateur);
-            $groupe->setVm(new VirtualMachine());
-            $ug = $groupe->addUtilisateurGroupe($utilisateur);
-            $ug->setRole("GROUPE_CHEF");
-
-            $em->persist($groupe);
-            $em->persist($repertoire);
-            $em->persist($ug);
-            $em->flush();
-            $this->addFlash('success', 'Groupe créé avec succès.');
-            return $this->redirectToRoute('mes_groupes');
-        }
 
         return $this->render('groupe/listeGroupe.html.twig', [
             'groupesMembre' => $groupesMembre,
@@ -228,5 +211,59 @@ final class GroupeController extends AbstractController
 
         return $this->redirectToRoute('mes_groupes');
     }
+
+    #[IsGranted('ROLE_ADMIN')]
+    #[Route('/panneauadmin/classes', name: 'classes', methods: ['GET', 'POST'])]
+    public function afficherClasses(Request $request, EntityManagerInterface $em): Response
+    {
+        $redirect = $this->handleGroupeForm($request, $em, 'Classe créée avec succès.', 'classes', fn(Groupe $g) => $g->setIsClass(true));
+        if ($redirect) return $redirect;
+
+        $groupe = new Groupe();
+        $formGroupe = $this->createForm(GroupeType::class, $groupe);
+        $formGroupe->handleRequest($request);
+
+        return $this->render("groupe/classes.html.twig", [
+            'formGroupe' => $formGroupe,
+        ]);
+    }
+
+    private function handleGroupeForm(
+        Request $request,
+        EntityManagerInterface $em,
+        string $flashMessage,
+        string $redirectRoute,
+        ?callable $configure = null
+    ): ?Response {
+        $utilisateur = $this->getUser();
+        $groupe = new Groupe();
+        $form = $this->createForm(GroupeType::class, $groupe);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            if ($configure) {
+                $configure($groupe);
+            }
+            $repertoire = new Repertoire();
+            $repertoire->setGroupeRepertoire($groupe);
+            $repertoire->setName('Répertoire groupe');
+
+            $groupe->setEtreChef($utilisateur);
+            $groupe->setVm(new VirtualMachine());
+            $ug = $groupe->addUtilisateurGroupe($utilisateur);
+            $ug->setRole("GROUPE_CHEF");
+
+            $em->persist($groupe);
+            $em->persist($repertoire);
+            $em->persist($ug);
+            $em->flush();
+
+            $this->addFlash('success', $flashMessage);
+            return $this->redirectToRoute($redirectRoute);
+        }
+
+        return null; // formulaire non soumis ou invalide
+    }
+
 
 }

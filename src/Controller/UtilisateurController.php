@@ -323,13 +323,23 @@ final class UtilisateurController extends AbstractController
         return $this->redirectToRoute('mes_groupes');
     }
 
-    #[IsGranted('ROLE_USER')]
+    #[IsGranted('ROLE_ETUDIANT')]
     #[Route('/ignorer-classe-popup', name: 'ignorer_classe_popup', methods: ['GET'])]
     public function ignorerClassePopup(Request $request): Response
     {
         $request->getSession()->remove('show_classe_popup');
 
         return $this->redirectToRoute('index');
+    }
+
+    #[IsGranted('ROLE_PROFESSEUR')]
+    #[Route('/liste-etudiants', name: 'liste_etudiants', methods: ['GET'])]
+    public function listeEtudiants(): Response {
+
+        $utilisateurs = $this->repository->findByRole('ROLE_ETUDIANT');
+        return $this->render('utilisateur/listeEtudiants.html.twig', [
+            'utilisateurs' => $utilisateurs,
+        ]);
     }
 
 

@@ -79,14 +79,20 @@
                         <a class="nav-link fw-medium" href="{{ path('mes_groupes') }}">Groupes</a>
                     </li>
 
+                    {% if is_granted('ROLE_PROFESSEUR') %}
+                        <li class="nav-item mx-2">
+                            <a class="nav-link fw-medium" href="{{ path('liste_etudiants') }}">Liste des étudiants</a>
+                        </li>
+                    {% endif %}
+
                     <li class="nav-item mx-2">
                         <a class="nav-link fw-medium" href="{{ path('services_list') }}">Services</a>
                     </li>
 
 
-                    {#                    <li class="nav-item mx-2">#}
-{#                        <a class="nav-link fw-medium" href="{{ path('listContainers') }}">Monitoring</a>#}
-{#                    </li>#}
+                    {#                    <li class="nav-item mx-2"> #}
+                    {#                        <a class="nav-link fw-medium" href="{{ path('listContainers') }}">Monitoring</a> #}
+                    {#                    </li> #}
 
 
                     {% if is_granted('ROLE_ADMIN') %}
@@ -96,12 +102,14 @@
                     {% endif %}
                     {% if app.user.vm %}
                         <li class="nav-item mx-2">
-                            <a class="nav-link text-white fw-medium" href="{{ path('listContainers', {'id': app.user.vm.id}) }}">Liste des
+                            <a class="nav-link text-white fw-medium"
+                               href="{{ path('listContainers', {'id': app.user.vm.id}) }}">Liste des
                                 conteneurs</a>
                         </li>
                     {% endif %}
                     <li class="nav-item mx-2">
-                        <form method="post" action="{{ path('_logout_main') }}" class="d-inline" onsubmit="return confirmLogoutVm()">
+                        <form method="post" action="{{ path('_logout_main') }}" class="d-inline"
+                              onsubmit="return confirmLogoutVm()">
                             <button class="btn btn-light btn-sm fw-semibold rounded-pill px-3 ms-lg-2" type="submit">
                                 <i class="bi bi-box-arrow-right me-1"></i> Déconnexion
                             </button>

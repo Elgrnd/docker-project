@@ -1,0 +1,87 @@
+{% extends "base.html.twig" %}
+{% block title %}<title>Liste des étudiants</title>{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/utilisateur/listeEtudiants.css') }}">
+{% endblock %}
+
+{% block scriptJs %}
+    <script defer src="{{ asset('js/searchUsers.js') }}"></script>
+    <script defer src="{{ asset('js/filtrerClasses.js') }}"></script>
+{% endblock %}
+
+{% block page_content %}
+    <main class="container mt-4 user-list-wrapper">
+
+        <h2 class="mb-4">Liste des étudiants</h2>
+
+        <div class="card user-list-card">
+            <div class="card-body">
+
+                <div class="mb-3">
+                    <label for="searchInput" class="form-label fw-semibold">
+                        🔍 Rechercher un étudiant
+                    </label>
+                    <input
+                            type="text"
+                            id="searchInput"
+                            class="form-control"
+                            placeholder="Login ou ID..."
+                    >
+                </div>
+
+                <div class="mb-3 d-flex flex-wrap gap-2">
+                    <span class="fw-semibold align-self-center">Filtrer par classe :</span>
+                    {% set classes = [] %}
+                    {% for u in utilisateurs %}
+                        {% if u.classe is not null and u.classe not in classes %}
+                            {% set classes = classes|merge([u.classe]) %}
+                        {% endif %}
+                    {% endfor %}
+
+                    {% for classe in classes %}
+                        <button
+                                class="btn btn-outline-primary btn-sm btn-filter-classe"
+                                data-classe="{{ classe }}"
+                        >
+                            {{ classe }}
+                        </button>
+                    {% endfor %}
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle" id="usersTable">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Login</th>
+                            <th>ID</th>
+                            <th>Nom</th>
+                            <th>Prenom</th>
+                            <th>Classe</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for u in utilisateurs %}
+                            <tr>
+                                <td>{{ u.login }}</td>
+                                <td>{{ u.id }}</td>
+                                <td>{{ u.nom }}</td>
+                                <td>{{ u.prenom }}</td>
+                                <td>{{ u.classe }}</td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">
+                                    Aucun utilisateur trouvé.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+{% endblock %}

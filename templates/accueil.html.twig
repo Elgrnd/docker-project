@@ -12,55 +12,123 @@
 
 {% block page_content %}
     {% if is_granted('ROLE_USER') %}
-        {# Page pour utilisateurs connectés #}
-        <div class="welcome-card">
-            <h1>Bienvenue {{ app.user.login }}</h1>
-            <p>Texte D'intro</p>
 
-            <div class="welcome-buttons">
-                <a href="{{ path('repertoire') }}" class="btn-welcome">Repertoire Personnel</a>
-                <a href="{{ path('file_upload') }}" class="btn-welcome">Importer Un Fichier</a>
+        <!-- HERO -->
+        <div class="welcome-card text-center">
+            <h1>Bienvenue {{ app.user.login }}</h1>
+
+            <p class="mt-3">
+                Déployez, gérez et surveillez vos stacks Docker sur une machine virtuelle Proxmox,
+                directement depuis l’interface web.
+            </p>
+
+            <div class="welcome-buttons mt-4">
+                <a href="{{ path('repertoire') }}" class="btn-welcome">Répertoire Personnel</a>
+                <a href="{{ path('file_upload') }}" class="btn-welcome">Importer un fichier</a>
             </div>
         </div>
 
-{#        <div class="tutorial-section">#}
-{#            <h2>Tutoriel D'utilisation</h2>#}
+        <!-- FEATURES -->
+        <div class="container mt-5">
+            <h2 class="text-center mb-4">Fonctionnalités principales</h2>
 
-{#            <div class="tutorial-cards">#}
-{#                <div class="tutorial-card">#}
-{#                    <h3>Texte</h3>#}
-{#                    <span class="plus-icon">+</span>#}
-{#                    <p>Vidéo</p>#}
-{#                </div>#}
+            <div class="row text-center">
+                <div class="col-md-4">
+                    <div class="card p-3 shadow-sm">
+                        <h4>Machine virtuelle</h4>
+                        <p>Création automatique via Proxmox sans configuration complexe.</p>
+                    </div>
+                </div>
 
-{#                <div class="tutorial-card">#}
-{#                    <h3>Texte</h3>#}
-{#                    <span class="plus-icon">+</span>#}
-{#                    <p>Vidéo</p>#}
-{#                </div>#}
+                <div class="col-md-4">
+                    <div class="card p-3 shadow-sm">
+                        <h4>Stacks Docker</h4>
+                        <p>Déployez vos applications avec Docker Compose en un clic.</p>
+                    </div>
+                </div>
 
-{#                <div class="tutorial-card">#}
-{#                    <h3>Texte</h3>#}
-{#                    <span class="plus-icon">+</span>#}
-{#                    <p>Vidéo</p>#}
-{#                </div>#}
-{#            </div>#}
-{#        </div>#}
+                <div class="col-md-4">
+                    <div class="card p-3 shadow-sm">
+                        <h4>Monitoring</h4>
+                        <p>Suivi en temps réel du CPU, RAM, disque et uptime.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        <div id="vm-status-box"></div>
+        <!-- TUTORIEL -->
+        <div class="container mt-5">
+            <h2>Tutoriel de prise en main</h2>
+
+            <p>
+                Voici un exemple simple pour découvrir la plateforme avec un fichier Docker Compose prêt à l’emploi.
+            </p>
+
+            <ol>
+                <li>Téléchargez le fichier <strong>compose.yaml</strong> proposé ci-dessous.</li>
+                <li>Importez-le depuis le bouton <strong>Importer un fichier</strong>.</li>
+                <li>Déployez ensuite la stack dans votre machine virtuelle.</li>
+                <li>Consultez la page <strong>Liste des conteneurs</strong> pour vérifier que les services sont bien lancés.</li>
+                <li>Observez enfin le monitoring pour suivre l’état et les ressources de votre VM.</li>
+            </ol>
+
+            <p class="mt-3">
+                Ce fichier d’exemple déploie :
+            </p>
+
+            <ul>
+                <li>un serveur web <strong>Nginx</strong></li>
+                <li>une base de données <strong>MySQL</strong></li>
+            </ul>
+
+            <div class="mt-3">
+                <a href="{{ asset('files/composeExemple.yaml') }}" download class="btn btn-outline-primary">
+                    Télécharger le fichier d'exemple
+                </a>
+            </div>
+        </div>
+
+        <!-- EXPLICATION -->
+        <div class="container mt-5">
+            <h2>Objectif de la plateforme</h2>
+
+            <p>
+                Cette plateforme a été conçue pour simplifier l’utilisation de technologies complexes comme Docker et Proxmox,
+                en les rendant accessibles via une interface web.
+            </p>
+
+            <p>
+                Elle permet notamment de :
+            </p>
+
+            <ul>
+                <li>Éviter l’utilisation de lignes de commande pour gérer les conteneurs</li>
+                <li>Centraliser la gestion des environnements de développement</li>
+                <li>Faciliter la prise en main pour les étudiants et développeurs débutants</li>
+                <li>Visualiser rapidement l’état et les performances des machines virtuelles</li>
+            </ul>
+        </div>
+
+        <!-- VM STATUS -->
+        <div class="container mt-4">
+            <div id="vm-status-box"></div>
+        </div>
 
     {% else %}
-        {# Page pour visiteurs non connectés #}
-        <div class="welcome-card">
-            <h1>Bienvenue sur DockerIUT !</h1>
-            <p>Créez vos environnements docker en un clic et travaillez sans friction</p>
 
-            <div class="welcome-buttons">
+        <!-- VISITEUR -->
+        <div class="welcome-card text-center">
+            <h1>Bienvenue sur DockerIUT</h1>
+
+            <p>
+                Déployez vos environnements Docker sans complexité technique.
+            </p>
+
+            <div class="welcome-buttons mt-4">
                 <a href="{{ path('inscription') }}" class="btn-welcome">Inscription</a>
                 <a href="{{ path('connexion') }}" class="btn-welcome">Connexion</a>
             </div>
         </div>
 
-        <div id="vm-status-box"></div>
     {% endif %}
 {% endblock %}

@@ -176,7 +176,7 @@ class LdapController extends AbstractController
                         if (($userLdap['promotion'] ?? '') === "Personnel") {
                             $user->setRoles(['ROLE_PROFESSEUR']);
                         } else {
-                            $user->setRoles(['ROLE_USER']);
+                            $user->setRoles(['ROLE_ETUDIANT']);
                         }
 
                         $imported++;

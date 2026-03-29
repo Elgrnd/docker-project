@@ -3,6 +3,7 @@
 namespace App\EventSubscriber;
 
 use App\Message\DeleteVmMessage;
+use App\Repository\GroupeRepository;
 use App\Service\ProxmoxService;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
@@ -19,7 +20,8 @@ class AuthentificationSubscriber
     public function __construct(private RequestStack $requestStack,
                                 private ProxmoxService $proxmoxService,
                                 private EntityManagerInterface $entityManager,
-                                private MessageBusInterface $bus
+                                private MessageBusInterface $bus,
+                                private GroupeRepository $groupeRepo
     )
     {
     }
@@ -28,6 +30,23 @@ class AuthentificationSubscriber
     public function loginSuccess(LoginSuccessEvent $event) {
         if($event->getAuthenticator()) {
             $user = $event->getUser();
+
+            $promotionsEligibles = ['Ann1', 'Ann2', 'Ann3'];
+
+            if (
+                in_array($user->getPromotion(), $promotionsEligibles) &&
+                $user->getClasse() === null
+            ) {
+                $session = $this->requestStack->getSession();
+                $session->set('show_classe_popup', true);
+
+                // Stocker les IDs et noms pour éviter de sérialiser des entités en session
+                $classes = $this->groupeRepo->findBy(['isClass' => true]);
+                $session->set('classes_disponibles', array_map(
+                    fn($c) => ['id' => $c->getId(), 'nom' => $c->getNom()],
+                    $classes
+                ));
+            }
 
             if ($user->getVm()->getVmId() !== null) {
                 $user->getVm()->setDeleteVmAt(null);

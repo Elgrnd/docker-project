@@ -1,0 +1,23 @@
+{% extends "base.html.twig" %}
+{% block title %}<title>Liste des classes</title>{% endblock %}
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/groupe/classes.css') }}">
+{% endblock %}
+{% block page_content %}
+
+    <main class="container mt-4 user-list-wrapper">
+        <div class="create-groupe-card">
+            <h2 class="text-center mb-4">Créer une classe</h2>
+            {{ form_start(formGroupe, {'attr': {'class': 'create-groupe-form'}}) }}
+            <div class="form-group-custom">
+                <label for="groupe_nom">Nom de la classe :</label>
+                {{ form_widget(formGroupe.nom, {'attr': {'class': 'form-control-custom', 'id': 'groupe_nom'}}) }}
+            </div>
+            <div class="text-center">
+                <button type="submit" class="btn-creer">Créer</button>
+            </div>
+            {{ form_end(formGroupe) }}
+        </div>
+    </main>
+
+{% endblock %}

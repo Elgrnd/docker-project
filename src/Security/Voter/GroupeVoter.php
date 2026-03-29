@@ -68,6 +68,8 @@ final class GroupeVoter extends Voter
             case self::LEAVE:
                 if ($subject->getEtreChef() === $user) {
                     return false;
+                } else if ($subject->isClass()) {
+                    return false;
                 }
                 else if ($subject->contientMembre($user)) {
                     return true;

@@ -24,7 +24,7 @@
 
 <nav class="navbar navbar-expand-lg navbar-light bg-white py-3 border-bottom">
     <div class="container-fluid">
-        <a class="navbar-brand fw-bold text-primary d-flex align-items-center" href="{{ path('index') }}">
+        <a class="navbar-brand fw-bold text-primary d-flex align-items-center" href="{{ path('accueil') }}">
             {% if is_granted('ROLE_USER') %}
                 <i class="bi bi-person-circle me-2 fs-4"></i>
                 {{ app.user.roles|map(role => role != 'ROLE_USER' ? (role|trim('ROLE', 'left')|trim('_', 'left')) : '')|join('')|default('Étudiant') }} - {{ app.user.login }}
@@ -42,7 +42,7 @@
             <ul class="navbar-nav ms-auto align-items-lg-center">
                 {% if is_granted('ROLE_USER') %}
                     <li class="nav-item mx-2">
-                        <a class="nav-link fw-medium" href="{{ path('index') }}">Accueil</a>
+                        <a class="nav-link fw-medium" href="{{ path('accueil') }}">Accueil</a>
                     </li>
 
                     <!-- Menu déroulant Mes Projets -->
@@ -114,7 +114,7 @@
                     </li>
                 {% else %}
                     <li class="nav-item mx-2">
-                        <a class="nav-link fw-medium" href="{{ path('index') }}">Accueil</a>
+                        <a class="nav-link fw-medium" href="{{ path('accueil') }}">Accueil</a>
                     </li>
                     <li class="nav-item mx-2">
                         <a class="nav-link fw-medium" href="{{ path('inscription') }}">Inscription</a>

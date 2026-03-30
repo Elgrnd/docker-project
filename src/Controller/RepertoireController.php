@@ -479,9 +479,11 @@ final class RepertoireController extends AbstractController
 
     #[IsGranted("ROLE_USER")]
     #[Route('/vm/accesFileZilla', name: 'filezillaAcces', methods: ['GET'])]
-    public function accesFileZilla() : Response {
+    public function accesFileZilla(
+        ProxmoxService $proxmoxService
+    ) : Response {
         $user  = $this->getUser();
-        $vmIp  = $user->getVm()->getVmIp();
+        $vmIp  = $proxmoxService->verifVMIp($user->getVm());
         if($vmIp != null) {
             return $this->render('utilisateur/accesFileZilla.html.twig', [
                 "vmIp" => $vmIp,

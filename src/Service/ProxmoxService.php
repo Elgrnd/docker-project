@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\VirtualMachine;
 use Doctrine\ORM\EntityManagerInterface;
+use Exception;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\DecodingExceptionInterface;
@@ -37,9 +38,10 @@ class ProxmoxService
     public function cloneUserVmAsynchrone(string $login): void
     {
         $command = sprintf(
-            'php %s/bin/console app:create-vm %s > /dev/null 2>&1 &',
+            'php %s/bin/console app:create-vm %s > %s/var/log/create-vm.log 2>&1 &',
             $this->projectDir,
-            $login
+            $login,
+            $this->projectDir
         );
 
         exec($command);
@@ -71,13 +73,13 @@ class ProxmoxService
             'newid' => $vmid,
             'name' => "vm-$name",
             'full' => 1,
-            'target' => 'proxmox',
+            'target' => 'pve',
             'storage' => 'local-lvm',
         ];
 
         $response = $this->client->request(
             'POST',
-            "{$this->apiUrl}/nodes/proxmox/qemu/100/clone",
+            "{$this->apiUrl}/nodes/proxmox/qemu/200/clone",
             [
                 'headers' => [
                     'Authorization' => "PVEAPIToken={$this->tokenId}={$this->secret}",
@@ -96,6 +98,7 @@ class ProxmoxService
             sleep(2);
             $status = $this->getTaskStatus($upid);
         } while ($status['status'] !== 'stopped' || $status['exitstatus'] !== 'OK');
+
 
         $this->startVM($vmid);
 
@@ -247,6 +250,7 @@ class ProxmoxService
         $data = $response->toArray();
         return $data['data'] ?? [];
     }
+
 
     /**
      * Liste toutes les VM du node Proxmox.

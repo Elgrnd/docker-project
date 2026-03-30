@@ -1,0 +1,66 @@
+/* ========== SFTP PAGE ========== */
+.sftp-card {
+    background: var(--bg-cadre-1);
+    border-radius: 24px;
+    padding: 60px 50px;
+    max-width: 700px;
+    margin: 3rem auto;
+    text-align: center;
+    box-shadow: 6px 8px 4px rgba(0, 0, 0, 0.25);
+}
+
+.sftp-card h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--txt);
+    margin-bottom: 2rem;
+}
+
+/* GRID INFOS */
+.sftp-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 2.5rem;
+}
+
+.sftp-item {
+    background: white;
+    border-radius: 12px;
+    padding: 15px 20px;
+    text-align: left;
+    border: 1px solid #E5E7EB;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.sftp-item .label {
+    display: block;
+    font-size: 0.85rem;
+    color: #6B7280;
+    margin-bottom: 5px;
+}
+
+.sftp-item .value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--txt-header);
+}
+
+/* HELP TEXT */
+.sftp-help {
+    margin-top: 2rem;
+    font-size: 0.95rem;
+    color: #4B5563;
+    line-height: 1.5;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+    .sftp-card {
+        padding: 40px 25px;
+    }
+
+    .sftp-info-grid {
+        grid-template-columns: 1fr;
+    }
+}

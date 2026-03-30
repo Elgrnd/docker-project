@@ -45,3 +45,7 @@ services:
         arguments:
             $storageDir: '%app.file_storage_dir%'
 
+    App\Service\SftpCredentialService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
+

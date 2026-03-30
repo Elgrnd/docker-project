@@ -1,6 +1,6 @@
 {% extends "base.html.twig" %}
 
-{% block title %}<title>Accès FileZilla</title>{% endblock %}
+{% block title %}<title>Accès SFTP/SSH</title>{% endblock %}
 
 {% block stylesheets %}
     <link rel="stylesheet" href="{{ asset('css/utilisateur/filezilla.css') }}">
@@ -9,7 +9,7 @@
 {% block page_content %}
     <div class="sftp-card">
 
-        <h2>Accès FileZilla / SFTP</h2>
+        <h2>Accès SFTP / SSH</h2>
 
         <div class="sftp-info-grid">
             <div class="sftp-item">
@@ -32,6 +32,8 @@
                 <span class="value">Clé privée</span>
             </div>
         </div>
+
+        <p class="sftp-help">Si l'hôte ne s'affiche pas, il faut rafraîchir la page </p>
 
         <a href="{{ path('vm_sftp_download_key') }}" class="btn-welcome">
             Télécharger ma clé privée (.pem)

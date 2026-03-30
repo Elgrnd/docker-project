@@ -38,7 +38,7 @@ final class UtilisateurController extends AbstractController
         $this->repository = $repository;
     }
 
-    #[Route('/', name: 'accueil', methods: ['GET'])]
+    #[Route('/', name: 'index', methods: ['GET'])]
     public function index(): Response
     {
         return $this->render('accueil.html.twig');
@@ -51,7 +51,7 @@ final class UtilisateurController extends AbstractController
                              UtilisateurManagerInterface $utilisateurManager): Response
     {
         if ($this->isGranted('ROLE_USER')) {
-            return $this->redirectToRoute('accueil');
+            return $this->redirectToRoute('index');
         }
 
         $utilisateur = new Utilisateur();
@@ -73,7 +73,7 @@ final class UtilisateurController extends AbstractController
             $entityManager->flush();
             $this->addFlash('success', 'Inscription réussie !');
 
-            return $this->redirectToRoute('accueil');
+            return $this->redirectToRoute('index');
         }
 
         $flashMessageHelperInterface->addFormErrorsAsFlash($form);
@@ -85,7 +85,7 @@ final class UtilisateurController extends AbstractController
     public function connecter(AuthenticationUtils $authenticationUtils): Response
     {
         if ($this->isGranted('ROLE_USER')) {
-            return $this->redirectToRoute('accueil');
+            return $this->redirectToRoute('index');
         }
 
         $lastUsername = $authenticationUtils->getLastUsername();
@@ -329,7 +329,7 @@ final class UtilisateurController extends AbstractController
     {
         $request->getSession()->remove('show_classe_popup');
 
-        return $this->redirectToRoute('accueil');
+        return $this->redirectToRoute('index');
     }
 
 

@@ -366,7 +366,6 @@ final class UtilisateurController extends AbstractController
         $em->persist($groupe);
         $em->persist($repertoire);
 
-        // Ajouter chaque étudiant sélectionné
         foreach ($membresIds as $membreId) {
             $membre = $em->getRepository(Utilisateur::class)->find($membreId);
             if (!$membre) continue;

@@ -100,7 +100,7 @@
                                 conteneurs</a>
                         </li>
                     {% endif %}
-                    {% if app.user.vm %}
+                    {% if app.user.vm and app.user.vm.vmStatus == 'ready' %}
                         <li class="nav-item mx-2">
                             <a class="nav-link text-white fw-medium" href="{{ path('filezillaAcces') }}"> Accès SFTP (FileZilla) </a>
                         </li>

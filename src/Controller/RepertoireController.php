@@ -453,6 +453,7 @@ final class RepertoireController extends AbstractController
         @rmdir($dir);
     }
 
+    #[IsGranted("ROLE_USER")]
     #[Route('/vm/sftp/key', name: 'vm_sftp_download_key', methods: ['GET'])]
     public function downloadSftpKey(
         SftpCredentialService $sftpService,
@@ -476,13 +477,19 @@ final class RepertoireController extends AbstractController
         );
     }
 
+    #[IsGranted("ROLE_USER")]
     #[Route('/vm/accesFileZilla', name: 'filezillaAcces', methods: ['GET'])]
     public function accesFileZilla() : Response {
         $user  = $this->getUser();
         $vmIp  = $user->getVm()->getVmIp();
-        return $this->render('utilisateur/accesFileZilla.html.twig', [
-            "vmIp" => $vmIp,
-        ]);
+        if($vmIp != null) {
+            return $this->render('utilisateur/accesFileZilla.html.twig', [
+                "vmIp" => $vmIp,
+            ]);
+        } else {
+            $this->addFlash("error", "La VM n'est pas active ou n'est pas encore prête");
+            return $this->redirectToRoute('accueil');
+        }
     }
 
 }

@@ -73,7 +73,7 @@ class ProxmoxService
             'newid' => $vmid,
             'name' => "vm-$name",
             'full' => 1,
-            'target' => 'pve',
+            'target' => 'proxmox',
             'storage' => 'local-lvm',
         ];
 

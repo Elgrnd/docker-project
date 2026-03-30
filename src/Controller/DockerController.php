@@ -48,11 +48,11 @@ final class DockerController extends AbstractController
     {
         if ($virtualMachine->getVmId() == null || $virtualMachine->getVmStatus() == "none") {
             $this->addFlash("error", "Vous n'avez pas encore crée de VM");
-            return $this->redirectToRoute('index');
+            return $this->redirectToRoute('accueil');
         }
         if ($virtualMachine->getVmStatus() !== "ready") {
             $this->addFlash("error", "Votre VM n'est pas encore prête !");
-            return $this->redirectToRoute('index');
+            return $this->redirectToRoute('accueil');
         }
 
         $user = $this->getUser();

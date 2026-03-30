@@ -341,7 +341,7 @@ final class DockerController extends AbstractController
     {
         $user = $this->getUser();
 
-        if ($user->getVm()->getVmId() !== null) {
+        if ($user->getVm() !== null) {
             return new JsonResponse(['status' => 'already_exists'], 400);
         }
         $user->getVm()->setVmStatus('creating');

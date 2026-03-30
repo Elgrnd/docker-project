@@ -1,15 +1,19 @@
 {% extends "base.html.twig" %}
 
-{% block title %}<title>Accès FileZilla</title>{% endblock %}
+{% block title %}<title>Accès SFTP/SSH</title>{% endblock %}
 
 {% block stylesheets %}
     <link rel="stylesheet" href="{{ asset('css/utilisateur/filezilla.css') }}">
 {% endblock %}
 
+{% block scriptJs %}
+    <script defer src="{{ asset('js/utilisateur/fileZilla.js') }}"></script>
+{% endblock %}
+
 {% block page_content %}
     <div class="sftp-card">
 
-        <h2>Accès FileZilla / SFTP</h2>
+        <h2>Accès SFTP / SSH</h2>
 
         <div class="sftp-info-grid">
             <div class="sftp-item">
@@ -33,6 +37,8 @@
             </div>
         </div>
 
+        <p class="sftp-help">Si l'hôte ne s'affiche pas, il faut rafraîchir la page </p>
+
         <a href="{{ path('vm_sftp_download_key') }}" class="btn-welcome">
             Télécharger ma clé privée (.pem)
         </a>
@@ -41,6 +47,17 @@
             Dans FileZilla : <br>
             <em>Édition → Paramètres → SFTP → Ajouter un fichier de clé</em>
         </p>
+
+        <div class="sftp-ssh-block">
+            <p class="label">Connexion SSH directe</p>
+            <div class="ssh-command-box">
+                <code id="ssh-cmd">ssh -i chemin/vers/ta/cle.pem root@{{ vmIp }}</code>
+                <button class="btn-copy" onclick="copySSH()">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <p class="sftp-help">Remplace <em>chemin/vers/ta/cle.pem</em> par l'emplacement où tu as sauvegardé ta clé.</p>
+        </div>
 
     </div>
 {% endblock %}

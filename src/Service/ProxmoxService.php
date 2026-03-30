@@ -73,13 +73,13 @@ class ProxmoxService
             'newid' => $vmid,
             'name' => "vm-$name",
             'full' => 1,
-            'target' => 'pve',
+            'target' => 'proxmox',
             'storage' => 'local-lvm',
         ];
 
         $response = $this->client->request(
             'POST',
-            "{$this->apiUrl}/nodes/proxmox/qemu/200/clone",
+            "{$this->apiUrl}/nodes/proxmox/qemu/100/clone",
             [
                 'headers' => [
                     'Authorization' => "PVEAPIToken={$this->tokenId}={$this->secret}",

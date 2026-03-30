@@ -357,7 +357,7 @@ final class DockerController extends AbstractController
     public function listServices(DockerService $dockerService, ProxmoxService $proxmoxService): Response
     {
         $user = $this->getUser();
-        $vmip = $proxmoxService->verifVMIp($user->getVm()->getVmId());
+        $vmip = $proxmoxService->verifVMIp($user->getVm());
         $services = $dockerService->listServices($vmip);
         return $this->render('docker/listServices.html.twig', [
             'services' => $services

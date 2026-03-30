@@ -64,3 +64,37 @@
         grid-template-columns: 1fr;
     }
 }
+
+.sftp-ssh-block {
+    margin-top: 1.5rem;
+}
+
+.ssh-command-box {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #1e1e1e;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin: 0.5rem 0;
+}
+
+.ssh-command-box code {
+    color: #4ec9b0;
+    font-family: monospace;
+    font-size: 0.95rem;
+    flex: 1;
+}
+
+.btn-copy {
+    background: none;
+    border: none;
+    color: #aaa;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: color 0.2s;
+}
+
+.btn-copy:hover {
+    color: #fff;
+}

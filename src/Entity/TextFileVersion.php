@@ -24,6 +24,10 @@ class TextFileVersion
     #[ORM\JoinColumn(nullable: false)]
     private ?TextFile $textFileId = null;
 
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Utilisateur $utilisateur = null;
+
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $commentaire = null;
 
@@ -62,6 +66,17 @@ class TextFileVersion
     public function setTextFileId(?TextFile $textFileId): static
     {
         $this->textFileId = $textFileId;
+        return $this;
+    }
+
+    public function getUtilisateur(): ?Utilisateur
+    {
+        return $this->utilisateur;
+    }
+
+    public function setUtilisateur(?Utilisateur $utilisateur): static
+    {
+        $this->utilisateur = $utilisateur;
         return $this;
     }
 

@@ -27,7 +27,8 @@ class AuthentificationSubscriber
     }
 
     #[AsEventListener]
-    public function loginSuccess(LoginSuccessEvent $event) {
+    public function loginSuccess(LoginSuccessEvent $event): void
+    {
         if($event->getAuthenticator()) {
             $user = $event->getUser();
 

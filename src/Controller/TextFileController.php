@@ -49,6 +49,7 @@ final class TextFileController extends AbstractController
                     $version->setBodyFile($textFile->getBodyFile());
                     $version->setTextFileId($textFile);
                     $version->setDateEdition(new \DateTime());
+                    $version->setUtilisateur($this->getUser());
                     $version->setCommentaire('Sauvegarde automatique avant modification du ' . (new \DateTime())->format('d/m/Y H:i:s'));
                     $entityManager->persist($version);
 

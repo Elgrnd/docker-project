@@ -79,12 +79,6 @@
                         <a class="nav-link fw-medium" href="{{ path('mes_groupes') }}">Groupes</a>
                     </li>
 
-                    {% if is_granted('ROLE_PROFESSEUR') %}
-                        <li class="nav-item mx-2">
-                            <a class="nav-link fw-medium" href="{{ path('liste_etudiants') }}">Liste des étudiants</a>
-                        </li>
-                    {% endif %}
-
                     <li class="nav-item mx-2">
                         <a class="nav-link fw-medium" href="{{ path('services_list') }}">Services</a>
                     </li>
@@ -100,13 +94,14 @@
                             <a class="nav-link fw-medium" href="{{ path('panneauAdmin') }}">Panneau de bord</a>
                         </li>
                     {% endif %}
-                    {% if app.user.vm %}
-                        <li class="nav-item mx-2">
-                            <a class="nav-link text-white fw-medium"
-                               href="{{ path('listContainers', {'id': app.user.vm.id}) }}">Liste des
-                                conteneurs</a>
-                        </li>
-                    {% endif %}
+                    <li class="nav-item mx-2">
+                        <a class="nav-link text-white fw-medium"
+                           href="{{ path('listContainers', {'id': app.user.vm.id}) }}">Liste des
+                            conteneurs</a>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <a class="nav-link text-white fw-medium" href="{{ path('accesSFTP') }}"> Accès SFTP/SSH </a>
+                    </li>
                     <li class="nav-item mx-2">
                         <form method="post" action="{{ path('_logout_main') }}" class="d-inline"
                               onsubmit="return confirmLogoutVm()">

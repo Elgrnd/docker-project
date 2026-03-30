@@ -12,10 +12,12 @@
 
 {% block page_content %}
     {% if is_granted('ROLE_USER') %}
+        <div id="vm-status-box"></div>
+
         {# Page pour utilisateurs connectés #}
         <div class="welcome-card">
             <h1>Bienvenue {{ app.user.login }}</h1>
-            <p>Texte D'intro</p>
+            <p>Créez vos environnements docker en un clic et travaillez sans friction</p>
 
             <div class="welcome-buttons">
                 <a href="{{ path('repertoire') }}" class="btn-welcome">Repertoire Personnel</a>
@@ -47,9 +49,10 @@
 {#            </div>#}
 {#        </div>#}
 
-        <div id="vm-status-box"></div>
 
     {% else %}
+        <div id="vm-status-box"></div>
+
         {# Page pour visiteurs non connectés #}
         <div class="welcome-card">
             <h1>Bienvenue sur DockerIUT !</h1>
@@ -61,6 +64,5 @@
             </div>
         </div>
 
-        <div id="vm-status-box"></div>
     {% endif %}
 {% endblock %}

@@ -374,27 +374,4 @@ class ProxmoxService
         return $result;
     }
 
-    /**
-     * Provisionne l'accès SFTP pour un utilisateur sur sa VM.
-     * Retourne les infos de connexion FileZilla.
-     */
-    public function provisionSftpAccess(
-        string $login,
-        string $vmIp,
-        SftpCredentialService $sftpService,
-        DockerService $dockerService
-    ): array {
-        $keys = $sftpService->generateKeyPair($login);
-
-        $dockerService->pushSftpPublicKey($keys['publicKey'], $vmIp);
-
-        return [
-            'host'            => $vmIp,
-            'port'            => 22,
-            'user'            => 'root',
-            'privateKeyPath'  => $keys['privateKeyPath'],
-            'privateKey'      => $keys['privateKey'],
-        ];
-    }
-
 }

@@ -212,7 +212,7 @@ class DockerService
     /**
      * @throws RandomException
      */
-    public function pullDirFromVmAsTarAndExtract(string $remoteDir, string $localExtractDir, string $vmIp): string
+    public function pullDirFromVmAsTarAndExtract(string $localExtractDir, string $vmIp): string
     {
         $remoteTar = '/tmp/copievm_' . bin2hex(random_bytes(6)) . '.tar.gz';
 
@@ -251,5 +251,32 @@ class DockerService
         return trim($extractOut ?? '');
     }
 
+
+    public function pushSftpPublicKey(string $publicKey, string $vmIp): void
+    {
+        $this->runInVm('mkdir -p /root/.ssh && chmod 700 /root/.ssh', $vmIp);
+
+        $escapedKey = escapeshellarg($publicKey);
+        $cmd = sprintf(
+            'grep -qF %s /root/.ssh/authorized_keys 2>/dev/null || echo %s >> /root/.ssh/authorized_keys && chmod 600 /root/.ssh/authorized_keys',
+            $escapedKey,
+            $escapedKey
+        );
+
+        $this->runInVm($cmd, $vmIp);
+    }
+
+
+    public function revokeSftpPublicKey(string $publicKey, string $vmIp): void
+    {
+        $escapedKey = escapeshellarg($publicKey);
+
+        $cmd = sprintf(
+            'sed -i "/%s/d" /root/.ssh/authorized_keys',
+            preg_quote(explode(' ', trim($publicKey))[1] ?? '', '/')
+        );
+
+        $this->runInVm($cmd, $vmIp);
+    }
 
 }

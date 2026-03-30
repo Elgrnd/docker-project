@@ -11,6 +11,9 @@
                 <a href="{{ path('modifier_text_file_groupe', {"id":gyr.groupe.id,"textFileId": gyr.file.id}) }}">
                     <i class="bi bi-pencil edit-icon" title="Modifier"></i>
                 </a>
+                <a href="{{ path('listVersion', {'groupeId': gyr.groupe.id, 'textFileId': gyr.file.id}) }}">
+                    <i class="bi bi-clock-history version-icon" title="Voir les versions"></i>
+                </a>
             {% endif %}
             {% if groupe.vm and groupe.vm.vmStatus == 'ready' and gyr.file.isYaml %}
                 <a href="{{ path('deploy_yaml_file_groupe', {idFile: gyr.file.id, groupe: groupe.id}) }}"

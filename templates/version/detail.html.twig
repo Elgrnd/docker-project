@@ -11,7 +11,7 @@
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h3>{{ textFile.nameFile }}</h3>
-                <a href="{{ path('listVersion', {'id': textFile.id}) }}" class="btn btn-secondary">
+                <a href="{{ path('listVersion', {'textFileId': textFile.id}) }}" class="btn btn-secondary">
                     Retour à la liste
                 </a>
             </div>
@@ -19,6 +19,11 @@
                 <dl class="row">
                     <dt class="col-sm-3">Date d'édition :</dt>
                     <dd class="col-sm-9">{{ version.dateEdition|date('d/m/Y H:i:s') }}</dd>
+
+                    <dt class="col-sm-3">Modifié par :</dt>
+                    <dd class="col-sm-9">
+                        {{ version.utilisateur ? version.utilisateur.login : 'Inconnu' }}
+                    </dd>
 
                     <dt class="col-sm-3">Commentaire :</dt>
                     <dd class="col-sm-9">{{ version.commentaire ?? 'Aucun commentaire' }}</dd>

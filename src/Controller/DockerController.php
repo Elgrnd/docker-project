@@ -390,7 +390,7 @@ final class DockerController extends AbstractController
     {
         $user = $this->getUser();
 
-        if ($user->getVm()->getVmId() !== null) {
+        if ($user->getVm() !== null) {
             return new JsonResponse(['status' => 'already_exists'], 400);
         }
         $user->getVm()->setVmStatus('creating');
@@ -406,7 +406,7 @@ final class DockerController extends AbstractController
     public function listServices(DockerService $dockerService, ProxmoxService $proxmoxService): Response
     {
         $user = $this->getUser();
-        $vmip = $proxmoxService->verifVMIp($user->getVm()->getVmId());
+        $vmip = $proxmoxService->verifVMIp($user->getVm());
         $services = $dockerService->listServices($vmip);
         return $this->render('docker/listServices.html.twig', [
             'services' => $services

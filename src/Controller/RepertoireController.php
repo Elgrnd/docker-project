@@ -13,6 +13,7 @@ use App\Repository\RepertoireRepository;
 use App\Service\DockerService;
 use App\Service\ProxmoxService;
 use App\Service\RepertoireService;
+use App\Service\SftpCredentialService;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use RuntimeException;
@@ -43,9 +44,8 @@ final class RepertoireController extends AbstractController
         $nouveauNom = $data['name'] ?? null;
 
 
-
         $parent = $repertoire->getParent();
-        if ($repertoire->getUtilisateurRepertoire() !== null){
+        if ($repertoire->getUtilisateurRepertoire() !== null) {
             $existe = $entityManager->getRepository(Repertoire::class)->verifierNomDejaExistantUtilsateur($nouveauNom, $parent, $user->getId());
         } else {
             $existe = $entityManager->getRepository(Repertoire::class)->verifierNomDejaExistantGroupe($nouveauNom, $parent, $repertoire->getGroupeRepertoire());
@@ -58,7 +58,7 @@ final class RepertoireController extends AbstractController
             ], Response::HTTP_BAD_REQUEST);
         }
 
-        if ($existe != null){
+        if ($existe != null) {
             return $this->json([
                 'success' => false,
                 'message' => 'Un répertoire avec ce nom existe déjà à cet emplacement'
@@ -96,23 +96,23 @@ final class RepertoireController extends AbstractController
             $this->denyAccessUnlessGranted('GROUPE_EDIT', $groupe);
 
             $repertoires = $repertoireRepository->findDeletedByGroupe($groupe);
-            $files   = $fileRepository->findDeletedByGroupe($groupe);
+            $files = $fileRepository->findDeletedByGroupe($groupe);
 
             return $this->render('repertoire/corbeilleRepertoireGroupe.html.twig', [
                 'repertoires' => $repertoires,
-                'files'   => $files,
-                'groupe'      => $groupe
+                'files' => $files,
+                'groupe' => $groupe
             ]);
 
         } else {
             $user = $this->getUser();
 
             $repertoires = $repertoireRepository->findDeletedByUser($user);
-            $files   = $fileRepository->findDeletedByUser($user);
+            $files = $fileRepository->findDeletedByUser($user);
 
             return $this->render('repertoire/corbeilleRepertoire.html.twig', [
                 'repertoires' => $repertoires,
-                'files'   => $files,
+                'files' => $files,
             ]);
         }
     }
@@ -120,8 +120,8 @@ final class RepertoireController extends AbstractController
     #[IsGranted('REP_EDIT', subject: 'repertoire')]
     #[Route('/repertoire/supprimerCorbeille/{id}', name: 'deleteRepertoire', options: ["expose" => true], methods: ['DELETE'])]
     public function supprimerRepertoire(
-        ?Repertoire $repertoire,
-        Request $request,
+        ?Repertoire            $repertoire,
+        Request                $request,
         EntityManagerInterface $em
     ): JsonResponse
     {
@@ -140,11 +140,11 @@ final class RepertoireController extends AbstractController
     #[IsGranted('GROUPE_EDIT', subject: 'groupe')]
     #[Route('/groupe/{id}/repertoire/supprimerCorbeille/{repertoireId}', name: 'deleteRepertoireGroupe', options: ["expose" => true], methods: ['DELETE'])]
     public function supprimerRepertoireGroupe(
-        Groupe $groupe,
-        RepertoireRepository $repertoireRepository,
-        Request $request,
+        Groupe                 $groupe,
+        RepertoireRepository   $repertoireRepository,
+        Request                $request,
         EntityManagerInterface $em,
-        int $repertoireId
+        int                    $repertoireId
     ): JsonResponse
     {
         $repertoire = $repertoireRepository->find($repertoireId);
@@ -181,7 +181,7 @@ final class RepertoireController extends AbstractController
 
         $groupe = $em->getRepository(Groupe::class)->find($idGroupe);
 
-        return  $this->redirectToRoute('repertoire_corbeille_groupe', ['id' => $groupe->getId()]);
+        return $this->redirectToRoute('repertoire_corbeille_groupe', ['id' => $groupe->getId()]);
     }
 
 
@@ -208,7 +208,7 @@ final class RepertoireController extends AbstractController
 
         $groupe = $em->getRepository(Groupe::class)->find($idGroupe);
 
-        return  $this->redirectToRoute('repertoire_corbeille_groupe', ['id' => $groupe->getId()]);
+        return $this->redirectToRoute('repertoire_corbeille_groupe', ['id' => $groupe->getId()]);
     }
 
 
@@ -216,9 +216,10 @@ final class RepertoireController extends AbstractController
     #[Route('/repertoire/corbeille/delete-all', name: 'delete_repertoire_permanent_all')]
     public function deleteAll(
         EntityManagerInterface $em,
-        RepertoireRepository $repo,
-        RepertoireService $repertoireService,
-    ): Response {
+        RepertoireRepository   $repo,
+        RepertoireService      $repertoireService,
+    ): Response
+    {
         $user = $this->getUser();
 
         $repertoires = $repo->findDeletedByUser($user);
@@ -235,10 +236,11 @@ final class RepertoireController extends AbstractController
     #[Route('/groupe/{id}/repertoire/corbeille/delete-all', name: 'delete_repertoire_permanent_all_groupe')]
     public function deleteAllRepGroupe(
         EntityManagerInterface $em,
-        RepertoireRepository $repo,
-        RepertoireService $repertoireService,
-        Groupe $groupe
-    ): Response {
+        RepertoireRepository   $repo,
+        RepertoireService      $repertoireService,
+        Groupe                 $groupe
+    ): Response
+    {
         $repertoires = $repo->findDeletedByGroupe($groupe);
 
         foreach ($repertoires as $rep) {
@@ -253,16 +255,16 @@ final class RepertoireController extends AbstractController
     }
 
 
-
     /**
      * @throws Exception
      */
     #[IsGranted("REP_UPLOAD", subject: 'repertoire')]
     #[Route('/repertoire/telecharger/{id}', name: 'repertoire_telecharger_zip')]
     public function telechargerZip(
-        Repertoire $repertoire,
+        Repertoire        $repertoire,
         RepertoireService $repertoireService
-    ): Response {
+    ): Response
+    {
         $zipPath = sys_get_temp_dir() . '/repertoire_' . $repertoire->getId() . '.zip';
 
         $zip = new ZipArchive();
@@ -287,10 +289,10 @@ final class RepertoireController extends AbstractController
     #[IsGranted("ROLE_USER")]
     #[Route('/repertoire/copier-vm/{id}', name: 'repertoire_copier_vm')]
     public function copierRepertoireDansVm(
-        Repertoire $repertoire,
-        DockerService $dockerService,
+        Repertoire        $repertoire,
+        DockerService     $dockerService,
         RepertoireService $repertoireService,
-        ProxmoxService $proxmoxService
+        ProxmoxService    $proxmoxService
     ): Response
     {
         if (!$this->getUser() || !$this->getUser()->getVm()) {
@@ -315,11 +317,11 @@ final class RepertoireController extends AbstractController
     #[IsGranted("ROLE_ADMIN")]
     #[Route('/repertoire/{repertoire}/groupe/{groupe}/copier-vm', name: 'repertoire_copier_vm_groupe')]
     public function copierRepertoireGroupeDansVm(
-        Repertoire $repertoire,
-        Groupe $groupe,
-        DockerService $dockerService,
+        Repertoire        $repertoire,
+        Groupe            $groupe,
+        DockerService     $dockerService,
         RepertoireService $repertoireService,
-        ProxmoxService $proxmoxService
+        ProxmoxService    $proxmoxService
     ): Response
     {
         if (!$groupe || !$groupe->getVm()) {
@@ -375,14 +377,15 @@ final class RepertoireController extends AbstractController
     #[IsGranted("ROLE_USER")]
     #[Route('/vm/copier', name: 'copier_vm', methods: ['POST'])]
     public function copierVm(
-        Request $request,
-        DockerService $docker,
-        ProxmoxService $proxmox,
+        Request                $request,
+        DockerService          $docker,
+        ProxmoxService         $proxmox,
         EntityManagerInterface $em,
-        KernelInterface $kernel,
-        RepertoireRepository $repertoireRepository,
-        RepertoireService $repertoireService
-    ): Response {
+        KernelInterface        $kernel,
+        RepertoireRepository   $repertoireRepository,
+        RepertoireService      $repertoireService
+    ): Response
+    {
         $user = $this->getUser();
 
         $vm = $user->getVm();
@@ -402,7 +405,7 @@ final class RepertoireController extends AbstractController
                 $this->rrmdir($extractDir);
             }
 
-            $docker->pullDirFromVmAsTarAndExtract('/root', $extractDir, $vmIp);
+            $docker->pullDirFromVmAsTarAndExtract($extractDir, $vmIp);
 
             $racine = $repertoireRepository->recupererRepertoireRacineUtilisateur($user->getId());
             if (!$racine) throw new \RuntimeException("Répertoire racine introuvable");
@@ -450,6 +453,52 @@ final class RepertoireController extends AbstractController
             $f->isDir() ? @rmdir($f->getPathname()) : @unlink($f->getPathname());
         }
         @rmdir($dir);
+    }
+
+    #[IsGranted("ROLE_USER")]
+    #[Route('/vm/sftp/key', name: 'vm_sftp_download_key', methods: ['GET'])]
+    public function downloadSftpKey(
+        SftpCredentialService $sftpService,
+        DockerService         $dockerService
+    ): Response
+    {
+        $user = $this->getUser();
+        $login = $user->getLogin();
+        $vmIp = $user->getVm()->getVmIp();
+
+        $keys = $sftpService->generateKeyPair($login);
+
+        $dockerService->pushSftpPublicKey($keys['publicKey'], $vmIp);
+
+        return new Response(
+            $keys['privateKey'],
+            200,
+            [
+                'Content-Type' => 'application/octet-stream',
+                'Content-Disposition' => 'attachment; filename="sftp_key_' . $login . '.pem"',
+            ]
+        );
+    }
+
+    #[IsGranted("ROLE_USER")]
+    #[Route('/vm/accesSFTP', name: 'accesSFTP', methods: ['GET'])]
+    public function accesSFTP(
+        ProxmoxService $proxmoxService
+    ): Response
+    {
+        $user = $this->getUser();
+        $virtualMachine = $user->getVm();
+        if ($virtualMachine->getVmId() == null || $virtualMachine->getVmStatus() == "none") {
+            $this->addFlash("error", "Vous n'avez pas encore crée de VM");
+            return $this->redirectToRoute('index');
+        }
+
+        $vmIp = $proxmoxService->verifVMIp($virtualMachine);
+
+        return $this->render('utilisateur/accesFileZilla.html.twig', [
+            "vmIp" => $vmIp,
+        ]);
+
     }
 
 }

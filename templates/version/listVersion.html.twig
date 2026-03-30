@@ -24,6 +24,7 @@
                         <thead>
                         <tr>
                             <th>Date d'édition</th>
+                            <th>Modifié par</th>
                             <th>Commentaire</th>
                             <th>Actions</th>
                         </tr>
@@ -32,14 +33,25 @@
                         {% for version in versions %}
                             <tr>
                                 <td>{{ version.dateEdition|date('d/m/Y H:i:s') }}</td>
+                                <td>
+                                    {{ version.utilisateur ? version.utilisateur.login : 'Inconnu' }}
+                                </td>
                                 <td>{{ version.commentaire ?? 'Aucun commentaire' }}</td>
                                 <td>
-                                    <a href="{{ path('version_detail', {'id': version.id}) }}"
+                                    <a href="{% if isGroupe %}
+                                                {{ path('version_detail_groupe', {'groupeId': groupe.id, 'versionId': version.id}) }}
+                                            {% else %}
+                                                {{ path('version_detail', {'id': version.id}) }}
+                                            {% endif %}"
                                        class="btn btn-sm btn-primary"
                                        title="Voir les détails">
                                         <i class="fas fa-eye"></i> Voir
                                     </a>
-                                    <a href="{{ path('version_restore', {'id': version.id}) }}"
+                                    <a href="{% if isGroupe %}
+                                                {{ path('version_restore_groupe', {'groupeId': groupe.id, 'versionId': version.id}) }}
+                                            {% else %}
+                                                {{ path('version_restore', {'id': version.id}) }}
+                                            {% endif %}"
                                        class="btn btn-sm btn-warning"
                                        onclick="return confirm('Êtes-vous sûr de vouloir restaurer cette version ?')"
                                        title="Restaurer cette version">

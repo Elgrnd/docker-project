@@ -7,6 +7,7 @@ use App\Entity\File;
 use App\Entity\Groupe;
 use App\Entity\GroupeFileRepertoire;
 use App\Entity\Repertoire;
+use App\Entity\TextFileVersion;
 use App\Entity\UtilisateurFileRepertoire;
 use App\Entity\TextFile;
 use App\Form\DeplacerFileGroupeType;
@@ -356,6 +357,16 @@ final class GroupeFileRepertoireController extends AbstractController
 
                 try {
                     if ($textFile->isYaml()) {Yaml::parse($fileContent);}
+
+                    $version = new TextFileVersion();
+                    $version->setBodyFile($textFile->getBodyFile());
+                    $version->setTextFileId($textFile);
+                    $version->setDateEdition(new \DateTime());
+                    $version->setUtilisateur($this->getUser());
+                    $version->setCommentaire('Sauvegarde automatique avant modification du ' . (new \DateTime())->format('d/m/Y H:i:s'));
+
+                    $entityManager->persist($version);
+
                     $textFile->setBodyFile($fileContent);
                     $entityManager->flush();
 

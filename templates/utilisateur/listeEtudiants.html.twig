@@ -2,7 +2,6 @@
 {% block title %}<title>Liste des étudiants</title>{% endblock %}
 
 {% block stylesheets %}
-    <link rel="stylesheet" href="{{ asset('css/utilisateur/listeEtudiants.css') }}">
 {% endblock %}
 
 {% block scriptJs %}
@@ -38,6 +37,7 @@
                             {% set classes = classes|merge([u.classe]) %}
                         {% endif %}
                     {% endfor %}
+                    {% set classes = classes|sort %}
 
                     {% for classe in classes %}
                         <button
@@ -49,10 +49,50 @@
                     {% endfor %}
                 </div>
 
+                <div class="mb-2 d-flex align-items-center gap-3">
+                    <span id="selectionCount" class="text-muted small">0 sélectionné(s)</span>
+                    <button id="clearSelection" class="btn btn-sm btn-outline-secondary d-none">
+                        Tout désélectionner
+                    </button>
+                    <button id="btnCreerGroupe" class="btn btn-sm btn-primary d-none">
+                        ➕ Créer un groupe
+                    </button>
+                </div>
+
+                <!-- Modal -->
+                <div class="modal fade" id="creerGroupeModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Créer un groupe</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="formCreerGroupe" method="POST" action="{{ path('creer_groupe_depuis_selection') }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('creer_groupe_selection') }}">
+                                    <input type="hidden" name="membres_ids" id="membresIds">
+
+                                    <div class="mb-3">
+                                        <label for="groupeNom" class="form-label">Nom du groupe</label>
+                                        <input type="text" class="form-control" id="groupeNom" name="nom" required>
+                                    </div>
+
+                                    <p class="text-muted small">
+                                        <span id="modalNbMembres">0</span> étudiant(s) sélectionné(s) seront ajoutés.
+                                    </p>
+
+                                    <button type="submit" class="btn btn-primary w-100">Créer</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="table-responsive">
                     <table class="table table-striped align-middle" id="usersTable">
                         <thead class="table-light">
                         <tr>
+                            <th><input type="checkbox" id="selectAll"></th>
                             <th>Login</th>
                             <th>ID</th>
                             <th>Nom</th>
@@ -62,7 +102,8 @@
                         </thead>
                         <tbody>
                         {% for u in utilisateurs %}
-                            <tr>
+                            <tr data-classe="{{ u.classe }}">
+                                <td><input type="checkbox" class="user-checkbox" value="{{ u.id }}"></td>
                                 <td>{{ u.login }}</td>
                                 <td>{{ u.id }}</td>
                                 <td>{{ u.nom }}</td>
@@ -70,7 +111,7 @@
                                 <td>{{ u.classe }}</td>
                             </tr>
                         {% else %}
-                            <tr>
+                            <tr data-classe="{{ u.classe }}">
                                 <td colspan="4" class="text-center text-muted">
                                     Aucun utilisateur trouvé.
                                 </td>

@@ -10,6 +10,15 @@
     --txt: #000000;
 }
 
+*::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+
+* {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+
 /* ========== GENERAL ========== */
 body {
     background-color: var(--bg-1);

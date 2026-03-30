@@ -13,6 +13,7 @@ use App\Repository\RepertoireRepository;
 use App\Service\DockerService;
 use App\Service\ProxmoxService;
 use App\Service\RepertoireService;
+use App\Service\SftpCredentialService;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use RuntimeException;
@@ -402,7 +403,7 @@ final class RepertoireController extends AbstractController
                 $this->rrmdir($extractDir);
             }
 
-            $docker->pullDirFromVmAsTarAndExtract('/root', $extractDir, $vmIp);
+            $docker->pullDirFromVmAsTarAndExtract($extractDir, $vmIp);
 
             $racine = $repertoireRepository->recupererRepertoireRacineUtilisateur($user->getId());
             if (!$racine) throw new \RuntimeException("Répertoire racine introuvable");
@@ -450,6 +451,38 @@ final class RepertoireController extends AbstractController
             $f->isDir() ? @rmdir($f->getPathname()) : @unlink($f->getPathname());
         }
         @rmdir($dir);
+    }
+
+    #[Route('/vm/sftp/key', name: 'vm_sftp_download_key', methods: ['GET'])]
+    public function downloadSftpKey(
+        SftpCredentialService $sftpService,
+        DockerService $dockerService
+    ): Response {
+        $user  = $this->getUser();
+        $login = $user->getLogin();
+        $vmIp  = $user->getVm()->getVmIp();
+
+        $keys = $sftpService->generateKeyPair($login);
+
+        $dockerService->pushSftpPublicKey($keys['publicKey'], $vmIp);
+
+        return new Response(
+            $keys['privateKey'],
+            200,
+            [
+                'Content-Type'        => 'application/octet-stream',
+                'Content-Disposition' => 'attachment; filename="sftp_key_' . $login . '.pem"',
+            ]
+        );
+    }
+
+    #[Route('/vm/accesFileZilla', name: 'filezillaAcces', methods: ['GET'])]
+    public function accesFileZilla() : Response {
+        $user  = $this->getUser();
+        $vmIp  = $user->getVm()->getVmIp();
+        return $this->render('utilisateur/accesFileZilla.html.twig', [
+            "vmIp" => $vmIp,
+        ]);
     }
 
 }

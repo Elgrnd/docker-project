@@ -1,0 +1,46 @@
+{% extends "base.html.twig" %}
+
+{% block title %}<title>Accès FileZilla</title>{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/utilisateur/filezilla.css') }}">
+{% endblock %}
+
+{% block page_content %}
+    <div class="sftp-card">
+
+        <h2>Accès FileZilla / SFTP</h2>
+
+        <div class="sftp-info-grid">
+            <div class="sftp-item">
+                <span class="label">Hôte</span>
+                <span class="value">{{ vmIp }}</span>
+            </div>
+
+            <div class="sftp-item">
+                <span class="label">Port</span>
+                <span class="value">22</span>
+            </div>
+
+            <div class="sftp-item">
+                <span class="label">Utilisateur</span>
+                <span class="value">root</span>
+            </div>
+
+            <div class="sftp-item">
+                <span class="label">Authentification</span>
+                <span class="value">Clé privée</span>
+            </div>
+        </div>
+
+        <a href="{{ path('vm_sftp_download_key') }}" class="btn-welcome">
+            Télécharger ma clé privée (.pem)
+        </a>
+
+        <p class="sftp-help">
+            Dans FileZilla : <br>
+            <em>Édition → Paramètres → SFTP → Ajouter un fichier de clé</em>
+        </p>
+
+    </div>
+{% endblock %}

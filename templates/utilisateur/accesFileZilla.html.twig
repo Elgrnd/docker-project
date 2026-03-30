@@ -6,6 +6,10 @@
     <link rel="stylesheet" href="{{ asset('css/utilisateur/filezilla.css') }}">
 {% endblock %}
 
+{% block scriptJs %}
+    <script defer src="{{ asset('js/utilisateur/fileZilla.js') }}"></script>
+{% endblock %}
+
 {% block page_content %}
     <div class="sftp-card">
 
@@ -54,15 +58,6 @@
             </div>
             <p class="sftp-help">Remplace <em>chemin/vers/ta/cle.pem</em> par l'emplacement où tu as sauvegardé ta clé.</p>
         </div>
-
-        <script>
-            function copySSH() {
-                navigator.clipboard.writeText(document.getElementById('ssh-cmd').innerText);
-                const btn = document.querySelector('.btn-copy');
-                btn.innerHTML = '<i class="bi bi-clipboard-check"></i>';
-                setTimeout(() => btn.innerHTML = '<i class="bi bi-clipboard"></i>', 2000);
-            }
-        </script>
 
     </div>
 {% endblock %}

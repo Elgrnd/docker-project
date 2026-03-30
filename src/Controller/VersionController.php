@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use App\Entity\Groupe;
+use App\Entity\GroupeFileRepertoire;
 use App\Entity\TextFile;
 use App\Entity\TextFileVersion;
 use App\Repository\TextFileRepository;
@@ -13,103 +15,168 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 final class VersionController extends AbstractController
 {
-    #[IsGranted('ROLE_USER')]
-    #[Route('/listVersion/{id}', name: 'listVersion')]
-    public function listVersion(int $id, EntityManagerInterface $entityManager): Response
-    {
-        $utilisateur = $this->getUser();
+    #[Route('/versions/{textFileId}', name: 'listVersion')]
+    #[Route('/groupe/{groupeId}/versions/{textFileId}', name: 'listVersion_groupe')]
+    public function listVersion(
+        int $textFileId,
+        ?int $groupeId,
+        EntityManagerInterface $em
+    ): Response {
 
-        $textFile = $entityManager->getRepository(TextFile::class)->find($id);
+        $user = $this->getUser();
 
+        $textFile = $em->getRepository(TextFile::class)->find($textFileId);
         if (!$textFile) {
-            $this->addFlash('error', 'Fichier introuvable.');
-            return $this->redirectToRoute('repertoire');
+            throw $this->createNotFoundException();
         }
 
-        if ($textFile->getUtilisateurFile() !== $utilisateur) {
-            throw $this->createAccessDeniedException('Vous n\'êtes pas autorisé à voir les versions de ce fichier.');
+        $groupe = null;
+
+        if ($groupeId) {
+            $groupe = $em->getRepository(Groupe::class)->find($groupeId);
+
+            $gfr = $em->getRepository(GroupeFileRepertoire::class)
+                ->findOneBy(['file' => $textFile, 'groupe' => $groupe]);
+
+            if (!$gfr) {
+                throw $this->createAccessDeniedException();
+            }
+
+            $this->denyAccessUnlessGranted('GROUPE_FILE_EDIT', $gfr);
+        } else {
+            if ($textFile->getUtilisateurFile() !== $user) {
+                throw $this->createAccessDeniedException();
+            }
         }
 
-        $versions = $entityManager->getRepository(TextFileVersion::class)
+        $versions = $em->getRepository(TextFileVersion::class)
             ->findBy(['textFileId' => $textFile], ['dateEdition' => 'DESC']);
-
-        usort($versions, function(TextFileVersion $a, TextFileVersion $b) {
-            return $b->getDateEdition() <=> $a->getDateEdition();
-        });
 
         return $this->render('version/listVersion.html.twig', [
             'textFile' => $textFile,
             'versions' => $versions,
+            'groupe' => $groupe,
+            'isGroupe' => $groupe !== null
         ]);
     }
 
     #[Route('/version/restore/{id}', name: 'version_restore')]
+    #[Route('/groupe/{groupeId}/version/restore/{id}', name: 'version_restore_groupe')]
     public function restore(
         int $id,
-        EntityManagerInterface $entityManager
+        ?int $groupeId = null,
+        EntityManagerInterface $em
     ): Response {
-        $utilisateur = $this->getUser();
 
-        $version = $entityManager->getRepository(TextFileVersion::class)->find($id);
+        $user = $this->getUser();
+
+        $version = $em->getRepository(TextFileVersion::class)->find($id);
 
         if (!$version) {
-            $this->addFlash('error', 'Version introuvable.');
-            return $this->redirectToRoute('repertoire');
+            throw $this->createNotFoundException();
         }
 
         $textFile = $version->getTextFileId();
+        $groupe = null;
 
-        if ($textFile->getUtilisateurFile() !== $utilisateur) {
-            throw $this->createAccessDeniedException('Vous n\'êtes pas autorisé à restaurer ce fichier.');
+        if ($groupeId) {
+            $groupe = $em->getRepository(Groupe::class)->find($groupeId);
+
+            $gfr = $em->getRepository(GroupeFileRepertoire::class)
+                ->findOneBy([
+                    'file' => $textFile,
+                    'groupe' => $groupe
+                ]);
+
+            if (!$gfr) {
+                throw $this->createAccessDeniedException();
+            }
+
+            $this->denyAccessUnlessGranted('GROUPE_FILE_EDIT', $gfr);
+
+        } else {
+            $this->denyAccessUnlessGranted('FILE_OWNER', $textFile);
         }
 
-        $nouvelleVersion = new TextFileVersion();
-        $nouvelleVersion->setBodyFile($textFile->getBodyFile());
-        $nouvelleVersion->setDateEdition(new \DateTime());
-        $nouvelleVersion->setTextFileId($textFile);
-        $nouvelleVersion->setCommentaire('Sauvegarde automatique avant restauration de la version du ' . $version->getDateEdition()->format('d/m/Y H:i:s'));
+        // 🔹 Backup avant restauration
+        $backup = new TextFileVersion();
+        $backup->setBodyFile($textFile->getBodyFile());
+        $backup->setDateEdition(new \DateTime());
+        $backup->setUtilisateur($user);
+        $backup->setTextFileId($textFile);
+        $backup->setCommentaire(
+            'Backup automatique par ' . $user->getLogin() .
+            ' avant restauration (' . (new \DateTime())->format('d/m/Y H:i:s') . ')'
+        );
 
-        $entityManager->persist($nouvelleVersion);
+        $em->persist($backup);
 
+        // 🔹 Restauration
         $textFile->setBodyFile($version->getBodyFile());
 
-        $versionRestauration = new TextFileVersion();
-        $versionRestauration->setBodyFile($version->getBodyFile());
-        $versionRestauration->setDateEdition(new \DateTime());
-        $versionRestauration->setTextFileId($textFile);
-        $versionRestauration->setCommentaire('Restauration de la version du ' . $version->getDateEdition()->format('d/m/Y H:i:s'));
+        // 🔹 Trace restauration
+        $restore = new TextFileVersion();
+        $restore->setBodyFile($version->getBodyFile());
+        $restore->setDateEdition(new \DateTime());
+        $restore->setUtilisateur($user);
+        $restore->setTextFileId($textFile);
+        $restore->setCommentaire(
+            'Restauration effectuée par ' . $user->getLogin() .
+            ' (version du ' . $version->getDateEdition()->format('d/m/Y H:i:s') . ')'
+        );
 
-        $entityManager->persist($versionRestauration);
-        $entityManager->flush();
+        $em->persist($restore);
+        $em->flush();
 
-        $this->addFlash('success', 'Le fichier "' . $textFile->getNameFile() . '" a été restauré avec succès.');
-
-        return $this->redirectToRoute('repertoire');
+        return $this->redirectToRoute(
+            $groupe ? 'listVersion_groupe' : 'listVersion',
+            $groupe
+                ? ['groupeId' => $groupe->getId(), 'textFileId' => $textFile->getId()]
+                : ['textFileId' => $textFile->getId()]
+        );
     }
 
-    #[IsGranted('ROLE_USER')]
     #[Route('/version/detail/{id}', name: 'version_detail')]
+    #[Route('/groupe/{groupeId}/version/detail/{id}', name: 'version_detail_groupe')]
     public function detail(
         int $id,
-        EntityManagerInterface $entityManager
+        ?int $groupeId = null,
+        EntityManagerInterface $em
     ): Response {
-        $utilisateur = $this->getUser();
 
-        $version = $entityManager->getRepository(TextFileVersion::class)->find($id);
+        $version = $em->getRepository(TextFileVersion::class)->find($id);
 
         if (!$version) {
             throw $this->createNotFoundException('Version introuvable.');
         }
 
         $textFile = $version->getTextFileId();
+        $groupe = null;
 
-        if ($textFile->getUtilisateurFile() !== $utilisateur) {
-            throw $this->createAccessDeniedException('Vous n\'êtes pas autorisé à voir cette version.');
+        if ($groupeId) {
+            $groupe = $em->getRepository(Groupe::class)->find($groupeId);
+
+            $gfr = $em->getRepository(GroupeFileRepertoire::class)
+                ->findOneBy([
+                    'file' => $textFile,
+                    'groupe' => $groupe
+                ]);
+
+            if (!$gfr) {
+                throw $this->createAccessDeniedException();
+            }
+
+            $this->denyAccessUnlessGranted('GROUPE_FILE_EDIT', $gfr);
+
+        } else {
+            $this->denyAccessUnlessGranted('FILE_OWNER', $textFile);
         }
 
         return $this->render('version/detail.html.twig', [
             'version' => $version,
             'textFile' => $textFile,
+            'groupe' => $groupe,
+            'isGroupe' => $groupe !== null
         ]);
     }
 }

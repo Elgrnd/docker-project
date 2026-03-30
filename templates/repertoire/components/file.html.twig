@@ -13,7 +13,7 @@
             <a href="{{ path('modifierTextFile', {"id": uyr.file.id}) }}">
                 <i class="bi bi-pencil edit-icon" title="Modifier"></i>
             </a>
-            <a href="{{ path('listVersion', {'id': uyr.file.id}) }}">
+            <a href="{{ path('listVersion', {'textFileId': uyr.file.id}) }}">
                 <i class="bi bi-clock-history version-icon" title="Voir les versions"></i>
             </a>
             {% if app.user.vm and app.user.vm.vmStatus == 'ready' and uyr.file.isYaml %}

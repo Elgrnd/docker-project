@@ -69,15 +69,6 @@
                         </a>
                     </div>
                 {% endif %}
-
-                {% if app.user.vm.vmStatus == 'ready' %}
-                    <form method="post" action="{{ path('copier_vm') }}" class="dropdown-item-form">
-                        <button type="submit" class="dropdown-item"
-                                onclick="return confirm('Copier tout /root de la VM dans copieVM ?');">
-                            📥 Copier VM
-                        </button>
-                    </form>
-                {% endif %}
             </div>
 
             <div class="card-body tree-container">
@@ -106,8 +97,18 @@
                 {% if app.user.vm.vmStatus == 'ready' %}
                     <a href="{{ path('repertoire_copier_vm', {'id': repertoireRacine.id}) }}"
                        class="btn btn-primary">
-                        Copier mon répertoire dans la VM
+                        Copier Répertoire → VM
                     </a>
+
+                    <form method="post"
+                          action="{{ path('copier_vm') }}"
+                          class="d-inline-block m-0">
+                        <button type="submit"
+                                class="btn btn-primary"
+                                onclick="return confirm('Copier tout /root de la VM dans copieVM ?');">
+                            Copier VM → Répertoire
+                        </button>
+                    </form>
                 {% endif %}
 
                 <a href="{{ path('repertoire_corbeille') }}" class="btn btn-outline-danger">

@@ -19,7 +19,7 @@ class EtrePartage
     private ?Utilisateur $utilisateur = null;
 
     #[ORM\ManyToOne(targetEntity: File::class)]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
     private ?File $file = null;
 
     #[ORM\Column(type: 'datetime_immutable')]

@@ -480,6 +480,12 @@ final class RepertoireController extends AbstractController
         );
     }
 
+    /**
+     * @throws TransportExceptionInterface
+     * @throws ServerExceptionInterface
+     * @throws RedirectionExceptionInterface
+     * @throws ClientExceptionInterface
+     */
     #[IsGranted("ROLE_USER")]
     #[Route('/vm/accesSFTP', name: 'accesSFTP', methods: ['GET'])]
     public function accesSFTP(

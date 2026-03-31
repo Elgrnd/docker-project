@@ -342,8 +342,7 @@ body {
 
 .create-section .btn-primary,
 #formContainer .btn-primary,
-.mb-3 .btn-primary,
-button[type="submit"].btn-primary {
+.mb-3 .btn-primary {
     background-color: #4338CA;
     border: none;
     color: white;
@@ -358,8 +357,7 @@ button[type="submit"].btn-primary {
 }
 
 .create-section .btn-primary:hover,
-#formContainer .btn-primary:hover,
-button[type="submit"].btn-primary:hover {
+#formContainer .btn-primary:hover {
     background-color: #3730a3;
     transform: translateY(-2px);
     box-shadow: 0 6px 12px rgba(67, 56, 202, 0.3);
@@ -577,4 +575,46 @@ button[type="submit"].btn-primary:hover {
 .dropdown-divider {
     margin: 0.5rem 0;
     border-color: #e5e7eb;
+}
+
+.btn-actions-group {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    align-items: center;
+    margin-top: 2rem;
+}
+
+.btn-actions-group form {
+    margin: 0;
+    display: inline-block;
+}
+
+.btn-actions-group .btn {
+    background-color: #818CF8;
+    border: none;
+    color: white;
+    padding: 0.875rem 3rem;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    margin: 0;
+}
+
+.btn-actions-group .btn:hover {
+    background-color: #6366f1;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(129, 140, 248, 0.3);
+}
+
+.btn-actions-group .btn-outline-danger {
+    background-color: #FF0004;
+}
+
+.btn-actions-group .btn-outline-danger:hover {
+    background-color: #cc0003;
 }

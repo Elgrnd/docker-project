@@ -65,16 +65,19 @@ final class TextFileController extends AbstractController
 
                     $this->addFlash('success', 'Fichier modifié avec succès');
                     return $this->redirectToRoute('repertoire');
-
                 } catch (ParseException $e) {
                     $this->addFlash('error', 'Erreur de syntaxe YAML : ' . $e->getMessage());
+
+                    return $this->render('file/editTextFile.html.twig', [
+                        'textFile' => $textFile,
+                        'textContent' => $textContent,
+                    ]);
                 }
             } else {
                 $this->addFlash('error', 'Token CSRF invalide');
                 return $this->redirectToRoute('repertoire');
             }
         }
-
         return $this->render('file/editTextFile.html.twig', ['textFile' => $textFile]);
     }
 

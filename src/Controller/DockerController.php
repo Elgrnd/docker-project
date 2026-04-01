@@ -427,45 +427,57 @@ final class DockerController extends AbstractController
             throw new Exception("Le fichier n'est pas un fichier .yaml/.yml.");
         }
         try {
-            $content = $idFile->getBodyFile();
+            $content  = $idFile->getBodyFile();
             $baseName = $idFile->getNameFile() ?? 'compose.yaml';
 
             $projectName = preg_replace('/[^a-z0-9_]/', '_', strtolower(pathinfo($baseName, PATHINFO_FILENAME)));
-            $remotePath = '/root/deploy/' . $projectName . '_l' . uniqid() . '.yaml';
 
             $vmIp = $proxmoxService->verifVMIp($vm);
             if (!$vmIp) {
                 throw new Exception("Impossible de récupérer l'IP de la VM.");
             }
 
-            $uploadError = $dockerService->sendContentToVm($content, $remotePath, $vmIp);
-            if (str_contains($uploadError, 'Permanently added')) {
-                $uploadError = '';
+            $existingPath = trim($dockerService->runInVm(
+                sprintf('find /root -name %s -not -path "/root/deploy/*" 2>/dev/null | head -1', escapeshellarg($baseName)),
+                $vmIp
+            ));
+
+            if (!empty($existingPath)) {
+                $workDir = dirname($existingPath);
+                $cmd = sprintf(
+                    'cd %s && /usr/bin/docker compose -p %s -f %s up -d 2>&1',
+                    escapeshellarg($workDir),
+                    escapeshellarg($projectName),
+                    escapeshellarg($baseName)
+                );
+            } else {
+                $remotePath  = '/root/deploy/' . $projectName . '_' . uniqid() . '.yaml';
+
+                $uploadError = $dockerService->sendContentToVm($content, $remotePath, $vmIp);
+                if (str_contains($uploadError, 'Permanently added')) {
+                    $uploadError = '';
+                }
+                if (!empty($uploadError)) {
+                    throw new Exception("Erreur SCP vers la VM: " . $uploadError);
+                }
+
+                $cmd = sprintf(
+                    '/usr/bin/docker compose -p %s -f %s up -d 2>&1',
+                    escapeshellarg($projectName),
+                    escapeshellarg($remotePath)
+                );
             }
 
-            if (!empty($uploadError)) {
-                throw new Exception("Erreur SCP vers la VM: " . $uploadError);
-            }
+            $output    = $dockerService->runInVm($cmd, $vmIp);
+            $lines     = explode("\n", $output);
 
-            $cmd = sprintf('/usr/bin/docker compose -p %s -f %s up -d 2>&1', escapeshellarg($projectName), escapeshellarg($remotePath));
-            $output = $dockerService->runInVm($cmd, $vmIp);
-
-            $lines = explode("\n", $output);
-
-            $important = array_filter($lines, fn($line) => str_contains(strtolower($line), 'error') ||
+            $important = array_filter($lines, fn($line) =>
+                str_contains(strtolower($line), 'error') ||
                 str_contains(strtolower($line), 'warning')
             );
 
             if (!empty($important)) {
                 throw new Exception("Erreur détectée pendant le déploiement :\n" . implode("\n", $important));
-            }
-
-            $fileExists = $dockerService->runInVm(
-                "test -f " . escapeshellarg($remotePath) . " && echo 'OK' || echo 'KO'",
-                $vmIp
-            );
-            if ($fileExists !== 'OK') {
-                throw new Exception("Le fichier YAML n'a pas été transféré correctement.");
             }
 
             $containers = $dockerService->listContainers($vmIp);

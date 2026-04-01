@@ -6,6 +6,7 @@ use App\Entity\Groupe;
 use App\Entity\Repertoire;
 use App\Entity\Utilisateur;
 use App\Entity\UtilisateurGroupe;
+use App\Entity\VirtualMachine;
 use App\Form\GitlabUrlType;
 use App\Form\UtilisateurType;
 use App\Repository\UtilisateurRepository;
@@ -323,13 +324,62 @@ final class UtilisateurController extends AbstractController
         return $this->redirectToRoute('mes_groupes');
     }
 
-    #[IsGranted('ROLE_USER')]
+    #[IsGranted('ROLE_ETUDIANT')]
     #[Route('/ignorer-classe-popup', name: 'ignorer_classe_popup', methods: ['GET'])]
     public function ignorerClassePopup(Request $request): Response
     {
         $request->getSession()->remove('show_classe_popup');
 
         return $this->redirectToRoute('index');
+    }
+
+    #[IsGranted('ROLE_PROFESSEUR')]
+    #[Route('/liste-etudiants', name: 'liste_etudiants', methods: ['GET'])]
+    public function listeEtudiants(): Response {
+
+        $utilisateurs = $this->repository->findByRole('ROLE_ETUDIANT');
+        return $this->render('utilisateur/listeEtudiants.html.twig', [
+            'utilisateurs' => $utilisateurs,
+        ]);
+    }
+
+    #[IsGranted('ROLE_PROFESSEUR')]
+    #[Route('/liste-etudiants/creer-depuis-selection', name: 'creer_groupe_depuis_selection', methods: ['POST'])]
+    public function creerGroupeDepuisSelection(Request $request, EntityManagerInterface $em): Response
+    {
+        if (!$this->isCsrfTokenValid('creer_groupe_selection', $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Token CSRF invalide.');
+        }
+
+        $nom = $request->request->get('nom');
+        $membresIds = array_filter(explode(',', $request->request->get('membres_ids')));
+
+        $groupe = new Groupe();
+        $groupe->setNom($nom);
+        $groupe->setEtreChef($this->getUser());
+        $groupe->setVm(new VirtualMachine());
+
+        $repertoire = new Repertoire();
+        $repertoire->setGroupeRepertoire($groupe);
+        $repertoire->setName('Répertoire groupe');
+
+        $em->persist($groupe);
+        $em->persist($repertoire);
+
+        foreach ($membresIds as $membreId) {
+            $membre = $em->getRepository(Utilisateur::class)->find($membreId);
+            if (!$membre) continue;
+
+            $ug = new UtilisateurGroupe();
+            $ug->setUtilisateur($membre);
+            $ug->setGroupe($groupe);
+            $em->persist($ug);
+        }
+
+        $em->flush();
+
+        $this->addFlash('success', "Groupe \"$nom\" créé avec " . count($membresIds) . " membre(s).");
+        return $this->redirectToRoute('liste_etudiants');
     }
 
 

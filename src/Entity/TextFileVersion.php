@@ -21,7 +21,7 @@ class TextFileVersion
     private ?\DateTime $dateEdition = null;
 
     #[ORM\ManyToOne(inversedBy: 'version')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: "CASCADE")]
     private ?TextFile $textFileId = null;
 
     #[ORM\ManyToOne]

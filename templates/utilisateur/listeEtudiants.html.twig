@@ -1,0 +1,127 @@
+{% extends "base.html.twig" %}
+{% block title %}<title>Liste des étudiants</title>{% endblock %}
+
+{% block stylesheets %}
+{% endblock %}
+
+{% block scriptJs %}
+    <script defer src="{{ asset('js/searchUsers.js') }}"></script>
+    <script defer src="{{ asset('js/filtrerClasses.js') }}"></script>
+{% endblock %}
+
+{% block page_content %}
+    <main class="container mt-4 user-list-wrapper">
+
+        <h2 class="mb-4">Liste des étudiants</h2>
+
+        <div class="card user-list-card">
+            <div class="card-body">
+
+                <div class="mb-3">
+                    <label for="searchInput" class="form-label fw-semibold">
+                        🔍 Rechercher un étudiant
+                    </label>
+                    <input
+                            type="text"
+                            id="searchInput"
+                            class="form-control"
+                            placeholder="Login ou ID..."
+                    >
+                </div>
+
+                <div class="mb-3 d-flex flex-wrap gap-2">
+                    <span class="fw-semibold align-self-center">Filtrer par classe :</span>
+                    {% set classes = [] %}
+                    {% for u in utilisateurs %}
+                        {% if u.classe is not null and u.classe not in classes %}
+                            {% set classes = classes|merge([u.classe]) %}
+                        {% endif %}
+                    {% endfor %}
+                    {% set classes = classes|sort %}
+
+                    {% for classe in classes %}
+                        <button
+                                class="btn btn-outline-primary btn-sm btn-filter-classe"
+                                data-classe="{{ classe }}"
+                        >
+                            {{ classe }}
+                        </button>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-2 d-flex align-items-center gap-3">
+                    <span id="selectionCount" class="text-muted small">0 sélectionné(s)</span>
+                    <button id="clearSelection" class="btn btn-sm btn-outline-secondary d-none">
+                        Tout désélectionner
+                    </button>
+                    <button id="btnCreerGroupe" class="btn btn-sm btn-primary d-none">
+                        ➕ Créer un groupe
+                    </button>
+                </div>
+
+                <div class="modal fade" id="creerGroupeModal" tabindex="-1">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Créer un groupe</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="formCreerGroupe" method="POST" action="{{ path('creer_groupe_depuis_selection') }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('creer_groupe_selection') }}">
+                                    <input type="hidden" name="membres_ids" id="membresIds">
+
+                                    <div class="mb-3">
+                                        <label for="groupeNom" class="form-label">Nom du groupe</label>
+                                        <input type="text" class="form-control" id="groupeNom" name="nom" required>
+                                    </div>
+
+                                    <p class="text-muted small">
+                                        <span id="modalNbMembres">0</span> étudiant(s) sélectionné(s) seront ajoutés.
+                                    </p>
+
+                                    <button type="submit" class="btn btn-primary w-100">Créer</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped align-middle" id="usersTable">
+                        <thead class="table-light">
+                        <tr>
+                            <th><input type="checkbox" id="selectAll"></th>
+                            <th>Login</th>
+                            <th>ID</th>
+                            <th>Nom</th>
+                            <th>Prenom</th>
+                            <th>Classe</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for u in utilisateurs %}
+                            <tr data-classe="{{ u.classe }}">
+                                <td><input type="checkbox" class="user-checkbox" value="{{ u.id }}"></td>
+                                <td>{{ u.login }}</td>
+                                <td>{{ u.id }}</td>
+                                <td>{{ u.nom }}</td>
+                                <td>{{ u.prenom }}</td>
+                                <td>{{ u.classe }}</td>
+                            </tr>
+                        {% else %}
+                            <tr data-classe="{{ u.classe }}">
+                                <td colspan="4" class="text-center text-muted">
+                                    Aucun utilisateur trouvé.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+{% endblock %}

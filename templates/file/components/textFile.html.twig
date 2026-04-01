@@ -22,7 +22,7 @@
                   name="text_content"
                   data-filename="{{ textFile.nameFile }}"
                   class="form-control"
-                  rows="20">{{ textFile.bodyFile }}</textarea>
+                  rows="20">{{ textContent ?? textFile.bodyFile }}</textarea>
     </div>
 
     <input type="hidden" name="_token" value="{{ csrf_token('edit-text') }}">

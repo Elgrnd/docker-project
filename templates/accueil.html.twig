@@ -13,6 +13,11 @@
 {% block page_content %}
     {% if is_granted('ROLE_USER') %}
 
+        <!-- VM STATUS -->
+        <div class="container mt-4">
+            <div id="vm-status-box"></div>
+        </div>
+
         <!-- HERO -->
         <div class="welcome-card text-center">
             <h1>Bienvenue {{ app.user.login }}</h1>
@@ -107,11 +112,6 @@
                 <li>Faciliter la prise en main pour les étudiants et développeurs débutants</li>
                 <li>Visualiser rapidement l’état et les performances des machines virtuelles</li>
             </ul>
-        </div>
-
-        <!-- VM STATUS -->
-        <div class="container mt-4">
-            <div id="vm-status-box"></div>
         </div>
 
     {% else %}

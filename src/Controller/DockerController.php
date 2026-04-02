@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Groupe;
 use App\Entity\TextFile;
+use App\Entity\Utilisateur;
 use App\Entity\VirtualMachine;
 use App\Repository\GroupeRepository;
 use App\Repository\VirtualMachineRepository;
@@ -19,6 +20,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
@@ -113,47 +115,7 @@ final class DockerController extends AbstractController
                 $accessibleVms = $this->getAccessibleVms($groupes);
             }
         }
-
-        // ---- MONITORING DES VM (TOUS LES UTILISATEURS) ----
-        try {
-            if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
-                // Admin : vue globale de toutes les VM
-                $vms = $proxmoxService->getAdminVmOverview();
-
-                // garder seulement les VM en cours d'exécution
-                $running = [];
-                foreach ($vms as $vm) {
-                    if (($vm['status'] ?? '') === 'running') {
-                        $running[] = $vm;
-                    }
-                }
-                $vms = $running;
-            } else {
-                // Utilisateur normal : seulement sa VM
-                $vmid = $virtualMachine->getVmId();
-                if ($vmid) {
-                    $runtime = $proxmoxService->getVMRuntimeStatus($vmid);
-
-                    $vms = [[
-                        'vmid' => $vmid,
-                        'name' => 'VM ' . $user->getLogin(),
-                        'status' => $runtime['status'] ?? 'unknown',
-                        'cpu' => $runtime['cpu'] ?? null,
-                        'maxcpu' => $runtime['maxcpu'] ?? null,
-                        'mem' => $runtime['mem'] ?? null,
-                        'maxmem' => $runtime['maxmem'] ?? null,
-                        'disk' => $runtime['disk'] ?? null,
-                        'maxdisk' => $runtime['maxdisk'] ?? null,
-                        'uptime' => $runtime['uptime'] ?? null,
-                    ]];
-                } else {
-                    $vms = [];
-                }
-            }
-        } catch (Throwable $e) {
-            $this->addFlash('error', 'Impossible de récupérer les informations de la VM : ' . $e->getMessage());
-            $vms = [];
-        }
+        $vms = $this->getVmOverview($user, $proxmoxService, $virtualMachine);
 
         return $this->render('docker/listContainers.html.twig', [
             'containers' => $containers,
@@ -162,6 +124,73 @@ final class DockerController extends AbstractController
             'controller_name' => 'DockerController',
             'virtualMachine' => $virtualMachine,
         ]);
+    }
+
+    #[Route('/etudiant/{id}/containers/', name: 'listContainersEtudiant', methods: ['GET'])]
+    #[IsGranted('ROLE_PROFESSEUR')]
+    public function getContainerEtudiantProfesseur(
+        DockerService               $dockerService,
+        Utilisateur                 $utilisateur,
+        ProxmoxService              $proxmoxService,
+    ): RedirectResponse|Response
+    {
+        if ($utilisateur->getVm()->getVmId() == null || $utilisateur->getVm()->getVmStatus() == "none") {
+            $this->addFlash("error", "Vous n'avez pas encore crée de VM");
+            return $this->redirectToRoute('mes_groupes');
+        }
+        if ($utilisateur->getVm()->getVmStatus() !== "ready") {
+            $this->addFlash("error", "Votre VM n'est pas encore prête !");
+            return $this->redirectToRoute('mes_groupes');
+        }
+        $containers = [];
+
+        try {
+            $vmIp = $proxmoxService->verifVMIp($utilisateur->getVm());
+
+        } catch (Exception) {
+            $this->addFlash('error', "le QGA n'est pas encore prêt pour la VM");
+            return $this->redirectToRoute("index");
+        }
+        if ($vmIp) {
+            $containers = $dockerService->listContainers($vmIp);
+            foreach ($containers as &$container) {
+                $container['user'] = $utilisateur->getLogin();
+                $container['vmid'] = $utilisateur->getVm()->getId();
+            }
+            $groupes = $utilisateur->getUtilisateurGroupe();
+            $accessibleVms = $this->getAccessibleVms($groupes);
+        }
+
+        $vms = $this->getVmOverview($utilisateur, $proxmoxService, $utilisateur->getVm());
+
+        return $this->render('docker/listContainers.html.twig', [
+            'containers' => $containers,
+            'accessibleVms' => $accessibleVms,
+            'vms' => $vms,
+            'controller_name' => 'DockerController',
+            'virtualMachine' => $utilisateur->getVm(),
+        ]);
+
+    }
+
+    #[Route('/etudiant/{id}/create/vm', name: 'createVMEtudiant', methods: ['GET'])]
+    #[IsGranted('ROLE_PROFESSEUR')]
+    public function createVmEtudiantProf(
+        Utilisateur $utilisateur,
+        EntityManagerInterface $entityManager,
+        ProxmoxService $proxmoxService
+    )
+    {
+
+        if ($utilisateur->getVm() !== null) {
+            $this->addFlash("error", "l'étudiant " . $utilisateur->getLogin() . " a déjà une VM");
+        }
+        $utilisateur->getVm()->setVmStatus('creating');
+        $entityManager->flush();
+
+        $proxmoxService->cloneUserVmAsynchrone($utilisateur->getLogin());
+
+        return new JsonResponse(['status' => 'creating']);
     }
 
     #[Route('/monitoring/vms', name: 'monitoring_vms', methods: ['GET'])]
@@ -516,6 +545,57 @@ final class DockerController extends AbstractController
             }
         }
         return $accessibleVms;
+    }
+
+    /**
+     * @param UserInterface|null $user
+     * @param ProxmoxService $proxmoxService
+     * @param VirtualMachine $virtualMachine
+     * @return array|array[]
+     */
+    public function getVmOverview(?UserInterface $user, ProxmoxService $proxmoxService, VirtualMachine $virtualMachine): array
+    {
+    // ---- MONITORING DES VM (TOUS LES UTILISATEURS) ----
+        try {
+            if (in_array('ROLE_ADMIN', $user->getRoles(), true)) {
+                // Admin : vue globale de toutes les VM
+                $vms = $proxmoxService->getAdminVmOverview();
+
+                // garder seulement les VM en cours d'exécution
+                $running = [];
+                foreach ($vms as $vm) {
+                    if (($vm['status'] ?? '') === 'running') {
+                        $running[] = $vm;
+                    }
+                }
+                $vms = $running;
+            } else {
+                // Utilisateur normal : seulement sa VM
+                $vmid = $virtualMachine->getVmId();
+                if ($vmid) {
+                    $runtime = $proxmoxService->getVMRuntimeStatus($vmid);
+
+                    $vms = [[
+                        'vmid' => $vmid,
+                        'name' => 'VM ' . $user->getLogin(),
+                        'status' => $runtime['status'] ?? 'unknown',
+                        'cpu' => $runtime['cpu'] ?? null,
+                        'maxcpu' => $runtime['maxcpu'] ?? null,
+                        'mem' => $runtime['mem'] ?? null,
+                        'maxmem' => $runtime['maxmem'] ?? null,
+                        'disk' => $runtime['disk'] ?? null,
+                        'maxdisk' => $runtime['maxdisk'] ?? null,
+                        'uptime' => $runtime['uptime'] ?? null,
+                    ]];
+                } else {
+                    $vms = [];
+                }
+            }
+        } catch (Throwable $e) {
+            $this->addFlash('error', 'Impossible de récupérer les informations de la VM : ' . $e->getMessage());
+            $vms = [];
+        }
+        return $vms;
     }
 
 

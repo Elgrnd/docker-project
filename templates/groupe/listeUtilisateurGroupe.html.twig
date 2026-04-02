@@ -56,13 +56,27 @@
                         {# ====== BOUTON RETIRER ====== #}
                         {% if is_granted('GROUPE_MODERATE', groupe) %}
                             <td class="member-action">
-                                {% if membre != groupe.etreChef %}
-                                    <form method="post"
-                                          action="{{ path('supprimer_membre_groupe', {id: groupe.id, login: membre.login}) }}"
-                                          onsubmit="return confirm('Supprimer {{ membre.login }} du groupe ?');">
-                                        <button type="submit" class="btn-remove">Retirer</button>
-                                    </form>
-                                {% endif %}
+                                <div class="member-action-buttons">
+                                    {% if is_granted('ROLE_PROFESSEUR') and membre.vm and membre.vm.vmStatus == 'ready' %}
+
+                                        <form method="get"
+                                              action="{{ path('listContainersEtudiant', {id: membre.id}) }}"
+                                              class="member-action-form">
+                                            <button type="submit" class="btn-containers">
+                                                Voir ses conteneurs
+                                            </button>
+                                        </form>
+                                    {% endif %}
+
+                                    {% if membre != groupe.etreChef %}
+                                        <form method="post"
+                                              action="{{ path('supprimer_membre_groupe', {id: groupe.id, login: membre.login}) }}"
+                                              class="member-action-form"
+                                              onsubmit="return confirm('Supprimer {{ membre.login }} du groupe ?');">
+                                            <button type="submit" class="btn-remove">Retirer</button>
+                                        </form>
+                                    {% endif %}
+                                </div>
                             </td>
                         {% endif %}
                     </tr>

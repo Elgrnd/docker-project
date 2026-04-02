@@ -6,11 +6,9 @@ use App\Entity\Groupe;
 use App\Entity\TextFile;
 use App\Entity\VirtualMachine;
 use App\Repository\GroupeRepository;
-use App\Repository\VirtualMachineRepository;
 use App\Service\DockerService;
 use App\Service\ProxmoxService;
 use App\Service\UtilisateurManagerInterface;
-use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManagerInterface;
 use Exception;
 use phpDocumentor\Reflection\Types\Collection;
@@ -19,10 +17,12 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Yaml\Yaml;
 use Symfony\Contracts\HttpClient\Exception\ClientExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\RedirectionExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\ServerExceptionInterface;
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
+use Symfony\Component\Yaml\Exception\ParseException;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Throwable;
 
@@ -430,6 +430,8 @@ final class DockerController extends AbstractController
             $content  = $idFile->getBodyFile();
             $baseName = $idFile->getNameFile() ?? 'compose.yaml';
 
+            $this->verifStructureYaml($content);
+
             $projectName = preg_replace('/[^a-z0-9_]/', '_', strtolower(pathinfo($baseName, PATHINFO_FILENAME)));
 
             $vmIp = $proxmoxService->verifVMIp($vm);
@@ -492,6 +494,32 @@ final class DockerController extends AbstractController
         }
 
         return $this->redirectToRoute('repertoire');
+    }
+
+    /**
+     * @throws Exception
+     */
+    private function verifStructureYaml($content): void
+    {
+        try {
+            $parsed = Yaml::parse($content);
+        } catch (ParseException $e) {
+            throw new Exception("YAML invalide : " . $e->getMessage());
+        }
+
+        if (!isset($parsed['services'])) {
+            throw new Exception("Le fichier YAML ne contient pas de section 'services' — ce n'est pas un docker-compose valide.");
+        }
+
+        foreach ($parsed['services'] as $serviceName => $serviceConfig) {
+            if (empty($serviceConfig)) {
+                throw new Exception("Le service '$serviceName' est vide.");
+            }
+            if (!isset($serviceConfig['image']) && !isset($serviceConfig['build'])) {
+                throw new Exception("Le service '$serviceName' n'a ni 'image' ni 'build' — il ne peut pas être déployé.");
+            }
+        }
+
     }
 
     /**

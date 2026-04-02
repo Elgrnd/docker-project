@@ -1,0 +1,36 @@
+<div class="file-item">
+    <div class="file-info">
+        <i class="bi bi-file-earmark-text file-icon"></i>
+        <span class="file-name">
+            {{ partage.file.nameFile }}
+        </span>
+        <small class="text-muted ms-2">
+            (partagé par {{ partage.file.utilisateurFile.login }})
+        </small>
+    </div>
+
+    <div class="file-actions">
+        {% if partage.file.isText %}
+            <i class="bi bi-eye view-icon"
+               onclick="afficherContenuTextFile('{{ partage.file.bodyFile|escape('js') }}')"></i>
+
+            {% if is_granted('FILE_EDIT', partage.file) %}
+                <a href="{{ path('modifierTextFile', {"id": partage.file.id}) }}">
+                    <i class="bi bi-pencil edit-icon"></i>
+                </a>
+
+                <a href="{{ path('listVersion', {'textFileId': partage.file.id}) }}">
+                    <i class="bi bi-clock-history version-icon"></i>
+                </a>
+            {% endif %}
+        {% endif %}
+
+        {% if is_granted('FILE_DOWNLOAD', partage.file) %}
+            <i class="bi bi-download download-icon"
+               onclick="downloadFileById('{{ partage.file.id }}')"></i>
+            <a href="{{ path('ajouterAuRepertoire', { id: partage.file.id }) }}">
+                <i class="bi bi-plus-circle" title="Ajouter au répertoire"></i>
+            </a>
+        {% endif %}
+    </div>
+</div>

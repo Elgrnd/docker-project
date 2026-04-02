@@ -4,9 +4,10 @@ namespace App\Controller;
 
 use App\Entity\Repertoire;
 use App\Entity\Utilisateur;
+use App\Entity\VirtualMachine;
 use App\Repository\UtilisateurRepository;
 use App\Service\ConfigurationLdap;
-use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,33 +16,46 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Psr\Log\LoggerInterface;
 
 #[Route('/panneauadmin/ldap')]
-#[IsGranted('ROLE_ADMIN')]
+#[IsGranted('ROLE_PROFESSEUR')]
 class LdapController extends AbstractController
 {
     public function __construct(
         private UtilisateurRepository $utilisateurRepository,
-        private EntityManagerInterface $entityManager,
-        private LoggerInterface $logger
+        private ManagerRegistry $doctrine,
+        private LoggerInterface $logger,
     ) {}
+
+    private function getEntityManager(): \Doctrine\ORM\EntityManagerInterface
+    {
+        $em = $this->doctrine->getManager();
+
+        if (!$em->isOpen()) {
+            $this->doctrine->resetManager();
+            $em = $this->doctrine->getManager();
+            $this->logger->info("EntityManager réinitialisé");
+        }
+
+        return $em;
+    }
 
     #[Route('/preview', name: 'admin_ldap_preview', methods: ['GET'])]
     public function preview(): Response
     {
         try {
-            ConfigurationLDAP::connecterServeur();
-            $utilisateursLdap = ConfigurationLDAP::getAll();
-            ConfigurationLDAP::deconnecterServeur();
+            ConfigurationLdap::connecterServeur();
+            $utilisateursLdap = ConfigurationLdap::getAll();
+            ConfigurationLdap::deconnecterServeur();
 
-            $toCreate = [];
-            $toUpdate = [];
-            $skipped = [];
+            $toCreate  = [];
+            $toUpdate  = [];
+            $skipped   = [];
             $unchanged = [];
 
             foreach ($utilisateursLdap as $userLdap) {
                 if (!$userLdap['login']) {
                     $skipped[] = [
-                        'login' => $userLdap['login'] ?? 'N/A',
-                        'reason' => 'Login manquant'
+                        'login'  => $userLdap['login'] ?? 'N/A',
+                        'reason' => 'Login manquant',
                     ];
                     continue;
                 }
@@ -53,53 +67,34 @@ class LdapController extends AbstractController
                 } else {
                     $changes = [];
 
-                    // ✅ Normalisation des valeurs pour comparaison correcte
-                    $existingNom = trim($existingUser->getNom() ?? '');
-                    $ldapNom = trim($userLdap['nom'] ?? '');
-
-                    $existingPrenom = trim($existingUser->getPrenom() ?? '');
-                    $ldapPrenom = trim($userLdap['prenom'] ?? '');
-
-                    $existingEmail = trim($existingUser->getAdresseMail() ?? '');
-                    $ldapEmail = trim($userLdap['email'] ?? '');
-
+                    $existingNom       = trim($existingUser->getNom() ?? '');
+                    $ldapNom           = trim($userLdap['nom'] ?? '');
+                    $existingPrenom    = trim($existingUser->getPrenom() ?? '');
+                    $ldapPrenom        = trim($userLdap['prenom'] ?? '');
+                    $existingEmail     = trim($existingUser->getAdresseMail() ?? '');
+                    $ldapEmail         = trim($userLdap['email'] ?? '');
                     $existingPromotion = trim($existingUser->getPromotion() ?? '');
-                    $ldapPromotion = trim($userLdap['promotion'] ?? '');
+                    $ldapPromotion     = trim($userLdap['promotion'] ?? '');
 
-                    // Comparaisons strictes
                     if ($existingNom !== $ldapNom) {
                         $changes[] = sprintf('Nom: "%s" → "%s"',
-                            $existingNom ?: '(vide)',
-                            $ldapNom ?: '(vide)'
-                        );
+                            $existingNom ?: '(vide)', $ldapNom ?: '(vide)');
                     }
-
                     if ($existingPrenom !== $ldapPrenom) {
                         $changes[] = sprintf('Prénom: "%s" → "%s"',
-                            $existingPrenom ?: '(vide)',
-                            $ldapPrenom ?: '(vide)'
-                        );
+                            $existingPrenom ?: '(vide)', $ldapPrenom ?: '(vide)');
                     }
-
                     if ($existingEmail !== $ldapEmail) {
                         $changes[] = sprintf('Email: "%s" → "%s"',
-                            $existingEmail ?: '(vide)',
-                            $ldapEmail ?: '(vide)'
-                        );
+                            $existingEmail ?: '(vide)', $ldapEmail ?: '(vide)');
                     }
-
                     if ($existingPromotion !== $ldapPromotion) {
                         $changes[] = sprintf('Promotion: "%s" → "%s"',
-                            $existingPromotion ?: '(vide)',
-                            $ldapPromotion ?: '(vide)'
-                        );
+                            $existingPromotion ?: '(vide)', $ldapPromotion ?: '(vide)');
                     }
 
                     if (!empty($changes)) {
-                        $toUpdate[] = [
-                            'user' => $userLdap,
-                            'changes' => $changes
-                        ];
+                        $toUpdate[] = ['user' => $userLdap, 'changes' => $changes];
                     } else {
                         $unchanged[] = $userLdap;
                     }
@@ -107,9 +102,9 @@ class LdapController extends AbstractController
             }
 
             return $this->render('ldap/preview.html.twig', [
-                'toCreate' => $toCreate,
-                'toUpdate' => $toUpdate,
-                'skipped' => $skipped,
+                'toCreate'  => $toCreate,
+                'toUpdate'  => $toUpdate,
+                'skipped'   => $skipped,
                 'unchanged' => $unchanged,
                 'totalLdap' => count($utilisateursLdap),
             ]);
@@ -120,7 +115,6 @@ class LdapController extends AbstractController
         }
     }
 
-
     #[Route('/import', name: 'admin_ldap_import', methods: ['POST'])]
     public function import(Request $request): Response
     {
@@ -130,18 +124,17 @@ class LdapController extends AbstractController
         }
 
         $imported = 0;
-        $updated = 0;
-        $skipped = 0;
-        $errors = [];
+        $updated  = 0;
+        $skipped  = 0;
+        $errors   = [];
 
         try {
-            ConfigurationLDAP::connecterServeur();
-            $utilisateursLdap = ConfigurationLDAP::getAll();
-            ConfigurationLDAP::deconnecterServeur();
+            ConfigurationLdap::connecterServeur();
+            $utilisateursLdap = ConfigurationLdap::getAll();
+            ConfigurationLdap::deconnecterServeur();
 
-            foreach ($utilisateursLdap as $userLdap) {
+            foreach ($utilisateursLdap as $index => $userLdap) {
                 try {
-                    // Validation login
                     $login = $userLdap['login'] ?? null;
 
                     if (!$login || empty(trim($login))) {
@@ -153,64 +146,60 @@ class LdapController extends AbstractController
                     $login = trim($login);
                     $this->logger->info("Traitement de: $login");
 
-                    // ✅ Email optionnel (nullable)
                     $email = $userLdap['email'] ?? null;
-
                     if ($email) {
                         $email = trim($email);
-
-                        // Valide uniquement si présent
                         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                             $errors[] = "⚠️ Email invalide pour '$login': '$email' → mis à null";
                             $email = null;
                         }
                     }
 
-                    //Récupère ou crée l'utilisateur
+                    $em   = $this->getEntityManager(); // ✅
                     $user = $this->utilisateurRepository->findOneBy(['login' => $login]);
 
                     if (!$user) {
                         $user = new Utilisateur();
                         $user->setLogin($login);
+                        $user->setRoles(
+                            ($userLdap['promotion'] ?? '') === 'Personnel'
+                                ? ['ROLE_PROFESSEUR']
+                                : ['ROLE_ETUDIANT']
+                        );
+                        $user->setVm(new VirtualMachine());
 
-                        if (($userLdap['promotion'] ?? '') === "Personnel") {
-                            $user->setRoles(['ROLE_PROFESSEUR']);
-                        } else {
-                            $user->setRoles(['ROLE_ETUDIANT']);
-                        }
+                        // ✅ Répertoire uniquement pour les nouveaux utilisateurs
+                        $repertoire = new Repertoire();
+                        $repertoire->setUtilisateurRepertoire($user);
+                        $repertoire->setName('Répertoire personnel');
+                        $em->persist($repertoire); // ✅
 
                         $imported++;
                         $this->logger->info("✅ Nouvel utilisateur créé: $login");
                     } else {
-                        // Mise à jour
                         $updated++;
                     }
 
                     $user->setNom($userLdap['nom'] ?? '');
                     $user->setPrenom($userLdap['prenom'] ?? '');
-                    $user->setAdresseMail($email);  // ✅ null accepté, doublons acceptés
+                    $user->setAdresseMail($email);
                     $user->setPromotion($userLdap['promotion'] ?? '');
                     $user->setPassword(null);
 
-                    $repertoire = new Repertoire();
-                    $repertoire->setUtilisateurRepertoire($user);
-                    $repertoire->setName('Répertoire personnel');
-
-                    $this->entityManager->persist($user);
-                    $this->entityManager->persist($repertoire);
+                    $em->persist($user); // ✅
 
                     // Flush par batch de 50
                     if (($imported + $updated) % 50 === 0) {
-                        $this->entityManager->flush();
-                        $this->entityManager->clear();
-                        $this->logger->info("Batch flush: {$imported} importés, {$updated} mis à jour");
+                        try {
+                            $em->flush(); // ✅
+                            $em->clear(); // ✅
+                            $this->logger->info("Batch flush OK: {$imported} importés, {$updated} mis à jour");
+                        } catch (\Exception $e) {
+                            $this->logger->error("Erreur batch flush: " . $e->getMessage());
+                            $errors[] = "Erreur batch à l'index $index: " . $e->getMessage();
+                            // getEntityManager() réinitialisera l'EM au prochain tour si nécessaire
+                        }
                     }
-
-                } catch (\Doctrine\DBAL\Exception\UniqueConstraintViolationException $e) {
-                    $errorMsg = "❌ Doublon pour {$userLdap['login']}: " . $e->getMessage();
-                    $this->logger->error($errorMsg);
-                    $errors[] = $errorMsg;
-                    $skipped++;
 
                 } catch (\Exception $e) {
                     $errorMsg = sprintf(
@@ -225,50 +214,31 @@ class LdapController extends AbstractController
                 }
             }
 
-            // ✅ Flush final
+            // Flush final
             try {
                 $this->logger->info("Flush final...");
-                $this->entityManager->flush();
-                $this->logger->info("✅ Flush réussi");
-
-            } catch (\Doctrine\DBAL\Exception\UniqueConstraintViolationException $e) {
-                $this->addFlash('error', '❌ Contrainte unique violée: ' . $e->getMessage());
-                $this->logger->error('Contrainte unique: ' . $e->getMessage());
-
-                // Indique quelle contrainte
-                if (strpos($e->getMessage(), 'login') !== false) {
-                    $this->addFlash('error', '→ Doublon sur le login détecté');
-                }
-
-                return $this->redirectToRoute('admin_ldap_preview');
-
+                $this->getEntityManager()->flush(); // ✅
+                $this->logger->info("✅ Flush final réussi");
             } catch (\Exception $e) {
-                $this->addFlash('error', '❌ Erreur flush: ' . $e->getMessage());
-                $this->logger->error('Erreur flush: ' . $e->getMessage());
+                $this->addFlash('error', '❌ Erreur flush final: ' . $e->getMessage());
+                $this->logger->error('Erreur flush final: ' . $e->getMessage());
                 return $this->redirectToRoute('admin_ldap_preview');
             }
 
-            // ✅ Messages de succès
+            // Messages de résultat
             if (empty($errors)) {
                 $this->addFlash('success', sprintf(
                     '✅ Import réussi ! %d créé(s), %d mis à jour, %d ignoré(s)',
-                    $imported,
-                    $updated,
-                    $skipped
+                    $imported, $updated, $skipped
                 ));
             } else {
                 $this->addFlash('warning', sprintf(
                     '⚠️ Import terminé avec avertissements : %d créé(s), %d mis à jour, %d ignoré(s)',
-                    $imported,
-                    $updated,
-                    $skipped
+                    $imported, $updated, $skipped
                 ));
-
-                // Affiche max 10 erreurs
                 foreach (array_slice($errors, 0, 10) as $error) {
                     $this->addFlash('info', $error);
                 }
-
                 if (count($errors) > 10) {
                     $this->addFlash('info', sprintf('... et %d autre(s) avertissement(s)', count($errors) - 10));
                 }
@@ -277,11 +247,10 @@ class LdapController extends AbstractController
             return $this->redirectToRoute('listeUtilisateurs');
 
         } catch (\Exception $e) {
-            ConfigurationLDAP::deconnecterServeur();
+            ConfigurationLdap::deconnecterServeur();
             $this->logger->error('Erreur fatale: ' . $e->getMessage());
             $this->addFlash('error', '❌ Erreur fatale : ' . $e->getMessage());
             return $this->redirectToRoute('admin_ldap_preview');
         }
     }
-
 }

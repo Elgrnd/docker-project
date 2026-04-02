@@ -1,8 +1,7 @@
 {% extends "base.html.twig" %}
 {% block title %}<title>Liste des étudiants</title>{% endblock %}
 
-{% block stylesheets %}
-{% endblock %}
+{% block stylesheets %}{% endblock %}
 
 {% block scriptJs %}
     <script defer src="{{ asset('js/searchUsers.js') }}"></script>
@@ -31,6 +30,7 @@
 
                 <div class="mb-3 d-flex flex-wrap gap-2">
                     <span class="fw-semibold align-self-center">Filtrer par classe :</span>
+
                     {% set classes = [] %}
                     {% for u in utilisateurs %}
                         {% if u.classe is not null and u.classe not in classes %}
@@ -59,6 +59,7 @@
                     </button>
                 </div>
 
+                <!-- Modal -->
                 <div class="modal fade" id="creerGroupeModal" tabindex="-1">
                     <div class="modal-dialog">
                         <div class="modal-content">
@@ -95,7 +96,7 @@
                             <th>Login</th>
                             <th>ID</th>
                             <th>Nom</th>
-                            <th>Prenom</th>
+                            <th>Prénom</th>
                             <th>Classe</th>
                         </tr>
                         </thead>
@@ -110,8 +111,8 @@
                                 <td>{{ u.classe }}</td>
                             </tr>
                         {% else %}
-                            <tr data-classe="{{ u.classe }}">
-                                <td colspan="4" class="text-center text-muted">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">
                                     Aucun utilisateur trouvé.
                                 </td>
                             </tr>

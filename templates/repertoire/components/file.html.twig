@@ -25,6 +25,9 @@
         {% endif %}
 
         {% if is_granted('FILE_DOWNLOAD', uyr.file) %}
+            <i class="bi bi-share share-icon"
+               onclick="openShareModal('{{ uyr.file.id }}', '{{ uyr.file.nameFile }}')"
+               title="Partager"></i>
             <i class="bi bi-download download-icon" title="Télécharger"
                onclick="downloadFileById('{{ uyr.file.id }}')"></i>
         {% endif %}

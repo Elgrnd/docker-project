@@ -193,3 +193,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 });
+
+function toggleForm() {
+const form = document.getElementById('shareForm');
+form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+function openShareModal(fileId, fileName) {
+    document.getElementById('shareModal').style.display = 'flex';
+    document.getElementById('modalFileName').innerText = "Partager : " + fileName;
+    document.getElementById('fileIdInput').value = fileId;
+}
+
+function closeModal() {
+    document.getElementById('shareModal').style.display = 'none';
+}
+
+function openShareModal(fileId, fileName) {
+    document.getElementById('shareModal').style.display = 'flex';
+    document.getElementById('modalFileName').innerText = "Partager : " + fileName;
+    document.getElementById('fileIdInput').value = fileId;
+
+    const form = document.getElementById('shareForm');
+    console.log(fileId);
+    form.action = Routing.generate('partager_fichier', { id: fileId });
+}

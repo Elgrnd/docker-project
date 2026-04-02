@@ -212,7 +212,7 @@ final class GroupeController extends AbstractController
         return $this->redirectToRoute('mes_groupes');
     }
 
-    #[IsGranted('ROLE_ADMIN')]
+    #[IsGranted('ROLE_PROFESSEUR')]
     #[Route('/panneauadmin/classes', name: 'classes', methods: ['GET', 'POST'])]
     public function afficherClasses(Request $request, EntityManagerInterface $em): Response
     {

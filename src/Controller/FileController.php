@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\BinaryFile;
+use App\Entity\EtrePartage;
 use App\Entity\File;
 use App\Entity\GroupeFileRepertoire;
 use App\Entity\Repertoire;
@@ -10,7 +11,9 @@ use App\Entity\UtilisateurFileRepertoire;
 use App\Form\AjouterBiblioRepertoireType;
 use App\Form\DeplacerFileType;
 use App\Form\DirectoryType;
+use App\Form\PartagerFichierType;
 use App\Form\UploadFileType;
+use App\Repository\EtrePartageRepository;
 use App\Service\FileUploadService;
 use App\Service\GitlabApiException;
 use App\Service\GitlabApiService;
@@ -263,12 +266,19 @@ final class FileController extends AbstractController
         EntityManagerInterface $entityManager,
         GitlabApiService $gitlab,
         GitlabSyncService $gitlabSync,
+        EtrePartageRepository $etrePartageRepo
     ): Response {
         $utilisateur = $this->getUser();
 
         $repertoire = new Repertoire();
         $form = $this->createForm(DirectoryType::class, $repertoire);
         $form->handleRequest($request);
+
+        $partage = new EtrePartage();
+        $formPartage = $this->createForm(PartagerFichierType::class, $partage, [
+            'utilisateur' => $utilisateur,
+        ]);
+        $formPartage->handleRequest($request);
 
         $repertoireRepository = $entityManager->getRepository(Repertoire::class);
         $uyrRepository = $entityManager->getRepository(UtilisateurFileRepertoire::class);
@@ -283,7 +293,11 @@ final class FileController extends AbstractController
                 }
             }
 
-            if ($repertoireRepository->verifierNomDejaExistant($repertoire->getName(), $repertoire->getParent(), $utilisateur->getId()) !== null) {
+            if ($repertoireRepository->verifierNomDejaExistant(
+                    $repertoire->getName(),
+                    $repertoire->getParent(),
+                    $utilisateur->getId()
+                ) !== null) {
                 $this->addFlash('error', 'Un répertoire avec ce nom existe déjà à cet emplacement');
                 return $this->redirectToRoute('repertoire');
             }
@@ -291,7 +305,35 @@ final class FileController extends AbstractController
             $entityManager->persist($repertoire);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Répertoire créé avec succès !');
+            return $this->redirectToRoute('repertoire');
+        }
+
+        if ($formPartage->isSubmitted() && $formPartage->isValid()) {
+            $fileId = $request->request->get('fileId');
+            $file = $entityManager->getRepository(File::class)->find($fileId);
+
+            if (!$file) {
+                return $this->redirectToRoute('repertoire');
+            }
+
+            $partage->setFile($file);
+            $partage->setDatePartage(new \DateTimeImmutable());
+
+            try {
+                $partage->assertNotSelfShare($utilisateur);
+                $partage->assertNotDuplicate(
+                    $etrePartageRepo->existsPartage(
+                        $partage->getUtilisateur(),
+                        $file
+                    )
+                );
+            } catch (DomainException $e) {
+                return $this->redirectToRoute('repertoire');
+            }
+
+            $entityManager->persist($partage);
+            $entityManager->flush();
+
             return $this->redirectToRoute('repertoire');
         }
 
@@ -302,8 +344,6 @@ final class FileController extends AbstractController
         $gitlabProject = null;
         $gitlabBranch = null;
 
-        $vmTree = null;
-
         if ($utilisateur->getGitlabUrl()) {
             $parsed = $gitlab->parseGitlabUrl($utilisateur->getGitlabUrl());
 
@@ -312,29 +352,30 @@ final class FileController extends AbstractController
                 $gitlabBranch  = $parsed['branch'] ?? null;
 
                 $latestSha = null;
+
                 try {
                     $latestSha = $gitlabSync->getLatestShaForUser($utilisateur);
-                } catch (\Throwable $e) {
-                    // GitLab down => on ne bloque pas, on affiche quand même la BD
-                }
+                } catch (\Throwable $e) {}
 
                 if ($latestSha !== null && $latestSha !== $utilisateur->getGitlabLastCommitSha()) {
-                    $this->addFlash('warning', "Votre dépôt GitLab a changé depuis la dernière mise en cache. Cliquez sur Actualiser.");
+                    $this->addFlash('warning', 'Votre dépôt GitLab a changé.');
                 }
 
                 $gitlabTree = $gitlabSync->buildTreeFromDatabase($utilisateur);
             }
         }
 
+        $partagesRecus = $etrePartageRepo->findBy(['utilisateur' => $utilisateur]);
+
         return $this->render('repertoire/repertoirePerso.html.twig', [
             'listUyr' => $listUyr,
             'formRepertoire' => $form,
+            'formulairePartage' => $formPartage,
             'repertoireRacine' => $repertoireRacine,
-
             'gitlabTree' => $gitlabTree,
             'gitlabProject' => $gitlabProject,
             'gitlabBranch' => $gitlabBranch,
-
+            'partagesRecus' => $partagesRecus,
         ]);
     }
 

@@ -93,14 +93,14 @@ final class UtilisateurController extends AbstractController
         return $this->render('utilisateur/connexion.html.twig', ['lastUsername' => $lastUsername]);
     }
 
-    #[IsGranted('ROLE_ADMIN')]
+    #[IsGranted('ROLE_PROFESSEUR')]
     #[Route('/panneauadmin', name: 'panneauAdmin', methods: ['GET'])]
     public function panneauAdmin(): Response
     {
         return $this->render('utilisateur/panneauAdmin.html.twig');
     }
 
-    #[IsGranted('ROLE_ADMIN')]
+    #[IsGranted('ROLE_PROFESSEUR')]
     #[Route('/panneauadmin/listeutilisateurs', name: 'listeUtilisateurs', methods: ['GET'])]
     public function listeUtilisateurs(): Response
     {
@@ -132,18 +132,19 @@ final class UtilisateurController extends AbstractController
      * @throws DecodingExceptionInterface
      * @throws ClientExceptionInterface
      */
-    #[IsGranted(new Expression("is_granted('ROLE_ADMIN')"))]
+    #[IsGranted(new Expression("is_granted('ROLE_PROFESSEUR')"))]
     #[Route('/panneauadmin/listeutilisateurs/{login}/creationVM', name: 'creerVmUtilisateur', methods: ['GET'])]
     public function creerVmUtilisateur(?Utilisateur $utilisateur, ProxmoxService $proxmoxService, EntityManagerInterface $entityManager) : Response {
         if($utilisateur === null) {
             $this->addFlash('error', "L'utilisateur n'existe pas");
             return $this->redirectToRoute('listeUtilisateurs');
-        } else if($utilisateur->getVm()->getVmId()() !== null) {
+        } else if($utilisateur->getVm()->getVmId() !== null) {
             $this->addFlash('error', "Cette Utilisateur à déjà une VM actif");
             return $this->redirectToRoute('listeUtilisateurs');
         } else {
-            $vmId = $proxmoxService->cloneVm($utilisateur->getLogin());
-            $utilisateur->getVm()->setVmId($vmId);
+
+            $proxmoxService->cloneUserVmAsynchrone($utilisateur->getLogin());
+            $utilisateur->getVm()->setVmStatus("creating");
             $entityManager->flush();
 
             $this->addFlash('success', "Une VM a été ajouté à l'utilisateur " . $utilisateur->getLogin());
@@ -154,17 +155,17 @@ final class UtilisateurController extends AbstractController
     /**
      * @throws TransportExceptionInterface
      */
-    #[IsGranted(new Expression("is_granted('ROLE_ADMIN')"))]
+    #[IsGranted(new Expression("is_granted('ROLE_PROFESSEUR')"))]
     #[Route('/panneauadmin/listeutilisateurs/{login}/suppressionVM', name: 'supprimerVmUtilisateur', methods: ['GET'])]
     public function suppressionVmUtilisateur(?Utilisateur $utilisateur, ProxmoxService $proxmoxService, EntityManagerInterface $entityManager) : Response {
         if($utilisateur === null) {
             $this->addFlash('error', "L'utilisateur n'existe pas");
             return $this->redirectToRoute('listeUtilisateurs');
-        } else if($utilisateur->getVm()->getVmId()() === null) {
+        } else if($utilisateur->getVm()->getVmId() === null) {
             $this->addFlash('error', "Cette Utilisateur n'a pas de VM actif");
             return $this->redirectToRoute('listeUtilisateurs');
         } else {
-            $proxmoxService->deleteVM($utilisateur->getVm()->getVmId()());
+            $proxmoxService->deleteVM($utilisateur->getVm()->getVmId());
             $utilisateur->getVm()->setVmId(null);
             $utilisateur->getVm()->setVmStatus(null);
             $utilisateur->getVm()->setVmIp(null);

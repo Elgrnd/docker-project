@@ -67,12 +67,12 @@
                                     </select>
                                 </td>
                                 <td>
-                                    {% if u.vm is null %}
+                                    {% if u.vm.vmId is null and u.vm.vmStatus is null%}
                                         <a href="{{ path('creerVmUtilisateur', {'login': u.login}) }}"
                                            class="btn btn-success btn-sm">
                                             <i class="bi bi-hdd-network me-1"></i> Créer VM
                                         </a>
-                                    {% elseif u.vm.vmStatus == 'ready' %}
+                                    {% elseif u.vm.vmStatus == 'ready' or u.vm.vmStatus == 'creating' %}
                                         <a href="{{ path('supprimerVmUtilisateur', {'login': u.login}) }}"
                                            class="btn btn-danger btn-sm"
                                            onclick="return confirm('Supprimer la VM ?')">

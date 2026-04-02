@@ -1,0 +1,118 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    <title>Fichiers partagés</title>
+{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/etre_partage/partages.css') }}">
+{% endblock %}
+
+{% block scriptJs %}
+    <script defer type="text/javascript" src="{{ asset('js/gestionEvent.js') }}"></script>
+{% endblock %}
+
+{% block page_content %}
+    <main class="container mt-4">
+
+        <h2>Mes partages</h2>
+
+        <button class="btn btn-success mb-3" onclick="toggleForm()">
+            ➕ Partager un fichier
+        </button>
+
+        <div id="shareForm" style="display:none;" class="share-container">
+            <div class="card-share">
+
+                <h2 class="title text-center mb-3">Partager un fichier</h2>
+
+                <p class="subtitle text-muted mb-4 text-center">
+                    {% if is_granted('ROLE_ADMIN') %}
+                        Mode admin — tous les fichiers disponibles
+                    {% else %}
+                        Partage de vos fichiers
+                    {% endif %}
+                </p>
+
+                {{ form_start(formulairePartage) }}
+
+                <div class="mb-3">
+                    {{ form_label(formulairePartage.fichier) }}
+                    {{ form_widget(formulairePartage.fichier, {'attr': {'class': 'form-select'}}) }}
+                    {{ form_errors(formulairePartage.fichier) }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form_label(formulairePartage.utilisateur) }}
+                    {{ form_widget(formulairePartage.utilisateur, {'attr': {'class': 'form-select'}}) }}
+                    {{ form_errors(formulairePartage.utilisateur) }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form_label(formulairePartage.droit) }}
+                    {{ form_widget(formulairePartage.droit, {'attr': {'class': 'form-select'}}) }}
+                    {{ form_errors(formulairePartage.droit) }}
+                </div>
+
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-primary px-4">
+                        Partager
+                    </button>
+                </div>
+
+                {{ form_end(formulairePartage) }}
+
+            </div>
+        </div>
+
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Fichier</th>
+                <th>Chemin</th>
+                <th>Utilisateur</th>
+                <th>Droit / Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            {% for partage in partages %}
+                {% set file = partage.file %}
+                {% set ufr = file.utilisateursParRepertoire|first %}
+                {% set path = ufr and ufr.repertoire ? ufr.repertoire.fullPath : 'inconnu' %}
+
+                <tr>
+                    <td>{{ file.nameFile }}</td>
+                    <td class="text-truncate" style="max-width: 250px;">
+                        {{ path }} / {{ file.nameFile }}
+                    </td>
+                    <td>{{ partage.utilisateur.login }}</td>
+                    <td style="width: 180px;">
+                        <form method="post" action="{{ path('edit_droit', {id: partage.id}) }}" class="d-flex gap-2">
+                            <select name="droit" class="form-select form-select-sm" onchange="this.form.submit()">
+                                <option value="lecture" {% if partage.droit == 'lecture' %}selected{% endif %}>Lecture</option>
+                                <option value="edition" {% if partage.droit == 'edition' %}selected{% endif %}>Édition</option>
+                            </select>
+
+                            <a href="{{ path('delete_partage', {id: partage.id}) }}"
+                               class="btn btn-danger btn-sm"
+                               onclick="return confirm('Supprimer ce partage ?')">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </form>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted">
+                        Aucun partage
+                    </td>
+                </tr>
+            {% endfor %}
+
+            </tbody>
+        </table>
+
+    </main>
+
+{% endblock %}

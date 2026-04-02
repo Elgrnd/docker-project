@@ -45,15 +45,6 @@ class UtilisateurFileRepertoireRepository extends ServiceEntityRepository
             ->select('uyfr', 'yf', 'r')
             ->join('uyfr.file', 'yf')
             ->join('uyfr.repertoire', 'r')
-
-            ->leftJoin(
-                'App\Entity\EtrePartage',
-                'ep',
-                'WITH',
-                'ep.file = yf'
-            )
-            ->andWhere('ep.id IS NULL')
-
             ->andWhere('yf.deletedAt IS NULL')
             ->addOrderBy('uyfr.utilisateur', 'ASC')
             ->addOrderBy('yf.nameFile', 'ASC');
@@ -79,8 +70,6 @@ class UtilisateurFileRepertoireRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
-
-
 
     public function supprimerFileUtilisateurParRepertoire($idFile)
     {

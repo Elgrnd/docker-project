@@ -56,7 +56,7 @@ class CreateVmCommand extends Command
             $io->error("User not found.");
             return Command::FAILURE;
         }
-        $vmId = $this->proxmoxService->cloneVm(str_replace(' ', '', $user->getLogin()), $user->getVm()->getId());
+        $vmId = $this->proxmoxService->cloneVm(str_replace(' ', '', $user->getLogin()));
         $user->getVm()->setVmId($vmId);
         $user->getVm()->setVmStatus('ready');
         $this->entityManager->flush();

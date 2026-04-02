@@ -66,20 +66,20 @@ class ProxmoxService
      * @throws ClientExceptionInterface
      * @throws DecodingExceptionInterface
      */
-    public function cloneVm(string $name, int $machineId): ?int
+    public function cloneVm(string $name): ?int
     {
         $vmid = rand(200, 999);
         $data = [
             'newid' => $vmid,
             'name' => "vm-$name",
             'full' => 1,
-            'target' => 'pve',
+            'target' => 'proxmox',
             'storage' => 'local-lvm',
         ];
 
         $response = $this->client->request(
             'POST',
-            "{$this->apiUrl}/nodes/pve/qemu/100/clone",
+            "{$this->apiUrl}/nodes/proxmox/qemu/100/clone",
             [
                 'headers' => [
                     'Authorization' => "PVEAPIToken={$this->tokenId}={$this->secret}",
@@ -99,21 +99,6 @@ class ProxmoxService
             $status = $this->getTaskStatus($upid);
         } while ($status['status'] !== 'stopped' || $status['exitstatus'] !== 'OK');
 
-        $newIp = "192.168.1." . ($machineId + 100);
-
-        $this->client->request(
-            'POST',
-            "{$this->apiUrl}/nodes/pve/qemu/$vmid/config",
-            [
-                'headers' => ['Authorization' => "PVEAPIToken={$this->tokenId}={$this->secret}"],
-                'json' => [
-                    'ipconfig0' => "ip=$newIp/24,gw=192.168.1.1",
-                    'nameserver' => '10.10.1.1',
-                ],
-                'verify_peer' => false,
-                'verify_host' => false,
-            ]
-        );
 
         $this->startVM($vmid);
 
@@ -129,7 +114,7 @@ class ProxmoxService
 
         $response = $this->client->request(
             'DELETE',
-            "{$this->apiUrl}/nodes/pve/qemu/$vmid",
+            "{$this->apiUrl}/nodes/proxmox/qemu/$vmid",
             [
                 'headers' => [
                     'Authorization' => "PVEAPIToken={$this->tokenId}={$this->secret}",
@@ -153,7 +138,7 @@ class ProxmoxService
         if(!$virtualMachine->getVmIp()) {
             $response = $this->client->request(
                 'GET',
-                "{$this->apiUrl}/nodes/pve/qemu/{$virtualMachine->getVmId()}/agent/network-get-interfaces",
+                "{$this->apiUrl}/nodes/proxmox/qemu/{$virtualMachine->getVmId()}/agent/network-get-interfaces",
                 [
                     'headers' => [
                         'Authorization' => "PVEAPIToken={$this->tokenId}={$this->secret}",
@@ -188,7 +173,7 @@ class ProxmoxService
     {
         $response = $this->client->request(
             'POST',
-            "{$this->apiUrl}/nodes/pve/qemu/{$vmid}/status/start",
+            "{$this->apiUrl}/nodes/proxmox/qemu/{$vmid}/status/start",
             [
                 'headers' => [
                     'Authorization' => "PVEAPIToken={$this->tokenId}={$this->secret}",
@@ -215,7 +200,7 @@ class ProxmoxService
     {
         $response = $this->client->request(
             'POST',
-            "{$this->apiUrl}/nodes/pve/qemu/{$vmid}/status/stop",
+            "{$this->apiUrl}/nodes/proxmox/qemu/{$vmid}/status/stop",
             [
                 'headers' => [
                     'Authorization' => "PVEAPIToken={$this->tokenId}={$this->secret}",
@@ -252,7 +237,7 @@ class ProxmoxService
     {
         $response = $this->client->request(
             'GET',
-            "{$this->apiUrl}/nodes/pve/tasks/{$upid}/status",
+            "{$this->apiUrl}/nodes/proxmox/tasks/{$upid}/status",
             [
                 'headers' => [
                     'Authorization' => "PVEAPIToken={$this->tokenId}={$this->secret}",
@@ -282,7 +267,7 @@ class ProxmoxService
     {
         $response = $this->client->request(
             'GET',
-            "{$this->apiUrl}/nodes/pve/qemu",
+            "{$this->apiUrl}/nodes/proxmox/qemu",
             [
                 'headers' => [
                     'Authorization' => "PVEAPIToken={$this->tokenId}={$this->secret}",
@@ -312,7 +297,7 @@ class ProxmoxService
     {
         $response = $this->client->request(
             'GET',
-            "{$this->apiUrl}/nodes/pve/qemu/{$vmid}/status/current",
+            "{$this->apiUrl}/nodes/proxmox/qemu/{$vmid}/status/current",
             [
                 'headers' => [
                     'Authorization' => "PVEAPIToken={$this->tokenId}={$this->secret}",

@@ -142,7 +142,7 @@ final class UtilisateurController extends AbstractController
             $this->addFlash('error', "Cette Utilisateur à déjà une VM actif");
             return $this->redirectToRoute('listeUtilisateurs');
         } else {
-            $vmId = $proxmoxService->cloneVm($utilisateur->getLogin(), $utilisateur->getVm()->getId());
+            $vmId = $proxmoxService->cloneVm($utilisateur->getLogin());
             $utilisateur->getVm()->setVmId($vmId);
             $entityManager->flush();
 

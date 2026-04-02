@@ -12,12 +12,14 @@ final class FileVoter extends Voter
     public const OWNER = 'FILE_OWNER';
     public const BIBLIO = 'FILE_BIBLIO';
     public const DOWNLOAD = 'FILE_DOWNLOAD';
+    public const VIEW = 'FILE_VIEW';
+    public const EDIT = 'FILE_EDIT';
 
     public function __construct(private Security $security) {}
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return in_array($attribute, [self::OWNER, self::BIBLIO, self::DOWNLOAD], true)
+        return in_array($attribute, [self::OWNER, self::BIBLIO, self::DOWNLOAD, self::VIEW, self::EDIT], true)
             && $subject instanceof \App\Entity\File;
     }
 
@@ -60,6 +62,28 @@ final class FileVoter extends Voter
 
                 foreach ($subject->getGroupeParRepertoire() as $gfr) {
                     if ($gfr->getGroupe() && $gfr->getGroupe()->contientMembre($user)) {
+                        return true;
+                    }
+                }
+
+                foreach ($subject->getEtrePartages() as $partage) {
+                    if ($partage->getUtilisateur() === $user) {
+                        return true;
+                    }
+                }
+
+                return false;
+
+            case self::EDIT:
+                if ($subject->getUtilisateurFile() === $user) {
+                    return true;
+                }
+
+                foreach ($subject->getEtrePartages() as $partage) {
+                    if (
+                        $partage->getUtilisateur() === $user &&
+                        $partage->getDroit() === 'edition'
+                    ) {
                         return true;
                     }
                 }

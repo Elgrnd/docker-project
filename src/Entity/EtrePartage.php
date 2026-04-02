@@ -22,6 +22,9 @@ class EtrePartage
     #[ORM\JoinColumn(nullable: false)]
     private ?File $file = null;
 
+    #[ORM\Column(length: 255)]
+    private ?string $droit = null;
+
     #[ORM\Column(type: 'datetime_immutable')]
     private ?\DateTimeImmutable $datePartage = null;
 
@@ -49,6 +52,17 @@ class EtrePartage
     public function setFile(?File $file): static
     {
         $this->file = $file;
+        return $this;
+    }
+
+    public function getDroit(): ?string
+    {
+        return $this->droit;
+    }
+
+    public function setDroit(string $droit): static
+    {
+        $this->droit = $droit;
         return $this;
     }
 

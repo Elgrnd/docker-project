@@ -82,9 +82,27 @@
 
             <div class="card-body tree-container">
                 {% if repertoireRacine %}
-                    {{ arbre.render_tree(repertoireRacine, listUyr, 'perso') }}
+                    {{ arbre.render_tree(repertoireRacine, listUyr, 'perso', null, formulairePartage) }}
                 {% else %}
                     <p class="text-muted">Aucun répertoire trouvé.</p>
+                {% endif %}
+
+                {% if partagesRecus is not empty %}
+                    <div class="tree-item">
+                        <div class="tree-folder" data-folder-id="shared">
+                            <span class="toggle-icon">▼</span>
+                            <i class="bi bi-folder-fill folder-icon"></i>
+                            <strong>Partagés avec moi</strong>
+                        </div>
+
+                        <div class="tree-children" data-children-of="shared">
+                            {% for partage in partagesRecus %}
+                                {{ include('repertoire/components/filePartage.html.twig', { partage: partage }) }}
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="text-muted mt-4">Aucun fichier partagé avec vous.</p>
                 {% endif %}
 
                 <hr class="my-4">
@@ -145,6 +163,34 @@
             </div>
         </div>
 
+    </div>
+
+
+    <div id="shareModal" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+
+            <h3 id="modalFileName" class="mb-3 text-center"></h3>
+
+            {{ form_start(formulairePartage, {
+                'attr': {
+                    'id': 'shareForm',
+                }
+            }) }}
+
+            {{ form_widget(formulairePartage.utilisateur, {'attr': {'class': 'form-select mb-3'}}) }}
+            {{ form_widget(formulairePartage.droit, {'attr': {'class': 'form-select mb-3'}}) }}
+
+            <input type="hidden" name="fileId" id="fileIdInput">
+
+            <button class="btn btn-primary w-100">Partager</button>
+
+            {{ form_end(formulairePartage) }}
+
+            <button onclick="closeModal()" class="btn btn-secondary w-100 mt-2">
+                Annuler
+            </button>
+
+        </div>
     </div>
 
 {% endblock %}

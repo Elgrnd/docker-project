@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\EtrePartage;
 use App\Entity\Utilisateur;
+use App\Repository\EtrePartageRepository;
 use App\Repository\UtilisateurFileRepertoireRepository;
 use App\Repository\UtilisateurRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -11,36 +12,40 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
 
 class EtrePartageType extends AbstractType
 {
     public function __construct(
         private UtilisateurRepository $utilisateurRepo,
         private UtilisateurFileRepertoireRepository $ufrRepo,
+        private EtrePartageRepository $partageRepo,
     ) {}
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         /** @var Utilisateur $utilisateur */
         $utilisateur = $options['utilisateur'];
-        $isAdmin = (bool) $options['is_admin'];
-
-        $ufrs = $this->ufrRepo->findFilesForUserAdmin($utilisateur, $isAdmin);
+        $is_Admin = $options['is_Admin'];
 
         $fileChoices = [];
+        $ufrs = $this->ufrRepo->findFilesForUserAdmin($utilisateur, $is_Admin);
+
         foreach ($ufrs as $ufr) {
             $file = $ufr->getFile();
             $repertoire = $ufr->getRepertoire();
-            $path = $repertoire?->getFullPath() ?? '';
+            $owner = $ufr->getUtilisateur();
 
-            if ($isAdmin) {
-                $owner = $file->getUtilisateurFile()?->getLogin() ?? 'inconnu';
-                $label = sprintf('%s — %s / %s', $file->getNameFile(), $owner, $path);
-            } else {
-                $label = sprintf('%s — %s', $file->getNameFile(), $path);
+            $label = $file->getNameFile();
+
+            if ($is_Admin && $owner) {
+                $label .= ' (' . $owner->getLogin() . ')';
             }
 
-            $fileChoices[$label] = (string) $file->getId();
+            $label .= ' — ' . ($repertoire?->getFullPath() ?? '');
+
+            $fileChoices[$label] = $file->getId();
         }
 
         $builder
@@ -48,14 +53,18 @@ class EtrePartageType extends AbstractType
                 'class' => Utilisateur::class,
                 'choices' => $this->utilisateurRepo->findAllExcept($utilisateur),
                 'choice_label' => 'login',
-                'label' => 'Utilisateur à qui partager',
                 'placeholder' => 'Sélectionner un utilisateur',
             ])
-            ->add('fileId', ChoiceType::class, [
+            ->add('fichier', ChoiceType::class, [
                 'mapped' => false,
                 'choices' => $fileChoices,
                 'placeholder' => 'Sélectionner un fichier',
-                'label' => 'Fichier à partager',
+            ])
+            ->add('droit', ChoiceType::class, [
+                'choices' => [
+                    'Lecture' => 'lecture',
+                    'Édition' => 'edition',
+                ],
             ]);
     }
 
@@ -63,7 +72,7 @@ class EtrePartageType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => EtrePartage::class,
-            'is_admin' => false,
+            'is_Admin' => false,
             'utilisateur' => null,
         ]);
     }

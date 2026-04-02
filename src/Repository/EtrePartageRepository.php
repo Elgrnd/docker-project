@@ -29,4 +29,14 @@ class EtrePartageRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
     }
+
+    public function findByOwner(Utilisateur $user): array
+    {
+        return $this->createQueryBuilder('p')
+            ->join('p.file', 'f')
+            ->where('f.utilisateur_file = :user')
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getResult();
+    }
 }

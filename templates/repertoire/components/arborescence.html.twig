@@ -1,4 +1,4 @@
-{% macro render_tree(repertoire, fichiers, mode, groupe = null) %}
+{% macro render_tree(repertoire, fichiers, mode, groupe = null, formulairePartage = null) %}
     <div class="tree-item">
         <div class="tree-folder" data-folder-id="{{ repertoire.id }}">
             <span class="toggle-icon">▼</span>
@@ -49,7 +49,7 @@
             {% for f in fichiers %}
                 {% if f.repertoire.id == repertoire.id %}
                     {% if mode == 'perso' %}
-                        {{ include('repertoire/components/file.html.twig', {'uyr': f}) }}
+                        {{ include('repertoire/components/file.html.twig', {'uyr': f, 'formulairePartage': formulairePartage}) }}
                     {% elseif mode == 'groupe' %}
                         {{ include('groupe/components/textFileGroupe.html.twig', {'gyr': f}) }}
                     {% endif %}
@@ -58,7 +58,7 @@
 
             {# Récursivité sur les sous-répertoires #}
             {% for child in repertoire.childrenActifs %}
-                {{ _self.render_tree(child, fichiers, mode, groupe) }}
+                {{ _self.render_tree(child, fichiers, mode, groupe, formulairePartage) }}
             {% endfor %}
         </div>
     </div>

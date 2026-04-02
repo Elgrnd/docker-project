@@ -44,9 +44,7 @@ final class VersionController extends AbstractController
 
             $this->denyAccessUnlessGranted('GROUPE_FILE_EDIT', $gfr);
         } else {
-            if ($textFile->getUtilisateurFile() !== $user) {
-                throw $this->createAccessDeniedException();
-            }
+            $this->denyAccessUnlessGranted('FILE_EDIT', $textFile);
         }
 
         $versions = $em->getRepository(TextFileVersion::class)
@@ -95,7 +93,7 @@ final class VersionController extends AbstractController
             $this->denyAccessUnlessGranted('GROUPE_FILE_EDIT', $gfr);
 
         } else {
-            $this->denyAccessUnlessGranted('FILE_OWNER', $textFile);
+            $this->denyAccessUnlessGranted('FILE_EDIT', $textFile);
         }
 
         // 🔹 Backup avant restauration
@@ -169,7 +167,7 @@ final class VersionController extends AbstractController
             $this->denyAccessUnlessGranted('GROUPE_FILE_EDIT', $gfr);
 
         } else {
-            $this->denyAccessUnlessGranted('FILE_OWNER', $textFile);
+            $this->denyAccessUnlessGranted('FILE_EDIT', $textFile);
         }
 
         return $this->render('version/detail.html.twig', [

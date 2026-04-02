@@ -21,7 +21,7 @@ use Symfony\Component\Yaml\Yaml;
 
 final class TextFileController extends AbstractController
 {
-    #[IsGranted('FILE_OWNER', subject: 'textFile')]
+    #[IsGranted('FILE_EDIT', subject: 'textFile')]
     #[Route('textfile/modifier/{id}', name: 'modifierTextFile', methods: ['GET', 'POST'])]
     public function modifierTextFile(
         ?TextFile $textFile,
@@ -208,7 +208,7 @@ final class TextFileController extends AbstractController
             $entityManager->flush();
 
             $this->addFlash('success', 'Fichier ajouté à votre répertoire avec succès');
-            return $this->redirectToRoute('bibliotheque');
+            return $this->redirectToRoute('repertoire');
         }
 
         return $this->render('file/ajouterAuRepertoire.html.twig', [

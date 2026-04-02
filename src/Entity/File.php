@@ -39,6 +39,9 @@ abstract class File
     #[ORM\Column(type: 'boolean', options: ['default' => false])]
     protected bool $fromGitlab = false;
 
+    #[ORM\OneToMany(mappedBy: 'file', targetEntity: EtrePartage::class, orphanRemoval: true)]
+    private Collection $etrePartages;
+
     #[ORM\Column(length: 1024, nullable: true)]
     protected ?string $gitlabPath = null;
 
@@ -65,6 +68,7 @@ abstract class File
     {
         $this->utilisateursParRepertoire = new ArrayCollection();
         $this->groupeParRepertoire = new ArrayCollection();
+        $this->etrePartages = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -158,6 +162,11 @@ abstract class File
     {
         $this->utilisateur_file = $utilisateur_file;
         return $this;
+    }
+
+    public function getEtrePartages(): Collection
+    {
+        return $this->etrePartages;
     }
 
     public function getUtilisateursParRepertoire(): Collection

@@ -85,9 +85,11 @@
                         </li>
                     {% endif %}
 
-                    <li class="nav-item mx-2">
-                        <a class="nav-link fw-medium" href="{{ path('services_list') }}">Services</a>
-                    </li>
+                    {% if is_granted('ROLE_USER') and app.user.vm.vmStatus == 'ready' %}
+                        <li class="nav-item mx-2">
+                            <a class="nav-link fw-medium" href="{{ path('services_list') }}">Services</a>
+                        </li>
+                    {% endif %}
 
 
                     {#                    <li class="nav-item mx-2"> #}

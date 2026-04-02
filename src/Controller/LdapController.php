@@ -16,7 +16,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Psr\Log\LoggerInterface;
 
 #[Route('/panneauadmin/ldap')]
-#[IsGranted('ROLE_ADMIN')]
+#[IsGranted('ROLE_PROFESSEUR')]
 class LdapController extends AbstractController
 {
     public function __construct(

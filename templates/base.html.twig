@@ -95,7 +95,7 @@
                     {#                    </li> #}
 
 
-                    {% if is_granted('ROLE_ADMIN') %}
+                    {% if is_granted('ROLE_PROFESSEUR') %}
                         <li class="nav-item mx-2">
                             <a class="nav-link fw-medium" href="{{ path('panneauAdmin') }}">Panneau de bord</a>
                         </li>

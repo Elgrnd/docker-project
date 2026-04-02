@@ -35,6 +35,10 @@ final class VirtualMachineVoter extends Voter
                     return true;
                 }
 
+                if (in_array('ROLE_PROFESSEUR', $user->getRoles())) {
+                    return true;
+                }
+
                 foreach ($user->getUtilisateurGroupe() as $groupe) {
                     if ($groupe->getVm() && $groupe->getVm() === $subject) {
                         return true;

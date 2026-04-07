@@ -1,4 +1,4 @@
-# 🖥️ DevBox — Plateforme de VMs pour étudiants
+# 🖥️ DOCKER IUT
 
 Application web permettant aux étudiants et aux enseignants de créer
 et gérer des machines virtuelles via **Proxmox**, offrant un environnement

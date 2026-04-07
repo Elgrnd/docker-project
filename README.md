@@ -61,7 +61,7 @@ GITLAB_TOKEN_KEY=your_gitlab_token
 | Rôle       | Permissions                              |
 |------------|------------------------------------------|
 | Étudiant   | Créer, démarrer, arrêter sa VM           |
-| Enseignant | Gérer toutes les VMs, créer des gabarits |
+| Enseignant | Gérer toutes les VMs, créer des groupes  |
 | Admin      | Administration complète de la plateforme |
 
 ## 👤 Auteurs
